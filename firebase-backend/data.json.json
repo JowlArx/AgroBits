@@ -1,0 +1,54 @@
+{
+  "usuarios": {
+    "joel123": {
+      "nombre": "Joel",
+      "sensores": {
+        "sensorH01": {
+          "tipo": "humedad",
+          "valor": 47,
+          "timestamp": "2025-06-14T12:00:00Z",
+          "cultivos": [
+            "lechuga",
+            "albahaca"
+          ]
+        }
+      },
+      "cultivos": {
+        "lechuga": {
+          "cultivoId": "lechuga",
+          "sensoresVinculados": [
+            "sensorH01"
+          ]
+        },
+        "albahaca": {
+          "cultivoId": "albahaca",
+          "sensoresVinculados": [
+            "sensorH01"
+          ]
+        }
+      }
+    }
+  },
+  "cultivos": {
+    "lechuga": {
+      "humedadMin": 40,
+      "humedadMax": 70,
+      "temperaturaMin": 10,
+      "temperaturaMax": 25,
+      "phMin": 6.0,
+      "phMax": 7.0,
+      "luzMin": 200,
+      "luzMax": 800
+    },
+    "albahaca": {
+      "humedadMin": 50,
+      "humedadMax": 75,
+      "temperaturaMin": 15,
+      "temperaturaMax": 30,
+      "phMin": 6.0,
+      "phMax": 7.5,
+      "luzMin": 300,
+      "luzMax": 1000
+    }
+  }
+}
