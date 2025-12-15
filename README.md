@@ -46,7 +46,16 @@ usuarios/
 
 ## ⚙️ Script de importación
 
-Se utilizó un script Node.js llamado `import.js` que importa usuarios, sensores y cultivos desde un archivo JSON (`Ejemplo_AgroBits_Estructura.json`) a Firestore.
+- Se utiliza un script Node.js llamado `import.js` que importa usuarios, sensores y cultivos desde un archivo JSON.
+- Parámetros disponibles:
+  - `DATA_FILE` (opcional): ruta al archivo de datos. Por defecto usa `firebase-backend/data.json`.
+  - `SERVICE_ACCOUNT_PATH` (opcional): ruta al archivo de credenciales del servicio. Por defecto usa `firebase-backend/serviceAccountKey.json`.
+- Ejemplo de ejecución segura (manteniendo las credenciales fuera del repo):
+  ```bash
+  cd firebase-backend
+  DATA_FILE=./data.json SERVICE_ACCOUNT_PATH=./serviceAccountKey.json node import.js
+  ```
+- El script realiza la escritura en lotes para evitar límites de Firestore y falla con código de salida distinto de cero si ocurre algún error.
 
 ---
 
