@@ -1,55 +1,97 @@
-
+const fs = require("fs");
+const path = require("path");
 const admin = require("firebase-admin");
-const serviceAccount = require("./serviceAccountKey.json"); // Reemplazá con el nombre correcto de tu archivo de clave
+
+const SERVICE_ACCOUNT_PATH =
+  process.env.SERVICE_ACCOUNT_PATH || path.join(__dirname, "serviceAccountKey.json");
+const DATA_PATH = process.env.DATA_FILE || path.join(__dirname, "data.json");
+const BATCH_LIMIT = 450; // Leave headroom under Firestore's 500 write limit
+
+function loadJson(filePath, description) {
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`${description} no encontrado en la ruta: ${filePath}`);
+  }
+
+  const content = fs.readFileSync(filePath, "utf8");
+  return JSON.parse(content);
+}
+
+function chunk(array, size) {
+  const chunks = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+  return chunks;
+}
+
+const serviceAccount = loadJson(SERVICE_ACCOUNT_PATH, "Archivo de credenciales");
+const dataset = loadJson(DATA_PATH, "Archivo de datos");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
 
 const db = admin.firestore();
-const data = require("./data.json");
 
-async function importData() {
-  for (const userId in data.usuarios) {
-    const user = data.usuarios[userId];
-    await db.collection("usuarios").doc(userId).set({
-      nombre: user.nombre
-    });
-
-    // Cultivos del usuario
-    if (user.cultivos) {
-      for (const cultivoId in user.cultivos) {
-        const cultivo = user.cultivos[cultivoId];
-        await db
-          .collection("usuarios")
-          .doc(userId)
-          .collection("cultivos")
-          .doc(cultivoId)
-          .set(cultivo);
-      }
+async function commitWrites(writes) {
+  for (const batchWrites of chunk(writes, BATCH_LIMIT)) {
+    const batch = db.batch();
+    for (const { ref, payload } of batchWrites) {
+      batch.set(ref, payload);
     }
-
-    // Sensores del usuario
-    if (user.sensores) {
-      for (const sensorId in user.sensores) {
-        const sensor = user.sensores[sensorId];
-        await db
-          .collection("usuarios")
-          .doc(userId)
-          .collection("sensores")
-          .doc(sensorId)
-          .set(sensor);
-      }
-    }
+    await batch.commit();
   }
-
-  // Cultivos globales
-  for (const cultivoId in data.cultivos) {
-    const cultivoData = data.cultivos[cultivoId];
-    await db.collection("cultivos").doc(cultivoId).set(cultivoData);
-  }
-
-  console.log("✅ Datos importados exitosamente a Firestore.");
 }
 
-importData().catch(console.error);
+async function importData() {
+  const writes = [];
+
+  for (const userId in dataset.usuarios) {
+    const user = dataset.usuarios[userId];
+    writes.push({
+      ref: db.collection("usuarios").doc(userId),
+      payload: { nombre: user.nombre }
+    });
+
+    if (user.cultivos) {
+      for (const cultivoId in user.cultivos) {
+        writes.push({
+          ref: db
+            .collection("usuarios")
+            .doc(userId)
+            .collection("cultivos")
+            .doc(cultivoId),
+          payload: user.cultivos[cultivoId]
+        });
+      }
+    }
+
+    if (user.sensores) {
+      for (const sensorId in user.sensores) {
+        writes.push({
+          ref: db
+            .collection("usuarios")
+            .doc(userId)
+            .collection("sensores")
+            .doc(sensorId),
+          payload: user.sensores[sensorId]
+        });
+      }
+    }
+  }
+
+  for (const cultivoId in dataset.cultivos) {
+    writes.push({
+      ref: db.collection("cultivos").doc(cultivoId),
+      payload: dataset.cultivos[cultivoId]
+    });
+  }
+
+  await commitWrites(writes);
+  console.log(`✅ Datos importados exitosamente a Firestore (${writes.length} documentos).`);
+}
+
+importData().catch((error) => {
+  console.error("❌ Error al importar datos:", error);
+  process.exitCode = 1;
+});
