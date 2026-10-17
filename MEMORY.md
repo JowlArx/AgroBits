@@ -47,6 +47,10 @@ Planificación (16/10/2026):
 - **D14 — Modelo de alertas:** una única alerta activa por (cultivo, tipo), que se mantiene activa mientras la medición siga fuera de rango y se marca resuelta al volver al rango.
 - **D15 — Frecuencia simulada:** 1 lectura cada 5 minutos por sensor en el generador de datos.
 
+Higiene del proyecto (17/10/2026):
+
+- **D16 — Configuración de agentes:** `opencode.json` se versiona con la API key de Context7 externalizada a `{env:CONTEXT7_API_KEY}` (variable de entorno local, nunca en el repo). Decisión delegada al agente por el humano.
+
 ## Decisiones pendientes
 
 - Política de retención/agregación del historial de mediciones (Fase 2).

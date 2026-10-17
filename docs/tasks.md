@@ -142,7 +142,7 @@ Reglas:
 ## Registro de verificación
 
 - **T-10 — Completada el 17/10/2026.** Verificado: `npm run test` (1 test de humo, aprobado), `npm run build` (tsc + vite build sin errores), `npm run lint` (sin incidencias). Dependencias instaladas con autorización: react@19.3.1, vite@8.3.4, vitest@4.1.12, typescript@6.0.3, eslint@10.13.0; 0 vulnerabilidades reportadas. Estructura creada en `web/` (decisión aprobada). Desviación menor del criterio original: en vez de "0 tests", se incluyó un test de humo para comprobar que la infraestructura de tests realmente ejecuta — se declara explícitamente.
-- **Pendiente de decisión:** `opencode.json` contiene una API key de Context7; no se ha commiteado por la prohibición de publicar credenciales (AGENTS.md §5).
+- **`opencode.json` — Resuelto el 17/10/2026 (decisión del agente, delegada por el humano):** se versiona el archivo con la API key de Context7 externalizada a `{env:CONTEXT7_API_KEY}` (sustitución soportada por OpenCode), y la clave se configuró como variable de entorno de usuario en la máquina local (no se publica). Verificado: `grep ctx7sk opencode.json` → 0 coincidencias.
 
 ## Fuera de esta versión (M5, post-MVP)
 
