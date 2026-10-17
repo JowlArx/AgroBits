@@ -139,6 +139,11 @@ Reglas:
 
 ---
 
+## Registro de verificación
+
+- **T-10 — Completada el 17/10/2026.** Verificado: `npm run test` (1 test de humo, aprobado), `npm run build` (tsc + vite build sin errores), `npm run lint` (sin incidencias). Dependencias instaladas con autorización: react@19.3.1, vite@8.3.4, vitest@4.1.12, typescript@6.0.3, eslint@10.13.0; 0 vulnerabilidades reportadas. Estructura creada en `web/` (decisión aprobada). Desviación menor del criterio original: en vez de "0 tests", se incluyó un test de humo para comprobar que la infraestructura de tests realmente ejecuta — se declara explícitamente.
+- **Pendiente de decisión:** `opencode.json` contiene una API key de Context7; no se ha commiteado por la prohibición de publicar credenciales (AGENTS.md §5).
+
 ## Fuera de esta versión (M5, post-MVP)
 
 Historial de mediciones, firmware ESP32 y tokens de dispositivo, compartir sensores entre usuarios, notificaciones externas. No generar tareas de este bloque sin modificación aprobada de `docs/spec.md`.
