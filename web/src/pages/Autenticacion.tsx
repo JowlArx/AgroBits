@@ -33,7 +33,7 @@ export default function Autenticacion() {
   }
 
   return (
-    <section data-testid="pantalla-acceso">
+    <section data-testid="pantalla-acceso" className="pantalla-acceso">
       <h2>{modo === 'sesion' ? 'Iniciar sesión' : 'Crear cuenta'}</h2>
 
       <form onSubmit={enviar}>
@@ -57,14 +57,15 @@ export default function Autenticacion() {
             type="password"
             name="clave"
             autoComplete={modo === 'sesion' ? 'current-password' : 'new-password'}
+            aria-describedby="reglas-clave"
             data-testid="clave"
             value={clave}
             onChange={(e) => setClave(e.target.value)}
           />
           {/* R-01 AC3 / riesgo T-22: la regla queda documentada en pantalla. */}
-          <small data-testid="reglas-clave">Mínimo {LONGITUD_MINIMA_CLAVE} caracteres.</small>
+          <small id="reglas-clave" data-testid="reglas-clave">Mínimo {LONGITUD_MINIMA_CLAVE} caracteres.</small>
         </label>
-        <button type="submit" data-testid="enviar-acceso" disabled={enviando}>
+        <button type="submit" className="btn-primario" data-testid="enviar-acceso" disabled={enviando}>
           {enviando ? 'Un momento…' : modo === 'sesion' ? 'Entrar' : 'Crear cuenta'}
         </button>
         {error && (
@@ -74,7 +75,7 @@ export default function Autenticacion() {
         )}
       </form>
 
-      <button type="button" data-testid="cambiar-modo" onClick={cambiarModo}>
+      <button type="button" className="enlace-boton" data-testid="cambiar-modo" onClick={cambiarModo}>
         {modo === 'sesion' ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
       </button>
     </section>

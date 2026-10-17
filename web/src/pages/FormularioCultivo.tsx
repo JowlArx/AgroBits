@@ -168,7 +168,7 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
         </fieldset>
 
         <div className="acciones">
-          <button type="submit" disabled={guardando}>
+          <button type="submit" className="btn-primario" disabled={guardando}>
             {guardando ? 'Guardando…' : 'Guardar'}
           </button>
           <button type="button" onClick={onCancelar}>

@@ -1,149 +1,561 @@
+/* ==========================================================================
+   AgroBits — sistema de estilos
+   Dirección visual: estación de monitoreo agrícola para cultivadores
+   pequeños (balcón / huerto). Papel blanco-verdoso, tinta verde-negra,
+   verde botánico como marca y ámbar-señal reservado en exclusiva a las
+   alertas: lo único con voz alta en toda la interfaz.
+   Temas claro/oscuro con tokens; contraste verificado (WCAG AA).
+   ========================================================================== */
+
 :root {
   color-scheme: light dark;
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Familias tipográficas */
+  --fuente-titulo: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --fuente-texto: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Escala de espacio (base 8px) */
+  --espacio-1: 0.25rem;
+  --espacio-2: 0.5rem;
+  --espacio-3: 0.75rem;
+  --espacio-4: 1rem;
+  --espacio-5: 1.5rem;
+  --espacio-6: 2rem;
+
+  /* Tema claro */
+  --fondo: #f6f8f4;
+  --superficie: #ffffff;
+  --texto: #12211a;
+  --texto-tenue: #5b6660;
+  --marca: #1e5b3d;
+  --marca-hover: #2e7d57;
+  --sobre-marca: #ffffff;
+  --senal: #c2410c;
+  --senal-suave: #fdf0e7;
+  --borde: #d8dfd6;
+  --borde-input: #78857d;
+  --foco: #1e5b3d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #0e1712;
+    --superficie: #16211b;
+    --texto: #e7ede7;
+    --texto-tenue: #9daa9f;
+    --marca: #74c894;
+    --marca-hover: #93d8ad;
+    --sobre-marca: #0e1712;
+    --senal: #f97316;
+    --senal-suave: #2c1a0e;
+    --borde: #2a3830;
+    --borde-input: #4a5a50;
+    --foco: #74c894;
+  }
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: var(--fuente-texto);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--fuente-titulo);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--texto);
+  margin: 0 0 var(--espacio-3);
+}
+
+h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  font-size: 1.35rem;
+}
+
+h3 {
+  font-size: 1.05rem;
+  margin-top: var(--espacio-5);
 }
 
 .app {
-  max-width: 760px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 1rem 1rem 3rem;
+  padding: var(--espacio-4) var(--espacio-4) var(--espacio-6);
 }
+
+main {
+  display: flow-root;
+}
+
+main > section + section {
+  margin-top: var(--espacio-5);
+}
+
+/* Utilidad para texto disponible solo para lectores de pantalla */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Enlace de salto para teclado (WCAG 2.4.1) */
+.saltar-contenido {
+  position: absolute;
+  left: var(--espacio-4);
+  top: var(--espacio-4);
+  transform: translateY(-300%);
+  z-index: 10;
+  background: var(--marca);
+  color: var(--sobre-marca);
+  padding: var(--espacio-2) var(--espacio-3);
+  border-radius: 6px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.saltar-contenido:focus {
+  transform: none;
+}
+
+/* Cabecera ---------------------------------------------------------------- */
 
 .cabecera {
   display: flex;
-  align-items: baseline;
-  gap: 0.75rem;
-  border-bottom: 1px solid #8884;
-  padding-bottom: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--espacio-3);
+  border-bottom: 1px solid var(--borde);
+  padding-bottom: var(--espacio-3);
+  margin-bottom: var(--espacio-5);
 }
 
 .cabecera h1 {
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+.marca {
+  color: var(--marca);
+  flex: none;
 }
 
 .cabecera nav {
   margin-left: auto;
   display: flex;
-  gap: 0.5rem;
+  gap: var(--espacio-1);
 }
 
-.fila-sensor {
+.cabecera nav button {
+  border-color: transparent;
+  background: transparent;
+  color: var(--texto-tenue);
+}
+
+.cabecera nav button:hover {
+  border-color: var(--borde-input);
+}
+
+.cabecera nav button[aria-current='page'] {
+  color: var(--marca);
+  font-weight: 700;
+  box-shadow: inset 0 -2px 0 var(--marca);
+}
+
+.cabecera > button {
+  min-height: 2.25rem;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+/* Botones ----------------------------------------------------------------- */
+
+button {
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  min-height: 2.75rem;
+  padding: 0 var(--espacio-3);
+  border: 1px solid var(--borde-input);
+  border-radius: 6px;
+  background: var(--superficie);
+  color: var(--texto);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+button:hover {
+  border-color: var(--marca);
+  color: var(--marca);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button:disabled:hover {
+  border-color: var(--borde-input);
+  color: var(--texto);
+}
+
+button.btn-primario {
+  background: var(--marca);
+  border-color: var(--marca);
+  color: var(--sobre-marca);
+}
+
+button.btn-primario:hover {
+  background: var(--marca-hover);
+  border-color: var(--marca-hover);
+  color: var(--sobre-marca);
+}
+
+button.btn-peligro {
+  color: var(--senal);
+  border-color: var(--senal);
+}
+
+button.btn-peligro:hover {
+  background: var(--senal-suave);
+  color: var(--senal);
+}
+
+/* Botón que actúa como enlace (cambio de modo de acceso) */
+button.enlace-boton {
+  min-height: 2.75rem;
+  border: none;
+  background: none;
+  color: var(--marca);
+  font-weight: 400;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0;
+}
+
+button.enlace-boton:hover {
+  color: var(--marca-hover);
+  background: none;
+  border: none;
+}
+
+/* Foco visible con contraste ≥ 3:1 (WCAG 2.4.7 / 1.4.11) */
+:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+/* Formularios ------------------------------------------------------------- */
+
+form label {
   display: flex;
-  gap: 0.5rem;
-  align-items: end;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
+  flex-direction: column;
+  gap: var(--espacio-1);
+  margin-bottom: var(--espacio-4);
+  font-size: 0.95rem;
+  font-weight: 700;
 }
 
-.sin-datos {
-  color: #888;
-  font-style: italic;
+form input,
+form select {
+  font: inherit;
+  font-weight: 400;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--borde-input);
+  border-radius: 6px;
+  padding: 0.45rem var(--espacio-2);
+  min-height: 2.75rem;
 }
 
-.alerta-activa {
-  border-color: #c0392b66;
+form input::placeholder {
+  color: var(--texto-tenue);
 }
 
-.etiqueta.alerta-activa {
-  background: #c0392b33;
+form input[aria-invalid='true'] {
+  border-color: var(--senal);
 }
 
-.alerta-resuelta {
-  opacity: 0.85;
-}
-
-.etiqueta {
+form small {
+  color: var(--texto-tenue);
+  font-weight: 400;
   font-size: 0.8rem;
-  background: #8882;
-  border-radius: 999px;
-  padding: 0.15rem 0.6rem;
 }
+
+fieldset {
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: var(--espacio-3) var(--espacio-4) var(--espacio-2);
+  margin: 0 0 var(--espacio-4);
+}
+
+legend {
+  font-family: var(--fuente-titulo);
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 0 var(--espacio-1);
+}
+
+/* Filas y utilidades de disposición --------------------------------------- */
 
 .fila-entre {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: var(--espacio-3);
+  flex-wrap: wrap;
 }
+
+.acciones {
+  display: flex;
+  gap: var(--espacio-2);
+  flex-wrap: wrap;
+}
+
+.fila-sensor {
+  display: flex;
+  gap: var(--espacio-2);
+  align-items: end;
+  flex-wrap: wrap;
+  margin-bottom: var(--espacio-4);
+}
+
+.fila-sensor label {
+  flex: 0 1 20rem;
+  margin-bottom: 0;
+}
+
+.fila-umbral {
+  display: grid;
+  grid-template-columns: 1fr 7.5rem 7.5rem;
+  gap: var(--espacio-2);
+  align-items: end;
+  margin-bottom: var(--espacio-2);
+}
+
+.etiqueta-umbral {
+  align-self: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.fila-umbral label {
+  margin-bottom: 0;
+}
+
+/* Listas y tarjetas ------------------------------------------------------- */
 
 .lista-cultivos {
   list-style: none;
+  margin: 0;
   padding: 0;
   display: grid;
-  gap: 1rem;
+  gap: var(--espacio-4);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+}
+
+.lista-cultivos li {
+  min-width: 0;
 }
 
 .tarjeta-cultivo {
-  border: 1px solid #8884;
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
+  height: 100%;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: var(--espacio-4);
 }
 
+/* Estados vacíos: invitación a actuar, no decoración */
+.estado-vacio {
+  border: 1px dashed var(--borde-input);
+  border-radius: 10px;
+  padding: var(--espacio-4);
+  color: var(--texto-tenue);
+}
+
+/* Tablas ------------------------------------------------------------------ */
+
 .tabla-umbrales {
-  margin-top: 0.5rem;
-  border-collapse: collapse;
   width: 100%;
-  font-size: 0.9rem;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  margin-top: var(--espacio-3);
 }
 
 .tabla-umbrales th,
 .tabla-umbrales td {
   text-align: left;
-  padding: 0.2rem 0.5rem;
-  border-bottom: 1px solid #8883;
+  padding: var(--espacio-2) var(--espacio-3);
+  border-bottom: 1px solid var(--borde);
 }
 
-.acciones {
-  display: flex;
-  gap: 0.5rem;
+.tabla-umbrales th {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--texto-tenue);
 }
+
+.tabla-umbrales td {
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla-umbrales tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Etiquetas (chips) ------------------------------------------------------- */
+
+.etiqueta {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--texto-tenue);
+  background: transparent;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  padding: 0.1rem var(--espacio-2);
+  overflow-wrap: anywhere;
+}
+
+/* Avisos informativos (referencia orientativa del catálogo, notas) -------- */
 
 .aviso {
-  font-size: 0.85rem;
-  background: #8882;
-  border-left: 3px solid #8886;
-  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  color: var(--texto-tenue);
+  border-left: 3px solid var(--marca);
+  padding: var(--espacio-2) var(--espacio-3);
+  margin: 0 0 var(--espacio-4);
 }
 
-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 0.75rem;
-}
+/* Detalle en dos columnas (dt/dd) de las alertas -------------------------- */
 
-form input,
-form select {
-  padding: 0.4rem;
-  font: inherit;
-}
-
-fieldset {
-  border: 1px solid #8884;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-}
-
-.fila-umbral {
+dl {
   display: grid;
-  grid-template-columns: 1fr 120px 120px;
-  gap: 0.5rem;
-  align-items: end;
-  margin-bottom: 0.5rem;
+  grid-template-columns: auto 1fr;
+  gap: var(--espacio-1) var(--espacio-3);
+  margin: var(--espacio-3) 0 0;
 }
 
-.etiqueta-umbral {
-  align-self: center;
+dt {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--texto-tenue);
 }
+
+dd {
+  margin: 0;
+}
+
+/* Estados de medición y alerta -------------------------------------------- */
+
+.sin-datos {
+  color: var(--texto-tenue);
+  font-style: italic;
+}
+
+/* La señal ámbar: únicamente las alertas activas la usan */
+.alerta-activa {
+  border-color: var(--senal);
+}
+
+.etiqueta.alerta-activa {
+  color: var(--senal);
+  border-color: var(--senal);
+  background: var(--senal-suave);
+}
+
+.alerta-resuelta {
+  border-color: var(--borde);
+}
+
+/* Errores (role="alert") -------------------------------------------------- */
 
 [role='alert'] {
-  background: #c0392b22;
-  border: 1px solid #c0392b66;
+  background: var(--senal-suave);
+  border: 1px solid var(--senal);
   border-radius: 8px;
-  padding: 0.5rem 0.75rem;
-  margin-bottom: 1rem;
+  padding: var(--espacio-2) var(--espacio-3);
+  margin: 0 0 var(--espacio-4);
+  color: var(--texto);
+}
+
+[role='alert'] ul {
+  margin: var(--espacio-1) 0 0;
+  padding-left: var(--espacio-4);
+}
+
+/* Pantalla de acceso ------------------------------------------------------ */
+
+.pantalla-acceso {
+  max-width: 24rem;
+  margin: var(--espacio-6) auto 0;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: var(--espacio-5);
+}
+
+.pantalla-acceso form button[type='submit'] {
+  width: 100%;
+}
+
+/* Responsivo -------------------------------------------------------------- */
+
+@media (max-width: 34rem) {
+  .fila-umbral {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .etiqueta-umbral {
+    grid-column: 1 / -1;
+  }
+
+  .cabecera nav {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+/* Accesibilidad: respeta la preferencia de movimiento reducido ------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  button:active {
+    transform: none;
+  }
 }

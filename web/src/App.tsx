@@ -28,8 +28,20 @@ export default function App() {
 
   return (
     <div className="app">
+      {/* WCAG 2.4.1: el teclado puede saltarse la cabecera. */}
+      <a className="saltar-contenido" href="#contenido">
+        Saltar al contenido
+      </a>
       <header className="cabecera">
-        <h1>AgroBits</h1>
+        <h1>
+          <svg className="marca" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              fill="currentColor"
+              d="M12 3c-1.5 3-4 5-7 5.5C6 14 8.5 18 12 21c3.5-3 6-7 7-12.5-3-.5-5.5-2.5-7-5.5Z"
+            />
+          </svg>
+          AgroBits
+        </h1>
         <span className="etiqueta">Acceso y datos con Supabase (T-24)</span>
         {sesion && (
           <>
@@ -39,11 +51,21 @@ export default function App() {
             <button type="button" data-testid="cerrar-sesion" onClick={() => void cerrarSesion()}>
               Cerrar sesión
             </button>
-            <nav>
-              <button type="button" data-testid="nav-cultivos" onClick={() => setVista({ tipo: 'lista' })}>
+            <nav aria-label="Principal">
+              <button
+                type="button"
+                data-testid="nav-cultivos"
+                aria-current={vista.tipo === 'alertas' ? undefined : 'page'}
+                onClick={() => setVista({ tipo: 'lista' })}
+              >
                 Cultivos
               </button>
-              <button type="button" data-testid="nav-alertas" onClick={() => setVista({ tipo: 'alertas' })}>
+              <button
+                type="button"
+                data-testid="nav-alertas"
+                aria-current={vista.tipo === 'alertas' ? 'page' : undefined}
+                onClick={() => setVista({ tipo: 'alertas' })}
+              >
                 Alertas
               </button>
             </nav>
@@ -51,7 +73,7 @@ export default function App() {
         )}
       </header>
 
-      <main>
+      <main id="contenido">
         {!sesion ? (
           <Autenticacion />
         ) : (

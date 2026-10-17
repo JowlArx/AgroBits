@@ -52,7 +52,7 @@ export default function Alertas() {
     <section>
       <h2>Alertas</h2>
       {alertas.length === 0 ? (
-        <p data-testid="vacio-alertas">
+        <p data-testid="vacio-alertas" className="estado-vacio">
           No hay alertas: ninguna medición ha salido fuera del rango de sus cultivos.
         </p>
       ) : (
