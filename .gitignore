@@ -1,0 +1,21 @@
+# Dependencias
+node_modules/
+
+# Entornos y secretos — nunca en el repositorio (AGENTS.md §5/§6)
+.env
+.env.*
+*.local
+
+# Builds
+dist/
+build/
+
+# Registros
+*.log
+npm-debug.log*
+
+# Editores y sistema
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
