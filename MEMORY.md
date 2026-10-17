@@ -4,7 +4,7 @@
 
 AgroBits se encuentra en la fase de definición de requisitos (Spec-Driven Development).
 
-La especificación del MVP (`docs/spec.md` v2) está redactada y **pendiente de aprobación humana**. Todavía no se ha aprobado la arquitectura ni se ha iniciado la implementación.
+La especificación del MVP (`docs/spec.md` v2) fue **aprobada por el humano el 16/10/2026** (hito M0) y el plan (`docs/plan.md`) fue **aprobado el 16/10/2026** (hito M1). Siguiente paso: desglose de tareas (M2). Todavía no se ha iniciado la implementación.
 
 ## Objetivo
 
@@ -40,19 +40,24 @@ Clarificación del MVP (16/10/2026):
 - **D10 — Versionado:** commit inicial de la documentación en `master` como punto de partida.
 - **D11 — Equipo:** agentes especializados (planner / implementador / verificador) con documentos de handoff entre ellos y aprobación humana en los hitos.
 
+Planificación (16/10/2026):
+
+- **D12 — Frontend:** Vite + React + TypeScript (SPA en ambas fases).
+- **D13 — Backend/infraestructura Fase 2:** Supabase (Postgres + RLS + Auth + API generada), en tier gratuito. El agente tendrá acceso mediante MCP Supabase; la creación de cuenta/proyecto la realiza el humano. Hosting estático gratuito para la SPA.
+- **D14 — Modelo de alertas:** una única alerta activa por (cultivo, tipo), que se mantiene activa mientras la medición siga fuera de rango y se marca resuelta al volver al rango.
+- **D15 — Frecuencia simulada:** 1 lectura cada 5 minutos por sensor en el generador de datos.
+
 ## Decisiones pendientes
 
-- Framework y arquitectura del frontend (etapa de planificación).
-- Base de datos y servicios concretos dentro de la plataforma managed elegida.
-- Protocolo de comunicación del ESP32 (post-MVP).
-- Frecuencia de muestreo y política de retención del historial (post-MVP, pero condiciona el modelo de datos).
+- Política de retención/agregación del historial de mediciones (Fase 2).
 - Contenido y fuentes del catálogo inicial de cultivos.
 - Formato concreto de handoff entre agentes especializados (D11).
-- Modelado de alertas: una por lectura fuera de rango vs. una activa por incidencia (ver preguntas abiertas de spec.md).
+- Protocolo de comunicación del ESP32 (post-MVP).
+- Aprobación de `docs/plan.md` → completada el 16/10/2026 (M1).
 
 ## Próximo objetivo
 
-Aprobar `docs/spec.md` v2 y, a partir de ella, elaborar `docs/plan.md` (arquitectura, modelo de datos, seguridad, pruebas y secuencia) antes de generar código.
+Desglosar `docs/tasks.md` a partir del plan aprobado (M2) y someterlo a aprobación humana antes de generar código.
 
 ## Reglas de actualización
 

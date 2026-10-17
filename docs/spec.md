@@ -2,8 +2,8 @@
 
 ## Estado
 
-v2 — Redactada tras la sesión de clarificación del 16/10/2026 (decisiones D1–D11 en `MEMORY.md`).
-**Pendiente de aprobación humana.** No se implementa nada hasta que esta especificación y el plan correspondiente estén aprobados.
+v2 — Redactada tras la sesión de clarificación del 16/10/2026 (decisiones D1–D15 en `MEMORY.md`).
+**Aprobada por el humano el 16/10/2026** (hito M0). Modificada en la misma fecha para incorporar el modelo de alertas D14 (R-13) y resolver la pregunta correspondiente de §8.
 
 Nota sobre fases: según la decisión D6, el proyecto avanza en dos fases (Fase 1: interfaz con datos simulados y auth provisional; Fase 2: backend, base de datos y auth real). Salvo indicación, los criterios de aceptación se verifican en la fase en la que el requisito queda implementado. Los criterios marcados como **[F2]** no pueden verificarse en la Fase 1, y su equivalente provisional en Fase 1 no se acepta como validación definitiva.
 
@@ -96,9 +96,11 @@ Cada cultivo define un par [mín, máx] por tipo de medición (decisión D3: val
 
 ### F. Alertas
 
-- **R-13** Cuando una medición de un cultivo caiga fuera del rango [mín, máx] definido para ese cultivo y tipo, el sistema debe generar una alerta.
-  - AC1: con una medición fuera de rango, se crea una alerta asociada al cultivo, con tipo, valor leído y hora.
-  - AC2: con una medición dentro del rango, no se crea una nueva alerta.
+- **R-13** Cuando una medición de un cultivo caiga fuera del rango [mín, máx] definido para ese cultivo y tipo, y no exista ya una alerta activa para ese cultivo y tipo, el sistema debe generar una alerta; la alerta se mantiene activa mientras la condición persista y se marca como resuelta cuando la medición vuelva al rango (decisión D14).
+  - AC1: con una medición fuera de rango y sin alerta activa de ese cultivo y tipo, se crea una alerta con tipo, valor leído y hora.
+  - AC2: con mediciones sucesivas fuera de rango del mismo cultivo y tipo, no se crean alertas duplicadas: la alerta activa persiste.
+  - AC3: cuando una medición vuelve al rango, la alerta activa de ese cultivo y tipo se marca como resuelta.
+  - AC4: con una medición dentro del rango y sin alerta previa, no se crea ninguna alerta.
 - **R-14** Mientras un usuario esté autenticado, el sistema debe mostrar las alertas de sus cultivos.
   - AC1: la lista de alertas solo contiene alertas de cultivos del usuario en sesión. **[F2]**
   - AC2: el usuario puede ver el detalle de una alerta (cultivo, tipo, valor, hora).
@@ -123,7 +125,9 @@ Estos elementos no deben aparecer en tareas del MVP salvo aprobación explícita
 
 ## 8. Preguntas abiertas (restantes tras la clarificación)
 
-- ¿Con qué frecuencia se toman las mediciones y durante cuánto tiempo se conservan? (Afecta al coste de almacenamiento; puede posponerse hasta la Fase 2, pero condiciona el modelo de datos.)
-- ¿Una medición repetidamente fuera de rango genera una alerta por cada lectura o una única alerta que se mantiene activa hasta volver al rango? (Afecta al diseño de la tabla de alertas.)
+- Retención de `measurements`: ¿durante cuánto tiempo se conservan las mediciones y cuándo se agregan o archivan? (Posponible a Fase 2; no bloquea el modelo de datos porque `measured_at` queda indexado desde el inicio.) *Frecuencia del simulador ya decidida: 1 lectura cada 5 minutos por sensor (D15).*
 - ¿Qué cultivos incluye el catálogo inicial y con qué fuentes se justifican sus umbrales? (Se debe documentar que son referencias orientativas.)
 - ¿Se mantienen "otros perfiles de usuario" además de huerta doméstica y pequeño cultivo, o se elimina de los usuarios objetivo?
+
+Resueltas en esta versión:
+- ~~Modelo de alertas~~ → decisión D14: una alerta activa por (cultivo, tipo) que se mantiene hasta volver al rango (R-13).
