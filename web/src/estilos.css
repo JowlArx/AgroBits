@@ -25,6 +25,37 @@ body {
   margin: 0;
 }
 
+.cabecera nav {
+  margin-left: auto;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.fila-sensor {
+  display: flex;
+  gap: 0.5rem;
+  align-items: end;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.sin-datos {
+  color: #888;
+  font-style: italic;
+}
+
+.alerta-activa {
+  border-color: #c0392b66;
+}
+
+.etiqueta.alerta-activa {
+  background: #c0392b33;
+}
+
+.alerta-resuelta {
+  opacity: 0.85;
+}
+
 .etiqueta {
   font-size: 0.8rem;
   background: #8882;

@@ -12,6 +12,7 @@ import {
   obtenerSensoresDeCultivo,
   suscribirSensores,
 } from '../data/storeSensores'
+import { procesarLecturas } from '../data/storeAlertas'
 import { obtenerCultivo, suscribirCultivos, obtenerCultivos } from '../data/storeCultivos'
 import { TIPOS_MEDICION } from '../domain/tipos'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
@@ -134,7 +135,11 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
         <button
           type="button"
           data-testid="simular-lectura"
-          onClick={() => sensores.forEach((sensor) => generarLectura(sensor.id))}
+          onClick={() => {
+            sensores.forEach((sensor) => generarLectura(sensor.id))
+            // R-13: cada nueva lectura se evalúa contra los umbrales (D14).
+            procesarLecturas(cultivo, ultimasPorTipo(sensores.map((s) => s.id)))
+          }}
         >
           Generar lectura simulada
         </button>

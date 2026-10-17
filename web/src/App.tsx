@@ -2,12 +2,14 @@ import { useState } from 'react'
 import ListaCultivos from './pages/ListaCultivos'
 import FormularioCultivo from './pages/FormularioCultivo'
 import DetalleCultivo from './pages/DetalleCultivo'
+import Alertas from './pages/Alertas'
 
 type Vista =
   | { tipo: 'lista' }
   | { tipo: 'nuevo' }
   | { tipo: 'editar'; id: string }
   | { tipo: 'detalle'; id: string }
+  | { tipo: 'alertas' }
 
 export default function App() {
   const [vista, setVista] = useState<Vista>({ tipo: 'lista' })
@@ -17,6 +19,14 @@ export default function App() {
       <header className="cabecera">
         <h1>AgroBits</h1>
         <span className="etiqueta">Fase 1 — datos simulados · acceso provisional</span>
+        <nav>
+          <button type="button" data-testid="nav-cultivos" onClick={() => setVista({ tipo: 'lista' })}>
+            Cultivos
+          </button>
+          <button type="button" data-testid="nav-alertas" onClick={() => setVista({ tipo: 'alertas' })}>
+            Alertas
+          </button>
+        </nav>
       </header>
 
       <main>
@@ -40,6 +50,7 @@ export default function App() {
         {vista.tipo === 'detalle' && (
           <DetalleCultivo cultivoId={vista.id} onVolver={() => setVista({ tipo: 'lista' })} />
         )}
+        {vista.tipo === 'alertas' && <Alertas />}
       </main>
     </div>
   )
