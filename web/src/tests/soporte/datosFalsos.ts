@@ -1,12 +1,18 @@
-// T-23 — Doble en memoria del ProveedorDatos para los tests (sin red).
+// T-23/T-25 — Doble en memoria del ProveedorDatos para los tests (sin red).
 // Sustituye a la lógica en memoria de la Fase 1: las stores pasaron a delegar
 // en el proveedor, de modo que estas pruebas ejercitan el mismo flujo que la
 // aplicación real (store → proveedor → caché), con ids `cN`/`sN` estables
 // (mismo criterio de numeración que la Fase 1, esperado por los tests).
+// T-25: `registrarLectura` EMULA el trigger de la BD (evaluación D14 con la
+// misma regla del dominio de T-11) y `cargarAlertas` devuelve el resultado;
+// la semántica REAL del trigger se verifica con la suite SQL versionada en
+// `supabase/tests/20261017_t25_evaluacion_alertas.sql`.
 
-import type { Cultivo, Medicion } from '../../domain/tipos'
+import { evaluarAlerta } from '../../domain/alertas'
+import { TIPOS_MEDICION, type Cultivo, type Medicion, type TipoMedicion } from '../../domain/tipos'
 import type { ErrorCampo, NuevoCultivo, ProveedorDatos, Resultado } from '../../data/datos/proveedorDatos'
 import type { Sensor } from '../../data/storeSensores'
+import type { Alerta } from '../../data/storeAlertas'
 
 const exito = <T>(valor: T): Resultado<T> => ({ ok: true, valor })
 const fallo = (errores: ErrorCampo[]): Resultado<never> => ({ ok: false, errores })
@@ -17,6 +23,8 @@ export class DatosFalsos implements ProveedorDatos {
   private sensores: Sensor[] = []
   private contadorSensor = 0
   private mediciones = new Map<string, Medicion[]>()
+  private alertas: Alerta[] = []
+  private contadorAlerta = 0
 
   // — Cultivos ————————————————————————————————————————————————
 
@@ -50,6 +58,8 @@ export class DatosFalsos implements ProveedorDatos {
 
   async eliminarCultivo(id: string): Promise<void> {
     this.cultivos = this.cultivos.filter((c) => c.id !== id)
+    // Emula la cascada de la BD (`alerts.crop_id ... on delete cascade`).
+    this.alertas = this.alertas.filter((a) => a.cultivoId !== id)
   }
 
   // — Sensores ———————————————————————————————————————————————
@@ -106,10 +116,66 @@ export class DatosFalsos implements ProveedorDatos {
       serie.push(medicion)
       this.mediciones.set(medicion.sensorId, serie)
     }
+    // T-25: emula el trigger de la BD — cada lectura evalúa sus cultivos.
+    for (const medicion of mediciones) this.evaluarAlertasDeSensor(medicion.sensorId)
     return exito([...mediciones])
   }
 
   async eliminarMediciones(sensorIds: readonly string[]): Promise<void> {
     for (const id of sensorIds) this.mediciones.delete(id)
+  }
+
+  // — Alertas (emulación del trigger T-25) ————————————————————————
+
+  async cargarAlertas(): Promise<Alerta[]> {
+    return this.alertas.map((a) => ({ ...a }))
+  }
+
+  private hayActiva(cultivoId: string, tipo: TipoMedicion): Alerta | undefined {
+    return this.alertas.find((a) => a.cultivoId === cultivoId && a.tipo === tipo && a.estado === 'activa')
+  }
+
+  /** Misma semántica que el trigger de la BD: D14 sobre la última lectura por tipo del cultivo. */
+  private evaluarAlertasDeSensor(sensorId: string): void {
+    const sensor = this.sensores.find((s) => s.id === sensorId)
+    if (!sensor) return
+
+    for (const cultivoId of sensor.cultivoIds) {
+      const cultivo = this.cultivos.find((c) => c.id === cultivoId)
+      if (!cultivo) continue
+
+      for (const tipo of TIPOS_MEDICION) {
+        let ultima: Medicion | undefined
+        for (const s of this.sensores) {
+          if (!s.cultivoIds.includes(cultivoId)) continue
+          for (const medicion of this.mediciones.get(s.id) ?? []) {
+            if (medicion.tipo === tipo && (!ultima || medicion.medidaEn >= ultima.medidaEn)) ultima = medicion
+          }
+        }
+        if (!ultima) continue
+        const valor = ultima.valor
+        const hora = ultima.medidaEn
+
+        const activa = this.hayActiva(cultivoId, tipo)
+        const accion = evaluarAlerta(valor, cultivo.umbrales[tipo], activa !== undefined)
+
+        if (accion === 'crear') {
+          this.alertas.push({
+            id: `a${++this.contadorAlerta}`,
+            cultivoId,
+            tipo,
+            valor,
+            estado: 'activa',
+            creadaEn: hora,
+          })
+        } else if (accion === 'mantener' && activa) {
+          this.alertas = this.alertas.map((a) => (a.id === activa.id ? { ...a, valor } : a))
+        } else if (accion === 'resolver' && activa) {
+          this.alertas = this.alertas.map((a) =>
+            a.id === activa.id ? { ...a, estado: 'resuelta' as const, valor, resueltaEn: hora } : a,
+          )
+        }
+      }
+    }
   }
 }

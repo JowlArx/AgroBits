@@ -1,10 +1,15 @@
-// T-15 — Store de alertas (R-13/R-14, modelo D14).
-// Una única alerta ACTIVA por (cultivo, tipo): se crea al salir del rango,
-// se mantiene mientras persista (sin duplicados) y se resuelve al volver
-// dentro de rango. Usa la regla pura evaluarAlerta() de T-11.
+// T-15/T-25 — Store de alertas (R-13/R-14, modelo D14). Desde T-25 la
+// EVALUACIÓN vive en la BD: un trigger sobre `measurements`
+// (`evaluar_alertas_de_sensor`, migración T-25) crea, mantiene y resuelve las
+// alertas con la regla del dominio, de modo que cualquier escritor de
+// mediciones —la SPA hoy, el ESP32 o un generador continuo mañana— queda
+// evaluado en un único punto, y el índice único parcial de D14
+// (`alerts_unica_activa_por_cultivo_tipo`) hace imposible el duplicado bajo
+// concurrencia. Este store es solo una fachada con caché síncrona que carga
+// desde el ProveedorDatos (mismo patrón que cultivos/sensores/mediciones).
 
-import { evaluarAlerta } from '../domain/alertas'
-import { TIPOS_MEDICION, type Cultivo, type Medicion, type TipoMedicion } from '../domain/tipos'
+import { exigirProveedor } from './datos/proveedorDatos'
+import type { TipoMedicion } from '../domain/tipos'
 
 export interface Alerta {
   id: string
@@ -17,7 +22,6 @@ export interface Alerta {
 }
 
 let alertas: Alerta[] = []
-let contador = 0
 const oyentes = new Set<() => void>()
 
 function notificar(): void {
@@ -34,50 +38,14 @@ export function obtenerAlertas(): Alerta[] {
   return alertas
 }
 
-function buscarActiva(cultivoId: string, tipo: TipoMedicion): Alerta | undefined {
-  return alertas.find((a) => a.cultivoId === cultivoId && a.tipo === tipo && a.estado === 'activa')
-}
-
-/**
- * Evalúa las últimas mediciones de cada tipo frente a los umbrales del
- * cultivo y aplica el modelo D14 (crear / mantener / resolver / nada).
- */
-export function procesarLecturas(
-  cultivo: Cultivo,
-  ultimas: Record<TipoMedicion, Medicion | undefined>,
-): void {
-  let huboCambios = false
-
-  for (const tipo of TIPOS_MEDICION) {
-    const medicion = ultimas[tipo]
-    if (!medicion) continue
-
-    const activa = buscarActiva(cultivo.id, tipo)
-    const accion = evaluarAlerta(medicion.valor, cultivo.umbrales[tipo], activa !== undefined)
-
-    if (accion === 'crear') {
-      alertas.push({
-        id: `a${++contador}`,
-        cultivoId: cultivo.id,
-        tipo,
-        valor: medicion.valor,
-        estado: 'activa',
-        creadaEn: medicion.medidaEn,
-      })
-      huboCambios = true
-    } else if (accion === 'mantener' && activa) {
-      // La alerta activa pasa a reflejar la última lectura (sin duplicar).
-      alertas = alertas.map((a) => (a.id === activa.id ? { ...a, valor: medicion.valor } : a))
-      huboCambios = true
-    } else if (accion === 'resolver' && activa) {
-      alertas = alertas.map((a) =>
-        a.id === activa.id ? { ...a, estado: 'resuelta' as const, valor: medicion.valor, resueltaEn: medicion.medidaEn } : a,
-      )
-      huboCambios = true
-    }
+/** T-25: carga desde la BD las alertas de los cultivos del usuario (R-14). */
+export async function cargarAlertas(): Promise<void> {
+  try {
+    alertas = await exigirProveedor().cargarAlertas()
+    notificar()
+  } catch (error) {
+    console.error('No se pudieron cargar las alertas', error)
   }
-
-  if (huboCambios) notificar()
 }
 
 /** Activas primero y, dentro de cada grupo, más recientes primero. */
@@ -86,19 +54,8 @@ export function alertasOrdenadas(): Alerta[] {
   return [...alertas].sort((a, b) => peso(a) - peso(b) || b.creadaEn.localeCompare(a.creadaEn))
 }
 
-export function reiniciarAlertas(): void {
+/** Vacia la caché local sin tocar el proveedor (cierre de sesión / tests). */
+export function vaciarAlertas(): void {
   alertas = []
-  contador = 0
   notificar()
-}
-
-/**
- * Hallazgo de la revisión T-17 (M3): al eliminar un cultivo sus alertas no
- * deben quedar huérfanas (mismo criterio de limpieza que T-18 aplicó a
- * asociaciones y mediciones).
- */
-export function eliminarAlertasDeCultivo(cultivoId: string): void {
-  const antes = alertas.length
-  alertas = alertas.filter((a) => a.cultivoId !== cultivoId)
-  if (alertas.length !== antes) notificar()
 }

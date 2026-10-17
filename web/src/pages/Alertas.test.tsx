@@ -4,19 +4,20 @@ import App from '../App'
 import { reiniciarCultivos } from '../data/storeCultivos'
 import { reiniciarSensores } from '../data/storeSensores'
 import { reiniciarMediciones } from '../data/medicionesSimuladas'
-import { reiniciarAlertas } from '../data/storeAlertas'
+import { vaciarAlertas } from '../data/storeAlertas'
 import { iniciarSesion } from '../data/storeSesion'
 import { TIPOS_MEDICION } from '../domain/tipos'
 
 // T-23: los pasos de cultivo/sensor/lectura son asíncronos (ProveedorDatos);
-// las alertas siguen evaluándose en memoria sobre esas lecturas (T-25 las
-// llevará a la BD).
+// T-25: la evaluación de alertas vive en la BD (trigger) y el doble
+// DatosFalsos emula ese trigger, así que la página debe recargarlas tras cada
+// lectura (se espera con findBy*/waitFor).
 beforeEach(async () => {
   await iniciarSesion('pruebas@agrobits.test', 'secreta')
   reiniciarCultivos()
   reiniciarSensores()
   reiniciarMediciones()
-  reiniciarAlertas()
+  vaciarAlertas()
 })
 
 function abrirAlertas(): void {

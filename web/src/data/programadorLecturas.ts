@@ -1,4 +1,7 @@
-// T-24 — Generador de mediciones simuladas de Fase 2 (R-10 AC2, D15).
+// T-24/T-25 — Generador de mediciones simuladas de Fase 2 (R-10 AC2, D15).
+// T-25: la evaluación de alertas (D14, R-13) vive en el trigger de la BD; el
+// tick solo recarga la caché de alertas tras escribir, para que la vista
+// (R-14) se mantenga viva sin recargar la página.
 // Mientras la SPA está abierta con sesión, este programador mantiene un tick
 // por sensor a razón de 1 lectura cada 5 minutos (decisión D15). Cada tick
 // reutiliza el mismo flujo que el botón manual: `generarLectura()` persiste en
@@ -18,33 +21,15 @@
 // `ProgramadorFalso` en `src/tests/soporte/configurarTests.ts`.
 
 import { INTERVALO_LECTURAS_MS } from './generador'
-import { generarLectura, obtenerMediciones, ultimasPorTipo } from './medicionesSimuladas'
-import { obtenerCultivo } from './storeCultivos'
-import { obtenerSensor, obtenerSensoresDeCultivo } from './storeSensores'
-import { procesarLecturas } from './storeAlertas'
+import { generarLectura, obtenerMediciones } from './medicionesSimuladas'
+import { obtenerSensor } from './storeSensores'
+import { cargarAlertas } from './storeAlertas'
 
 export interface ProgramadorLecturas {
   /** (Re)programa el tick de cada sensor indicado según su última lectura. */
   programar(sensorIds: readonly string[]): void
   /** Detiene todos los ticks (cierre de sesión / tests). */
   parar(): void
-}
-
-/**
- * Evalúa las últimas mediciones de los cultivos del sensor contra sus
- * umbrales (modelo D14, R-13) para que las lecturas automáticas mantengan
- * viva la regla de alertas mientras esa lógica siga en cliente (T-25 la
- * moverá a la BD).
- */
-function evaluarAlertasDeSensor(sensorId: string): void {
-  const sensor = obtenerSensor(sensorId)
-  if (!sensor) return
-  for (const cultivoId of sensor.cultivoIds) {
-    const cultivo = obtenerCultivo(cultivoId)
-    if (!cultivo) continue
-    const idsDeCultivo = obtenerSensoresDeCultivo(cultivoId).map((s) => s.id)
-    procesarLecturas(cultivo, ultimasPorTipo(idsDeCultivo))
-  }
 }
 
 /** Retraso hasta el siguiente tick: 0 si no hay lectura o si ya está vencida. */
@@ -96,7 +81,9 @@ export class ProgramadorTemporizado implements ProgramadorLecturas {
 
     // Si la sesión se cerró durante la escritura, no se reprograma nada.
     if (!obtenerSensor(sensorId)) return
-    evaluarAlertasDeSensor(sensorId)
+    // T-25: la evaluación de alertas es del trigger de la BD; se recarga la
+    // caché para que la vista de alertas (R-14) refleje el resultado.
+    await cargarAlertas()
     this.programar([sensorId])
   }
 }

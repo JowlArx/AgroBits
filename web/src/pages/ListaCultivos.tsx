@@ -7,7 +7,7 @@ import {
 } from '../data/storeCultivos'
 import { quitarAsociacionesDeCultivo } from '../data/storeSensores'
 import { eliminarMediciones } from '../data/medicionesSimuladas'
-import { eliminarAlertasDeCultivo } from '../data/storeAlertas'
+import { cargarAlertas } from '../data/storeAlertas'
 import { TIPOS_MEDICION, UNIDADES } from '../domain/tipos'
 
 interface Props {
@@ -26,8 +26,10 @@ export default function ListaCultivos({ onNuevo, onEditar, onVerMediciones }: Pr
     try {
       const borrados = await quitarAsociacionesDeCultivo(cultivoId)
       await eliminarMediciones(borrados)
-      eliminarAlertasDeCultivo(cultivoId)
       await eliminarCultivo(cultivoId)
+      // T-25: en la BD las alertas caen en cascada con el cultivo; aquí solo
+      // se recarga la caché local.
+      await cargarAlertas()
     } catch (error) {
       console.error('No se pudo eliminar el cultivo', error)
     }
@@ -37,7 +39,7 @@ export default function ListaCultivos({ onNuevo, onEditar, onVerMediciones }: Pr
     <section>
       <header className="fila-entre">
         <h2>Mis cultivos</h2>
-        <button type="button" onClick={onNuevo}>
+        <button type="button" className="btn-primario" onClick={onNuevo}>
           Nuevo cultivo
         </button>
       </header>
@@ -47,7 +49,7 @@ export default function ListaCultivos({ onNuevo, onEditar, onVerMediciones }: Pr
       ) : estadoCarga === 'error' ? (
         <p data-testid="error-carga">No se pudieron cargar los cultivos. Inténtalo más tarde.</p>
       ) : cultivos.length === 0 ? (
-        <p data-testid="vacio">
+        <p data-testid="vacio" className="estado-vacio">
           Todavía no hay cultivos. Crea el primero para ver sus umbrales y, más
           adelante, sus mediciones.
         </p>
@@ -69,6 +71,7 @@ export default function ListaCultivos({ onNuevo, onEditar, onVerMediciones }: Pr
                   </button>
                   <button
                     type="button"
+                    className="btn-peligro"
                     data-testid={`eliminar-${cultivo.id}`}
                     onClick={() => {
                       // T-18: al borrar el cultivo se retiran sus asociaciones;

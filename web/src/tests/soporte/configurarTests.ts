@@ -11,7 +11,7 @@ import { configurarProgramadorLecturas } from '../../data/programadorLecturas'
 import { reiniciarCultivos } from '../../data/storeCultivos'
 import { reiniciarSensores } from '../../data/storeSensores'
 import { reiniciarMediciones } from '../../data/medicionesSimuladas'
-import { reiniciarAlertas } from '../../data/storeAlertas'
+import { vaciarAlertas } from '../../data/storeAlertas'
 import { AuthFalso } from './authFalso'
 import { DatosFalsos } from './datosFalsos'
 import { ProgramadorFalso } from './programadorFalso'
@@ -42,5 +42,5 @@ beforeEach(() => {
   reiniciarCultivos()
   reiniciarSensores()
   reiniciarMediciones()
-  reiniciarAlertas()
+  vaciarAlertas()
 })

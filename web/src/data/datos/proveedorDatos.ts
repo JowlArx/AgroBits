@@ -6,6 +6,7 @@
 
 import type { Cultivo, Medicion, UmbralesPorTipo } from '../../domain/tipos'
 import type { Sensor } from '../storeSensores'
+import type { Alerta } from '../storeAlertas'
 
 export interface ErrorCampo {
   campo: string
@@ -40,6 +41,9 @@ export interface ProveedorDatos {
   cargarMediciones(sensorIds: readonly string[]): Promise<Medicion[]>
   registrarLectura(mediciones: readonly Medicion[]): Promise<Resultado<Medicion[]>>
   eliminarMediciones(sensorIds: readonly string[]): Promise<void>
+
+  // Alertas (R-13/R-14): T-25 evalúa en la BD (trigger); el cliente solo lee.
+  cargarAlertas(): Promise<Alerta[]>
 }
 
 let proveedor: ProveedorDatos | null = null

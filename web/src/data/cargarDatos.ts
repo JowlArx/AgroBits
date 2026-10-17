@@ -8,7 +8,7 @@
 import { cargarCultivos, vaciarCultivos } from './storeCultivos'
 import { cargarSensores, obtenerSensores, vaciarSensores } from './storeSensores'
 import { cargarMediciones, vaciarMediciones } from './medicionesSimuladas'
-import { reiniciarAlertas } from './storeAlertas'
+import { cargarAlertas, vaciarAlertas } from './storeAlertas'
 import { exigirProgramador } from './programadorLecturas'
 
 export async function cargarDatosSesion(): Promise<void> {
@@ -16,6 +16,8 @@ export async function cargarDatosSesion(): Promise<void> {
   await cargarSensores()
   const sensores = obtenerSensores()
   await cargarMediciones(sensores.map((sensor) => sensor.id))
+  // T-25: las alertas se evalúan en la BD (trigger); se cargan para la vista.
+  await cargarAlertas()
   // T-24: con las series ya cargadas, cada sensor queda programado con su
   // próximo tick (inmediato si su última lectura supera los 5 minutos).
   exigirProgramador().programar(sensores.map((sensor) => sensor.id))
@@ -26,5 +28,5 @@ export function vaciarDatosSesion(): void {
   vaciarCultivos()
   vaciarSensores()
   vaciarMediciones()
-  reiniciarAlertas()
+  vaciarAlertas()
 }

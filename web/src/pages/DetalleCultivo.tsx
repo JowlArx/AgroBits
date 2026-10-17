@@ -12,7 +12,7 @@ import {
   obtenerSensoresDeCultivo,
   suscribirSensores,
 } from '../data/storeSensores'
-import { procesarLecturas } from '../data/storeAlertas'
+import { cargarAlertas } from '../data/storeAlertas'
 import { exigirProgramador } from '../data/programadorLecturas'
 import { obtenerCultivo, suscribirCultivos, obtenerCultivos } from '../data/storeCultivos'
 import { TIPOS_MEDICION } from '../domain/tipos'
@@ -96,7 +96,7 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
 
       <h3>Sensores</h3>
       {sensores.length === 0 ? (
-        <p data-testid="sin-sensores">Este cultivo aún no tiene sensores asociados.</p>
+        <p data-testid="sin-sensores" className="estado-vacio">Este cultivo aún no tiene sensores asociados.</p>
       ) : (
         <ul data-testid="lista-sensores">
           {sensores.map((sensor) => (
@@ -117,7 +117,7 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
             placeholder="Ej.: Sensor del balcón"
           />
         </label>
-        <button type="submit" data-testid="crear-sensor">
+        <button type="submit" className="btn-primario" data-testid="crear-sensor">
           Crear y asociar
         </button>
         {errorSensor && (
@@ -139,13 +139,16 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
       {sensores.length > 0 && (
         <button
           type="button"
+          className="btn-primario"
           data-testid="simular-lectura"
           onClick={() => {
             void (async () => {
               // T-23: cada lectura se guarda en la BD antes de mostrarse.
               for (const sensor of sensores) await generarLectura(sensor.id)
-              // R-13: cada nueva lectura se evalúa contra los umbrales (D14).
-              procesarLecturas(cultivo, ultimasPorTipo(sensores.map((s) => s.id)))
+              // T-25: la evaluación de alertas (D14, R-13) es del trigger de
+              // la BD; se recargan para que la vista de alertas (R-14) las
+              // muestre en esta sesión sin recargar la página.
+              await cargarAlertas()
             })()
           }}
         >

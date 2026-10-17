@@ -1,7 +1,9 @@
-// T-24 — Pruebas del generador de lecturas simuladas (R-10 AC2, D15). La
+// T-24/T-25 — Pruebas del generador de lecturas simuladas (R-10 AC2, D15). La
 // cadencia se verifica con relojes simulados —sin esperar 5 minutos reales—
 // sobre el ProveedorDatos en memoria, es decir, por el mismo flujo que usa la
-// aplicación real (tick → generarLectura → proveedor → caché → alertas D14).
+// aplicación real (tick → generarLectura → proveedor → caché). T-25: la
+// evaluación de alertas es del trigger de la BD (emulado por el doble) y el
+// tick recarga la caché de alertas tras escribir.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
@@ -11,7 +13,7 @@ import {
 import { crearCultivo } from './storeCultivos'
 import { asociarSensor, crearSensor, vaciarSensores } from './storeSensores'
 import { generarLectura, obtenerMediciones } from './medicionesSimuladas'
-import { obtenerAlertas } from './storeAlertas'
+import { cargarAlertas, obtenerAlertas } from './storeAlertas'
 import { cargarDatosSesion, vaciarDatosSesion } from './cargarDatos'
 import { INTERVALO_LECTURAS_MS } from './generador'
 import { programadorFalsoActual } from '../tests/soporte/configurarTests'
@@ -113,11 +115,13 @@ describe('generador de lecturas simuladas (T-24, R-10 AC2, D15)', () => {
     expect(obtenerMediciones(sensorId)).toHaveLength(POR_LECTURA)
   })
 
-  it('las lecturas automáticas alimentan las alertas del modelo D14 (R-13)', async () => {
+  it('las lecturas automáticas alimentan las alertas evaluadas en la BD (R-13)', async () => {
     const sensorId = await prepararSensorConCultivo(UMBRALES_TEMPERATURA_FUERA)
     const programador = new ProgramadorTemporizado()
     programador.programar([sensorId])
     await vi.advanceTimersByTimeAsync(0)
+    // T-25: el tick recarga la caché de alertas tras escribir en la BD.
+    await cargarAlertas()
 
     const activas = obtenerAlertas().filter((a) => a.estado === 'activa')
     expect(activas).toHaveLength(1)

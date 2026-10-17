@@ -14,6 +14,7 @@ import type { Cultivo, Medicion, TipoMedicion, UmbralesPorTipo } from '../../dom
 import { TIPOS_MEDICION } from '../../domain/tipos'
 import type { NuevoCultivo, ProveedorDatos, Resultado } from './proveedorDatos'
 import type { Sensor } from '../storeSensores'
+import type { Alerta } from '../storeAlertas'
 import { CATALOGO_CULTIVOS } from '../catalogo'
 
 interface FilaUmbral {
@@ -41,6 +42,16 @@ interface FilaMedicion {
   value: number
   unit: string
   measured_at: string
+}
+
+interface FilaAlerta {
+  id: string
+  crop_id: string
+  tipo: TipoMedicion
+  value: number
+  estado: 'activa' | 'resuelta'
+  created_at: string
+  resolved_at: string | null
 }
 
 /** Umbrales de relleno si una fila falta (mismos límites que el catálogo base). */
@@ -90,6 +101,18 @@ function aMedicion(fila: FilaMedicion): Medicion {
     valor: fila.value,
     unidad: fila.unit,
     medidaEn: aISO(fila.measured_at),
+  }
+}
+
+function aAlerta(fila: FilaAlerta): Alerta {
+  return {
+    id: fila.id,
+    cultivoId: fila.crop_id,
+    tipo: fila.tipo,
+    valor: fila.value,
+    estado: fila.estado,
+    creadaEn: aISO(fila.created_at),
+    resueltaEn: fila.resolved_at ? aISO(fila.resolved_at) : undefined,
   }
 }
 
@@ -311,5 +334,18 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
       console.error('eliminarMediciones:', error)
       throw new Error(`No se pudieron eliminar las mediciones (${error.message})`)
     }
+  }
+
+  // — Alertas (R-13/R-14) ————————————————————————————————————————
+
+  // T-25: la evaluación (crear/mantener/resolver, D14) es del trigger de la
+  // BD; aquí solo se leen las alertas de los cultivos del usuario (RLS).
+  async cargarAlertas(): Promise<Alerta[]> {
+    const { data, error } = await this.cliente
+      .from('alerts')
+      .select('id, crop_id, tipo, value, estado, created_at, resolved_at')
+      .order('created_at', { ascending: false })
+    if (error) throw new Error(`No se pudieron cargar las alertas (${error.message})`)
+    return ((data ?? []) as unknown as FilaAlerta[]).map(aAlerta)
   }
 }
