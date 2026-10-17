@@ -19,8 +19,8 @@ Verificación global del estado al cerrar T-26: `npm run test` 124/124 ✔ · `n
 
 | Requisito | AC | Estado | Evidencia |
 |---|---|---|---|
-| R-01 | AC1 — el registro crea la cuenta e inicia sesión | ◐ | E2E T-22 (17/10/2026): registro real contra GoTrue con confirmación híbrida + login. No re-ejecutado hoy: requiere buzón de correo real y cuota de signup (limitación §5) |
-| R-01 | AC2 — email duplicado rechazado con mensaje | ◐ | E2E T-22: «Ya existe una cuenta con ese email» (ofuscación correcta). Mismo motivo que AC1 |
+| R-01 | AC1 — el registro crea la cuenta e inicia sesión | ✔ | Pasada manual del 17/10/2026 con el **correo real del humano**: registro → correo de confirmación de GoTrue **recibido y validado en su bandeja** → confirmación con el clic real del enlace (22:45:18 UTC) → login con sesión iniciada y lista vacía. Además certificada en T-22 |
+| R-01 | AC2 — email duplicado rechazado con mensaje | ✔ | Pasada del 17/10/2026: segundo registro con el mismo correo real ya confirmado → «Ya existe una cuenta con ese email.» (ofuscación correcta). Además en T-22 |
 | R-01 | AC3 — contraseña corta rechazada con motivo | ✔ | Suite T-26 `01-acceso` (en vivo) + E2E T-22 |
 | R-02 | AC1 — ninguna operación de A toca datos de B | ✔ | Suite SQL T-21 (identidades simuladas, pruebas negativas por fila) + suite T-26 `05-aislamiento` (observable en la app) |
 | R-02 | AC2 — datos filtrados por la sesión | ✔ | Suite SQL T-21 + suite T-26 `05-aislamiento` (dos contextos de navegador) |
@@ -49,7 +49,7 @@ Verificación global del estado al cerrar T-26: `npm run test` 124/124 ✔ · `n
 | R-14 | AC1 — la lista solo muestra alertas del usuario | ✔ | Suite SQL T-21/T-25 (B no ve alertas de A) + suite T-26 `05-aislamiento` |
 | R-14 | AC2 — detalle con cultivo, tipo, valor y hora | ✔ | Suite T-26 `04-alertas` (fila con los cuatro datos) |
 
-Resumen: **26 AC marcados ✔** y **2 ◐** (R-01 AC1/AC2: verificadas en T-22, no re-ejecutadas hoy — justificado en §5). Ninguna AC sin verificar.
+Resumen: **28 AC marcados ✔** y ninguno pendiente. R-01 AC1/AC2 se cerraron el 17/10/2026 con la pasada de validación sobre el correo real del humano (human-in-the-loop: bandeja y clic de confirmación verificados por la propia persona), además del E2E de T-22.
 
 ## 3. Infraestructura de E2E creada
 
@@ -70,22 +70,25 @@ values ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticate
   '{"provider":"email","providers":["email"]}', '{}', '', '', '', '', '', '', '', '');
 ```
 
+- **Cuenta real del humano** creada durante la validación M4 (dirección de correo personal: no se documenta aquí por ser dato personal). Se **conserva en el proyecto de desarrollo por decisión explícita del humano**, como excepción al residuo 0 — es una cuenta de usuario real, no una fixture de la suite; puede borrarse en cualquier momento desde el Dashboard o por SQL.
+
 ## 4. Limitaciones conocidas (acumuladas de la Fase 2)
 
 1. **Sin historial de mediciones**: la vista muestra solo la última lectura por tipo; el historial está fuera de alcance (§7 de la spec).
 2. **Sin hardware**: toda medición proviene del generador (T-24). El contrato R-08 está definido y probado contra la API; el ESP32 es post-MVP.
 3. **La evaluación de alertas solo se dispara con nuevas mediciones**: editar umbrales o desasociar un sensor no re-evalúa al instante; la corrección llega con la siguiente lectura (semántica D14/D19 aprobada; R-12 AC1 la cubre).
 4. **El generador solo escribe con la app abierta** con sesión (sustituto del hardware, D18).
-5. **R-01 AC1/AC2 no automatizables** sin un buzón de correo real o un cambio de decisión sobre la confirmación híbrida; quedan certificadas por el E2E manual de T-22.
+5. **R-01 AC1/AC2 no entran en la suite automatizada**: dependen de un buzón de correo real y del clic humano de confirmación; se certifican con una pasada manual human-in-the-loop (como la del 17/10/2026), no con Playwright.
 6. **Una recarga de página vuelve a la lista de cultivos** (SPA sin router): comportamiento conocido y asertado en la suite (R-08 AC1 reabre el detalle tras recargar).
 7. **Sin pruebas de carga, concurrencia real ni de rendimiento** (tier gratuito, tráfico mínimo); la concurrencia de alertas está cubierta por el índice único (T-25).
 8. **La suite E2E cubre chromium con viewport desktop**; no hay matriz de navegadores móviles automatizada (el diseño responsive se revisó manualmente en T-16).
 
 ## 5. Pruebas pendientes declaradas
 
-- Re-ejecución automatizada de R-01 AC1/AC2 (registro real): requiere buzón de correo o decisión explícita sobre la confirmación.
 - Matriz de navegadores móviles en la suite E2E (dispositivos Playwright) si se desea cerrar la limitación §4.8.
 - R-06 AC3 end-to-end por UI: la interfaz solo asocia el sensor en curso; el modelo N–N está cubierto por unit T-20 y por el esquema.
+
+*(Cerrada el 17/10/2026: la re-ejecución de R-01 AC1/AC2 se realizó con el correo real del humano — ver §2.)*
 
 ## 6. Desviaciones respecto del plan M2
 
