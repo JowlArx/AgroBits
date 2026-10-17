@@ -2,8 +2,15 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import App from './App'
 import { reiniciarCultivos } from './data/storeCultivos'
+import { iniciarSesion, reiniciarSesion } from './data/storeSesion'
 
-beforeEach(() => reiniciarCultivos())
+// T-16: la app está tras un gate de acceso provisional; estos tests del
+// flujo de cultivos empiezan ya con una sesión simulada.
+beforeEach(() => {
+  reiniciarCultivos()
+  reiniciarSesion()
+  iniciarSesion('pruebas@agrobits.test', 'secreta')
+})
 
 function irANuevoCultivo(): void {
   fireEvent.click(screen.getByRole('button', { name: 'Nuevo cultivo' }))
