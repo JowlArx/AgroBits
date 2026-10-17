@@ -4,7 +4,7 @@
 
 AgroBits se encuentra en la fase de definición de requisitos (Spec-Driven Development).
 
-La especificación del MVP (`docs/spec.md` v2) fue **aprobada por el humano el 16/10/2026** (hito M0) y el plan (`docs/plan.md`) fue **aprobado el 16/10/2026** (hito M1). El desglose de tareas (`docs/tasks.md`, hito M2) fue **aprobado el 17/10/2026**, con la incorporación autorizada de T-18 (R-06) el mismo día. Completadas y verificadas: T-10, T-11, T-12, T-13, T-14, T-15, T-16, T-18 (90 tests, build y lint correctos). **T-17 preparada el 17/10/2026: checklist de la Fase 1 trazada a la spec + demo grabada (`Temp\opencode\demo-fase1-final.mp4`) + hallazgo corregido de alertas huérfanas (`5872a34`) — PENDIENTE de aprobación humana (hito M3) para entrar en Fase 2.**
+La especificación del MVP (`docs/spec.md` v2) fue **aprobada por el humano el 16/10/2026** (hito M0) y el plan (`docs/plan.md`) fue **aprobado el 16/10/2026** (hito M1). El desglose de tareas (`docs/tasks.md`, hito M2) fue **aprobado el 17/10/2026**, con la incorporación autorizada de T-18 (R-06) el mismo día. Fase 1 **completa y verificada** (T-10…T-16, T-18; 90 tests, build y lint correctos). **Hito M3 aprobado por el humano el 17/10/2026 («Comienza fase 2»):** checklist de T-17 + demo revisadas, sin cambios solicitados. **Fase 2 iniciada con T-20** (esquema y RLS en el proyecto Supabase de desarrollo `fxiukidjxdcsrhyiphmu`, MCP conectado, 0 migraciones previas).
 
 ## Objetivo
 
