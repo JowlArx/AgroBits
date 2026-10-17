@@ -6,6 +6,7 @@ import {
 } from '../data/storeCultivos'
 import { quitarAsociacionesDeCultivo } from '../data/storeSensores'
 import { eliminarMediciones } from '../data/medicionesSimuladas'
+import { eliminarAlertasDeCultivo } from '../data/storeAlertas'
 import { TIPOS_MEDICION, UNIDADES } from '../domain/tipos'
 
 interface Props {
@@ -54,8 +55,10 @@ export default function ListaCultivos({ onNuevo, onEditar, onVerMediciones }: Pr
                       // T-18: al borrar el cultivo se retiran sus asociaciones;
                       // los sensores que quedan sin cultivos se eliminan junto
                       // con sus mediciones (simplificación de la Fase 1).
+                      // T-17: y sus alertas no quedan huérfanas.
                       const borrados = quitarAsociacionesDeCultivo(cultivo.id)
                       borrados.forEach(eliminarMediciones)
+                      eliminarAlertasDeCultivo(cultivo.id)
                       eliminarCultivo(cultivo.id)
                     }}
                   >

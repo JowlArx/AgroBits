@@ -108,6 +108,20 @@ describe('pantalla de alertas (T-15, R-13 y R-14)', () => {
     expect(screen.getByTestId('alerta-resuelta').querySelector('time')).toBeTruthy()
   })
 
+  it('T-17: al eliminar el cultivo desaparecen sus alertas de la lista', () => {
+    render(<App />)
+    crearCultivoCon('Huerto efímero', umbralesSoloHumedadFuera)
+    prepararSensorYLectura()
+    abrirAlertas()
+    expect(screen.queryByTestId('vacio-alertas')).toBeNull()
+
+    fireEvent.click(screen.getByTestId('nav-cultivos'))
+    fireEvent.click(screen.getByText('Eliminar'))
+    abrirAlertas()
+
+    expect(screen.getByTestId('vacio-alertas')).toBeTruthy()
+  })
+
   it('desde la pantalla de alertas se puede volver a la lista de cultivos', () => {
     render(<App />)
     abrirAlertas()

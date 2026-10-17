@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { obtenerAlertas, procesarLecturas, reiniciarAlertas } from './storeAlertas'
+import {
+  eliminarAlertasDeCultivo,
+  obtenerAlertas,
+  procesarLecturas,
+  reiniciarAlertas,
+} from './storeAlertas'
 import { crearCultivo, reiniciarCultivos } from './storeCultivos'
 import type { Medicion, TipoMedicion, UmbralesPorTipo } from '../domain/tipos'
 import { TIPOS_MEDICION, UNIDADES } from '../domain/tipos'
@@ -103,6 +108,33 @@ describe('store de alertas (T-15, R-13 modelo D14)', () => {
     procesarLecturas(cultivo, ultimas({}))
 
     expect(obtenerAlertas()).toHaveLength(0)
+  })
+
+  it('T-17: eliminar el cultivo retira sus alertas (activas y resueltas)', () => {
+    const cultivo = cultivoEjemplo()
+    procesarLecturas(cultivo, ultimas({ humedad_suelo: 10 }))
+    procesarLecturas(cultivo, ultimas({ humedad_suelo: 50 }))
+
+    eliminarAlertasDeCultivo(cultivo.id)
+
+    expect(obtenerAlertas()).toHaveLength(0)
+  })
+
+  it('T-17: la limpieza no afecta a las alertas de otros cultivos', () => {
+    const uno = cultivoEjemplo()
+    const dos = crearCultivo({
+      nombre: 'Otro huerto',
+      tipoCultivo: 'Lechuga',
+      umbrales,
+    })
+    if (!dos.ok) throw new Error('no se pudo crear el segundo cultivo')
+    procesarLecturas(uno, ultimas({ humedad_suelo: 10 }))
+    procesarLecturas(dos.valor, ultimas({ temperatura: 5 }))
+
+    eliminarAlertasDeCultivo(uno.id)
+
+    expect(obtenerAlertas()).toHaveLength(1)
+    expect(obtenerAlertas()[0].cultivoId).toBe(dos.valor.id)
   })
 
   it('evalúa cada tipo por separado con sus propios umbrales', () => {

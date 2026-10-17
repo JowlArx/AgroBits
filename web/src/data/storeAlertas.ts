@@ -91,3 +91,14 @@ export function reiniciarAlertas(): void {
   contador = 0
   notificar()
 }
+
+/**
+ * Hallazgo de la revisión T-17 (M3): al eliminar un cultivo sus alertas no
+ * deben quedar huérfanas (mismo criterio de limpieza que T-18 aplicó a
+ * asociaciones y mediciones).
+ */
+export function eliminarAlertasDeCultivo(cultivoId: string): void {
+  const antes = alertas.length
+  alertas = alertas.filter((a) => a.cultivoId !== cultivoId)
+  if (alertas.length !== antes) notificar()
+}
