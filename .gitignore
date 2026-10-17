@@ -10,6 +10,10 @@ node_modules/
 dist/
 build/
 
+# Artefactos de la suite E2E (Playwright): traces con datos de la app de prueba
+web/test-results/
+web/playwright-report/
+
 # Registros
 *.log
 npm-debug.log*
