@@ -1,17 +1,18 @@
-// T-14 — Mediciones simuladas por cultivo (R-09, Fase 1).
-// Cada cultivo tiene un sensor virtual cuyo historial empieza vacío: hasta
-// que no llega una lectura, la vista muestra "sin datos" (R-09 AC2) y nunca
-// inventa valores. En la Fase 2 este módulo se sustituirá por la capa de
-// Supabase (T-23) con el mismo contrato de R-08.
+// T-14/T-18 — Mediciones simuladas por SENSOR (R-09 + R-06 AC2, Fase 1).
+// Cada sensor tiene su propio historial, que empieza vacío: hasta que no
+// llega una lectura, la vista muestra "sin datos" (R-09 AC2) y nunca inventa
+// valores. Un cultivo ve las mediciones de sus sensores asociados. En la
+// Fase 2 este módulo se sustituirá por la capa de Supabase (T-23) con el
+// mismo contrato de R-08.
 
-import type { Cultivo, Medicion, TipoMedicion } from '../domain/tipos'
+import type { Medicion, TipoMedicion } from '../domain/tipos'
 import { TIPOS_MEDICION } from '../domain/tipos'
 import { INTERVALO_LECTURAS_MS, crearGenerador } from './generador'
 
-const MAX_LECTURAS_POR_CULTIVO = 200
+const MAX_LECTURAS_POR_SENSOR = 200
 const VACIO: readonly Medicion[] = []
 
-const porCultivo = new Map<string, Medicion[]>()
+const porSensor = new Map<string, Medicion[]>()
 const contadores = new Map<string, number>()
 const oyentes = new Set<() => void>()
 
@@ -19,62 +20,70 @@ function notificar(): void {
   for (const oyente of oyentes) oyente()
 }
 
-export function suscribirMediciones(_cultivoId: string, oyente: () => void): () => void {
+export function suscribirMediciones(_ambito: string, oyente: () => void): () => void {
   oyentes.add(oyente)
   return () => oyentes.delete(oyente)
 }
 
-export function obtenerMediciones(cultivoId: string): readonly Medicion[] {
-  return porCultivo.get(cultivoId) ?? VACIO
+export function obtenerMediciones(sensorId: string): readonly Medicion[] {
+  return porSensor.get(sensorId) ?? VACIO
 }
 
-function semillaDe(cultivoId: string): number {
+function semillaDe(sensorId: string): number {
   let hash = 0
-  for (const letra of cultivoId) hash = (Math.imul(hash, 31) + letra.charCodeAt(0)) | 0
+  for (const letra of sensorId) hash = (Math.imul(hash, 31) + letra.charCodeAt(0)) | 0
   return hash >>> 0
 }
 
 /**
- * Añade una lectura simulada (los 4 tipos) al sensor virtual del cultivo,
- * con marca de tiempo actual. Determinista por (cultivo, nº de lectura).
+ * Añade una lectura simulada (los 4 tipos) al sensor, con marca de tiempo
+ * actual. Determinista por (sensor, nº de lectura).
  */
-export function generarLectura(cultivo: Cultivo): readonly Medicion[] {
-  const numero = (contadores.get(cultivo.id) ?? 0) + 1
-  contadores.set(cultivo.id, numero)
+export function generarLectura(sensorId: string): readonly Medicion[] {
+  const numero = (contadores.get(sensorId) ?? 0) + 1
+  contadores.set(sensorId, numero)
 
-  const generador = crearGenerador(semillaDe(cultivo.id) + numero)
+  const generador = crearGenerador(semillaDe(sensorId) + numero)
   const instante = new Date().toISOString()
 
   const nuevas: Medicion[] = TIPOS_MEDICION.map((tipo) =>
-    generador.medicion({ sensorId: `sensor-${cultivo.id}`, tipo, medidaEn: instante }),
+    generador.medicion({ sensorId, tipo, medidaEn: instante }),
   )
 
-  const anteriores = porCultivo.get(cultivo.id) ?? []
-  const todas = [...anteriores, ...nuevas].slice(-MAX_LECTURAS_POR_CULTIVO)
-  porCultivo.set(cultivo.id, todas)
+  const anteriores = porSensor.get(sensorId) ?? []
+  const todas = [...anteriores, ...nuevas].slice(-MAX_LECTURAS_POR_SENSOR)
+  porSensor.set(sensorId, todas)
   notificar()
   return todas
 }
 
-/** Última lectura disponible por tipo; `undefined` si aún no hay datos. */
-export function ultimasPorTipo(cultivoId: string): Record<TipoMedicion, Medicion | undefined> {
+/**
+ * Última lectura disponible por tipo entre los sensores indicados (la más
+ * reciente gana); `undefined` si aún no hay datos.
+ */
+export function ultimasPorTipo(sensorIds: readonly string[]): Record<TipoMedicion, Medicion | undefined> {
   const resultado = {} as Record<TipoMedicion, Medicion | undefined>
   for (const tipo of TIPOS_MEDICION) resultado[tipo] = undefined
 
-  for (const medicion of obtenerMediciones(cultivoId)) {
-    resultado[medicion.tipo] = medicion
+  for (const sensorId of sensorIds) {
+    for (const medicion of porSensor.get(sensorId) ?? []) {
+      const actual = resultado[medicion.tipo]
+      if (!actual || medicion.medidaEn >= actual.medidaEn) {
+        resultado[medicion.tipo] = medicion
+      }
+    }
   }
   return resultado
 }
 
-export function eliminarMediciones(cultivoId: string): void {
-  if (porCultivo.delete(cultivoId)) notificar()
-  contadores.delete(cultivoId)
+export function eliminarMediciones(sensorId: string): void {
+  if (porSensor.delete(sensorId)) notificar()
+  contadores.delete(sensorId)
 }
 
 /** Solo para tests: vuelve al estado inicial. */
 export function reiniciarMediciones(): void {
-  porCultivo.clear()
+  porSensor.clear()
   contadores.clear()
   notificar()
 }

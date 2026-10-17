@@ -4,6 +4,7 @@ import {
   obtenerCultivos,
   suscribirCultivos,
 } from '../data/storeCultivos'
+import { quitarAsociacionesDeCultivo } from '../data/storeSensores'
 import { eliminarMediciones } from '../data/medicionesSimuladas'
 import { TIPOS_MEDICION, UNIDADES } from '../domain/tipos'
 
@@ -50,7 +51,11 @@ export default function ListaCultivos({ onNuevo, onEditar, onVerMediciones }: Pr
                     type="button"
                     data-testid={`eliminar-${cultivo.id}`}
                     onClick={() => {
-                      eliminarMediciones(cultivo.id)
+                      // T-18: al borrar el cultivo se retiran sus asociaciones;
+                      // los sensores que quedan sin cultivos se eliminan junto
+                      // con sus mediciones (simplificación de la Fase 1).
+                      const borrados = quitarAsociacionesDeCultivo(cultivo.id)
+                      borrados.forEach(eliminarMediciones)
                       eliminarCultivo(cultivo.id)
                     }}
                   >

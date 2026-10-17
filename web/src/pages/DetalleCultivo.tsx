@@ -1,12 +1,19 @@
-import { useSyncExternalStore } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import {
   generarLectura,
   obtenerMediciones,
   suscribirMediciones,
   ultimasPorTipo,
 } from '../data/medicionesSimuladas'
-import { obtenerCultivo } from '../data/storeCultivos'
-import { TIPOS_MEDICION, UNIDADES } from '../domain/tipos'
+import {
+  asociarSensor,
+  crearSensor,
+  obtenerSensores,
+  obtenerSensoresDeCultivo,
+  suscribirSensores,
+} from '../data/storeSensores'
+import { obtenerCultivo, suscribirCultivos, obtenerCultivos } from '../data/storeCultivos'
+import { TIPOS_MEDICION } from '../domain/tipos'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
 
 interface Props {
@@ -20,13 +27,24 @@ function horaLegible(iso: string): string {
 }
 
 export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
-  const cultivo = obtenerCultivo(cultivoId)
-  // Suscripción a los cambios del almacén de mediciones de ESTE cultivo.
+  // Suscripciones a los almacenes que puede cambiar esta vista.
+  // Nota: getSnapshot debe devolver valores estables; por eso se usan
+  // referencias del store (cambian solo al notificar) y una huella de texto
+  // para las mediciones (cambia cuando crece el nº de lecturas).
+  useSyncExternalStore(suscribirCultivos, obtenerCultivos)
+  useSyncExternalStore(suscribirSensores, obtenerSensores)
   useSyncExternalStore(
     (oyente) => suscribirMediciones(cultivoId, oyente),
-    () => obtenerMediciones(cultivoId),
+    () =>
+      obtenerSensoresDeCultivo(cultivoId)
+        .map((s) => `${s.id}:${obtenerMediciones(s.id).length}`)
+        .join('|'),
   )
 
+  const [nombreSensor, setNombreSensor] = useState('')
+  const [errorSensor, setErrorSensor] = useState('')
+
+  const cultivo = obtenerCultivo(cultivoId)
   if (!cultivo) {
     return (
       <section>
@@ -38,8 +56,25 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
     )
   }
 
-  const ultimas = ultimasPorTipo(cultivoId)
+  const sensores = obtenerSensoresDeCultivo(cultivoId)
+  const ultimas = ultimasPorTipo(sensores.map((s) => s.id))
   const conDatos = TIPOS_MEDICION.filter((tipo) => ultimas[tipo] !== undefined).length
+
+  function crearYAsociar(evento: React.FormEvent): void {
+    evento.preventDefault()
+    const sensor = crearSensor(nombreSensor)
+    if (!sensor.ok) {
+      setErrorSensor(sensor.errores.map((e) => e.motivo).join('. '))
+      return
+    }
+    const asociacion = asociarSensor(sensor.valor.id, cultivoId, (id) => obtenerCultivo(id) !== undefined)
+    if (!asociacion.ok) {
+      setErrorSensor(asociacion.errores.map((e) => e.motivo).join('. '))
+      return
+    }
+    setErrorSensor('')
+    setNombreSensor('')
+  }
 
   return (
     <section>
@@ -53,15 +88,57 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
         </button>
       </header>
 
+      <h3>Sensores</h3>
+      {sensores.length === 0 ? (
+        <p data-testid="sin-sensores">Este cultivo aún no tiene sensores asociados.</p>
+      ) : (
+        <ul data-testid="lista-sensores">
+          {sensores.map((sensor) => (
+            <li key={sensor.id}>{sensor.nombre}</li>
+          ))}
+        </ul>
+      )}
+
+      <form onSubmit={crearYAsociar} className="fila-sensor">
+        <label>
+          Nombre del sensor
+          <input
+            type="text"
+            name="nombreSensor"
+            data-testid="nombre-sensor"
+            value={nombreSensor}
+            onChange={(e) => setNombreSensor(e.target.value)}
+            placeholder="Ej.: Sensor del balcón"
+          />
+        </label>
+        <button type="submit" data-testid="crear-sensor">
+          Crear y asociar
+        </button>
+        {errorSensor && (
+          <p role="alert" data-testid="error-sensor">
+            {errorSensor}
+          </p>
+        )}
+      </form>
+
+      <h3>Últimas mediciones</h3>
       <p data-testid="resumen-medicion">
-        {conDatos === 0
-          ? 'Sin lecturas todavía: sensor sin datos.'
-          : `Lecturas disponibles: ${conDatos} de ${TIPOS_MEDICION.length} tipos.`}
+        {sensores.length === 0
+          ? 'Sin sensores: no hay lecturas que mostrar.'
+          : conDatos === 0
+            ? 'Sin lecturas todavía: sensor sin datos.'
+            : `Lecturas disponibles: ${conDatos} de ${TIPOS_MEDICION.length} tipos.`}
       </p>
 
-      <button type="button" data-testid="simular-lectura" onClick={() => generarLectura(cultivo)}>
-        Generar lectura simulada
-      </button>
+      {sensores.length > 0 && (
+        <button
+          type="button"
+          data-testid="simular-lectura"
+          onClick={() => sensores.forEach((sensor) => generarLectura(sensor.id))}
+        >
+          Generar lectura simulada
+        </button>
+      )}
 
       <table className="tabla-umbrales" data-testid="tabla-mediciones">
         <thead>
@@ -96,8 +173,8 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
       </table>
 
       <p className="aviso">
-        Datos simulados en la interfaz (Fase 1): {UNIDADES.temperatura} — frecuencia prevista de
-        5 minutos por sensor en la Fase 2.
+        Datos simulados en la interfaz (Fase 1). En la Fase 2 las lecturas llegarán cada 5 minutos
+        por sensor (decisión D15).
       </p>
     </section>
   )
