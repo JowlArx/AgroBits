@@ -4,7 +4,7 @@
 
 AgroBits se encuentra en la fase de definición de requisitos (Spec-Driven Development).
 
-La especificación del MVP (`docs/spec.md` v2) fue **aprobada por el humano el 16/10/2026** (hito M0) y el plan (`docs/plan.md`) fue **aprobado el 16/10/2026** (hito M1). El desglose de tareas (`docs/tasks.md`, hito M2) fue **aprobado el 17/10/2026**, con la incorporación autorizada de T-18 (R-06) el mismo día. Fase 1 **completa y verificada** (T-10…T-16, T-18; 90 tests, build y lint correctos). **Hito M3 aprobado por el humano el 17/10/2026 («Comienza fase 2»):** checklist de T-17 + demo revisadas, sin cambios solicitados. **Fase 2 iniciada con T-20** (esquema y RLS en el proyecto Supabase de desarrollo `fxiukidjxdcsrhyiphmu`, MCP conectado, 0 migraciones previas).
+La especificación del MVP (`docs/spec.md` v2) fue **aprobada por el humano el 16/10/2026** (hito M0) y el plan (`docs/plan.md`) fue **aprobado el 16/10/2026** (hito M1). El desglose de tareas (`docs/tasks.md`, hito M2) fue **aprobado el 17/10/2026**, con la incorporación autorizada de T-18 (R-06) el mismo día. Fase 1 **completa y verificada** (T-10…T-16, T-18; 90 tests, build y lint correctos). **Hito M3 aprobado por el humano el 17/10/2026 («Comienza fase 2»):** checklist de T-17 + demo revisadas, sin cambios solicitados. **Fase 2 en marcha: T-20 completada el 17/10/2026** — 3 migraciones aplicadas y versionadas en `supabase/migrations/` (7 tablas, RLS en 7/7 con 25 políticas, índice único D14, semilla del catálogo); verificado sin `service_role` en cliente; exportación documentada en `tasks.md`. Siguiente: T-21 (gate de seguridad con dos cuentas que prueba R-02/R-07 contra el RLS real).
 
 ## Objetivo
 
