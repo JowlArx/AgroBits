@@ -99,6 +99,7 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
           Nombre del cultivo
           <input
             type="text"
+            name="nombre"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
             placeholder="Ej.: Tomates del balcón"
@@ -107,7 +108,7 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
 
         <label>
           Tipo de cultivo
-          <select value={esPersonalizado ? TIPO_PERSONALIZADO : tipoCultivo} onChange={(e) => cambiarTipo(e.target.value)}>
+          <select name="tipoCultivo" value={esPersonalizado ? TIPO_PERSONALIZADO : tipoCultivo} onChange={(e) => cambiarTipo(e.target.value)}>
             {CATALOGO_CULTIVOS.map((e) => (
               <option key={e.tipoCultivo} value={e.tipoCultivo}>
                 {e.tipoCultivo}
@@ -122,6 +123,7 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
             Nombre del tipo personalizado
             <input
               type="text"
+              name="tipoPersonalizado"
               value={tipoCultivo === TIPO_PERSONALIZADO ? '' : tipoCultivo}
               onChange={(e) => setTipoCultivo(e.target.value)}
             />
@@ -137,6 +139,7 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
                 Mínimo
                 <input
                   type="number"
+                  name={`min-${tipo}`}
                   data-testid={`min-${tipo}`}
                   value={cadenas[tipo].min}
                   onChange={(e) => cambiarUmbral(tipo, 'min', e.target.value)}
@@ -146,6 +149,7 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
                 Máximo
                 <input
                   type="number"
+                  name={`max-${tipo}`}
                   data-testid={`max-${tipo}`}
                   value={cadenas[tipo].max}
                   onChange={(e) => cambiarUmbral(tipo, 'max', e.target.value)}
