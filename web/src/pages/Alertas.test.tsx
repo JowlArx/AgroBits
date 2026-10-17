@@ -5,12 +5,11 @@ import { reiniciarCultivos } from '../data/storeCultivos'
 import { reiniciarSensores } from '../data/storeSensores'
 import { reiniciarMediciones } from '../data/medicionesSimuladas'
 import { reiniciarAlertas } from '../data/storeAlertas'
-import { iniciarSesion, reiniciarSesion } from '../data/storeSesion'
+import { iniciarSesion } from '../data/storeSesion'
 import { TIPOS_MEDICION } from '../domain/tipos'
 
-beforeEach(() => {
-  reiniciarSesion()
-  iniciarSesion('pruebas@agrobits.test', 'secreta')
+beforeEach(async () => {
+  await iniciarSesion('pruebas@agrobits.test', 'secreta')
   reiniciarCultivos()
   reiniciarSensores()
   reiniciarMediciones()

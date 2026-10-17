@@ -2,14 +2,14 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import App from './App'
 import { reiniciarCultivos } from './data/storeCultivos'
-import { iniciarSesion, reiniciarSesion } from './data/storeSesion'
+import { iniciarSesion } from './data/storeSesion'
 
-// T-16: la app está tras un gate de acceso provisional; estos tests del
-// flujo de cultivos empiezan ya con una sesión simulada.
-beforeEach(() => {
+// T-16/T-22: la app está tras un gate de acceso; estos tests del flujo de
+// cultivos empiezan ya con una sesión abierta (doble de auth inyectado en
+// src/tests/soporte/configurarTests.ts).
+beforeEach(async () => {
   reiniciarCultivos()
-  reiniciarSesion()
-  iniciarSesion('pruebas@agrobits.test', 'secreta')
+  await iniciarSesion('pruebas@agrobits.test', 'secreta')
 })
 
 function irANuevoCultivo(): void {

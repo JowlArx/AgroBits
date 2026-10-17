@@ -15,20 +15,20 @@ type Vista =
 
 export default function App() {
   const [vista, setVista] = useState<Vista>({ tipo: 'lista' })
-  // T-16: gate de acceso PROVISIONAL (D8) — sin sesión no se ve el contenido.
+  // T-16/T-22: gate de acceso (D8) — sin sesión no se ve el contenido.
   const sesion = useSyncExternalStore(suscribirSesion, obtenerSesion)
 
   return (
     <div className="app">
       <header className="cabecera">
         <h1>AgroBits</h1>
-        <span className="etiqueta">Fase 1 — datos simulados · acceso provisional</span>
+        <span className="etiqueta">Acceso con Supabase · datos simulados (T-23)</span>
         {sesion && (
           <>
             <span className="etiqueta" data-testid="sesion-usuario">
               {sesion.usuario.email}
             </span>
-            <button type="button" data-testid="cerrar-sesion" onClick={cerrarSesion}>
+            <button type="button" data-testid="cerrar-sesion" onClick={() => void cerrarSesion()}>
               Cerrar sesión
             </button>
             <nav>

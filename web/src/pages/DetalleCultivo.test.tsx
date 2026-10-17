@@ -8,15 +8,15 @@ import {
   reiniciarSensores,
 } from '../data/storeSensores'
 import { reiniciarMediciones } from '../data/medicionesSimuladas'
-import { iniciarSesion, reiniciarSesion } from '../data/storeSesion'
+import { iniciarSesion } from '../data/storeSesion'
 import { UNIDADES, TIPOS_MEDICION } from '../domain/tipos'
 
 const existeCultivo = (id: string) => obtenerCultivos().some((c) => c.id === id)
 
-// T-16: la app está tras un gate de acceso provisional; empieza con sesión simulada.
-beforeEach(() => {
-  reiniciarSesion()
-  iniciarSesion('pruebas@agrobits.test', 'secreta')
+// T-16/T-22: la app está tras un gate de acceso; empieza con sesión abierta
+// (doble de auth inyectado en src/tests/soporte/configurarTests.ts).
+beforeEach(async () => {
+  await iniciarSesion('pruebas@agrobits.test', 'secreta')
   reiniciarCultivos()
   reiniciarSensores()
   reiniciarMediciones()
