@@ -1,10 +1,11 @@
-// T-14/T-18/T-23 — Mediciones por SENSOR con contrato R-08/R-09 (Fase 2).
+// T-14/T-18/T-23/T-24 — Mediciones por SENSOR con contrato R-08/R-09 (Fase 2).
 // Cada sensor tiene su propia serie: hasta que no hay lectura, la vista
 // muestra "sin datos" (R-09 AC2) y nunca inventa valores. La generación sigue
 // siendo determinista en cliente (T-12) pero cada lectura se PERSISTE ahora
 // en Supabase a través del ProveedorDatos (T-23): lo que se muestra es lo que
-// hay guardado en la BD. La frecuencia automática de 5 min/sensor (D15) la
-// aportará T-24; el botón manual de la vista es una herramienta de prueba.
+// hay guardado en la BD. La frecuencia automática de 1 lectura cada 5 minutos
+// por sensor (D15) la mantiene el ProgramadorLecturas (T-24); el botón manual
+// de la vista es una herramienta de prueba.
 
 import type { Medicion, TipoMedicion } from '../domain/tipos'
 import { TIPOS_MEDICION } from '../domain/tipos'

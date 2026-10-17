@@ -30,7 +30,7 @@ export default function App() {
     <div className="app">
       <header className="cabecera">
         <h1>AgroBits</h1>
-        <span className="etiqueta">Acceso y datos con Supabase (T-23)</span>
+        <span className="etiqueta">Acceso y datos con Supabase (T-24)</span>
         {sesion && (
           <>
             <span className="etiqueta" data-testid="sesion-usuario">

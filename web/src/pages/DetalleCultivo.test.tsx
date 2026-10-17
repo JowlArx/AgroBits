@@ -9,6 +9,7 @@ import {
 } from '../data/storeSensores'
 import { reiniciarMediciones } from '../data/medicionesSimuladas'
 import { iniciarSesion } from '../data/storeSesion'
+import { programadorFalsoActual } from '../tests/soporte/configurarTests'
 import { UNIDADES, TIPOS_MEDICION } from '../domain/tipos'
 
 const existeCultivo = (id: string) => obtenerCultivos().some((c) => c.id === id)
@@ -133,6 +134,19 @@ describe('registro y asociación de sensores (T-18/T-23, R-06)', () => {
       expect(screen.getByTestId('lista-sensores').textContent).toContain('Sensor del balcón'),
     )
     expect(screen.queryByTestId('sin-sensores')).toBeNull()
+  })
+
+  it('T-24: al crear un sensor se programa su primera lectura automática (D15)', async () => {
+    render(<App />)
+    await crearCultivoConDetalle('Huerto con generador')
+
+    crearSensor('Sensor automático')
+    await waitFor(() => expect(screen.queryByTestId('lista-sensores')).toBeTruthy())
+
+    // El programador doble registra la programación del sensor recién creado
+    // (tick inmediato: la app real escribe la primera lectura sin botón).
+    const [sensor] = obtenerSensores()
+    expect(programadorFalsoActual().programaciones).toContainEqual([sensor.id])
   })
 
   it('AC1: rechaza un sensor sin nombre e informa del motivo', async () => {

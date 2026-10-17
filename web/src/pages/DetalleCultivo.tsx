@@ -13,6 +13,7 @@ import {
   suscribirSensores,
 } from '../data/storeSensores'
 import { procesarLecturas } from '../data/storeAlertas'
+import { exigirProgramador } from '../data/programadorLecturas'
 import { obtenerCultivo, suscribirCultivos, obtenerCultivos } from '../data/storeCultivos'
 import { TIPOS_MEDICION } from '../domain/tipos'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
@@ -75,6 +76,10 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
     }
     setErrorSensor('')
     setNombreSensor('')
+    // T-24: el sensor recién conectado toma su primera lectura ya (tick
+    // inmediato) y la serie continúa cada 5 minutos mientras haya sesión
+    // abierta (decisión D15, R-10 AC2).
+    exigirProgramador().programar([asociacion.valor.id])
   }
 
   return (
@@ -181,8 +186,8 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
       </table>
 
       <p className="aviso">
-        Lecturas simuladas guardadas en Supabase (T-23). En la Fase 2 un generador las enviará
-        cada 5 minutos por sensor (decisión D15).
+        Lecturas simuladas guardadas en Supabase (T-23) y generadas automáticamente cada 5
+        minutos por sensor mientras hay sesión abierta (T-24, decisión D15).
       </p>
     </section>
   )
