@@ -1,0 +1,118 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 1rem 1rem 3rem;
+}
+
+.cabecera {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  border-bottom: 1px solid #8884;
+  padding-bottom: 0.5rem;
+}
+
+.cabecera h1 {
+  margin: 0;
+}
+
+.etiqueta {
+  font-size: 0.8rem;
+  background: #8882;
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+}
+
+.fila-entre {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.lista-cultivos {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.tarjeta-cultivo {
+  border: 1px solid #8884;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.tabla-umbrales {
+  margin-top: 0.5rem;
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+.tabla-umbrales th,
+.tabla-umbrales td {
+  text-align: left;
+  padding: 0.2rem 0.5rem;
+  border-bottom: 1px solid #8883;
+}
+
+.acciones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.aviso {
+  font-size: 0.85rem;
+  background: #8882;
+  border-left: 3px solid #8886;
+  padding: 0.5rem 0.75rem;
+}
+
+form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+form input,
+form select {
+  padding: 0.4rem;
+  font: inherit;
+}
+
+fieldset {
+  border: 1px solid #8884;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.fila-umbral {
+  display: grid;
+  grid-template-columns: 1fr 120px 120px;
+  gap: 0.5rem;
+  align-items: end;
+  margin-bottom: 0.5rem;
+}
+
+.etiqueta-umbral {
+  align-self: center;
+}
+
+[role='alert'] {
+  background: #c0392b22;
+  border: 1px solid #c0392b66;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+}
