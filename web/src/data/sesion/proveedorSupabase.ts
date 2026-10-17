@@ -68,8 +68,15 @@ export class ProveedorSupabase implements ProveedorAuth {
     const { data, error } = await this.cliente.auth.signUp({ email, password: clave })
     if (error) return { ok: false, errores: [{ campo: 'clave', motivo: mensajeAuth(error) }] }
     if (!data.session) {
-      // El proyecto exige confirmación de email: la cuenta existe pero no hay
-      // sesión todavía. Se informa para que la persona confirme y entre.
+      // GoTrue OFUSCA los emails ya registrados (anti-enumeración): responde
+      // 200 con un usuario sintético SIN identidades y sin sesión. Ese es el
+      // único indicador fiable del duplicado y permite cumplir R-01 AC2 con
+      // mensaje explícito (verificado en E2E el 17/10/2026).
+      if (data.user && (data.user.identities?.length ?? 0) === 0) {
+        return { ok: false, errores: [{ campo: 'email', motivo: 'Ya existe una cuenta con ese email.' }] }
+      }
+      // Registro nuevo con confirmación de email activa: la cuenta existe pero
+      // no hay sesión todavía. Se informa para que confirme y entre.
       return {
         ok: false,
         errores: [
