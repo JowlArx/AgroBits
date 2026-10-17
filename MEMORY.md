@@ -4,7 +4,7 @@
 
 AgroBits se encuentra en la fase de definición de requisitos (Spec-Driven Development).
 
-La especificación del MVP (`docs/spec.md` v2) fue **aprobada por el humano el 16/10/2026** (hito M0) y el plan (`docs/plan.md`) fue **aprobado el 16/10/2026** (hito M1). Siguiente paso: desglose de tareas (M2). Todavía no se ha iniciado la implementación.
+La especificación del MVP (`docs/spec.md` v2) fue **aprobada por el humano el 16/10/2026** (hito M0) y el plan (`docs/plan.md`) fue **aprobado el 16/10/2026** (hito M1). El desglose de tareas (`docs/tasks.md`, hito M2) está propuesto y **pendiente de aprobación humana**. Todavía no se ha iniciado la implementación.
 
 ## Objetivo
 
@@ -55,9 +55,11 @@ Planificación (16/10/2026):
 - Protocolo de comunicación del ESP32 (post-MVP).
 - Aprobación de `docs/plan.md` → completada el 16/10/2026 (M1).
 
+- Aprobación del desglose de `docs/tasks.md` (M2).
+
 ## Próximo objetivo
 
-Desglosar `docs/tasks.md` a partir del plan aprobado (M2) y someterlo a aprobación humana antes de generar código.
+Obtener la aprobación humana del desglose de `docs/tasks.md` (M2), incluida la ubicación de la SPA (`web/` o raíz), para iniciar T-10 bajo supervisión.
 
 ## Reglas de actualización
 
