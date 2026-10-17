@@ -10,6 +10,9 @@ import {
 import { crearCultivo, reiniciarCultivos, obtenerCultivos } from './storeCultivos'
 import type { UmbralesPorTipo } from '../domain/tipos'
 
+// T-23: store con caché síncrona y acciones asíncronas delegadas al
+// ProveedorDatos inyectado (doble en memoria en los tests).
+
 const umbrales: UmbralesPorTipo = {
   humedad_suelo: { min: 30, max: 70 },
   temperatura: { min: 12, max: 28 },
@@ -17,8 +20,8 @@ const umbrales: UmbralesPorTipo = {
   luminosidad: { min: 5_000, max: 40_000 },
 }
 
-function crearCultivoEjemplo(nombre: string): string {
-  const resultado = crearCultivo({ nombre, tipoCultivo: 'Tomate', umbrales })
+async function crearCultivoEjemplo(nombre: string): Promise<string> {
+  const resultado = await crearCultivo({ nombre, tipoCultivo: 'Tomate', umbrales })
   if (!resultado.ok) throw new Error('no se pudo crear el cultivo de prueba')
   return resultado.valor.id
 }
@@ -30,9 +33,9 @@ beforeEach(() => {
   reiniciarSensores()
 })
 
-describe('store de sensores (T-18, R-06)', () => {
-  it('AC1: crear un sensor con nombre válido lo añade con id y sin cultivos', () => {
-    const resultado = crearSensor('Sensor 1')
+describe('store de sensores (T-18/R-06, T-23)', () => {
+  it('AC1: crear un sensor con nombre válido lo añade con id y sin cultivos', async () => {
+    const resultado = await crearSensor('Sensor 1')
 
     expect(resultado.ok).toBe(true)
     if (resultado.ok) {
@@ -42,51 +45,51 @@ describe('store de sensores (T-18, R-06)', () => {
     expect(obtenerSensores()).toHaveLength(1)
   })
 
-  it('AC1: rechaza el nombre vacío', () => {
-    const resultado = crearSensor('   ')
+  it('AC1: rechaza el nombre vacío', async () => {
+    const resultado = await crearSensor('   ')
 
     expect(resultado.ok).toBe(false)
     if (!resultado.ok) expect(resultado.errores[0].motivo).toMatch(/obligatorio/)
     expect(obtenerSensores()).toHaveLength(0)
   })
 
-  it('AC2: asocia un sensor a un cultivo existente', () => {
-    const cultivoId = crearCultivoEjemplo('Huerto')
-    const sensor = crearSensor('Sensor A')
+  it('AC2: asocia un sensor a un cultivo existente', async () => {
+    const cultivoId = await crearCultivoEjemplo('Huerto')
+    const sensor = await crearSensor('Sensor A')
     if (!sensor.ok) throw new Error('esperaba crear')
 
-    const resultado = asociarSensor(sensor.valor.id, cultivoId, existeCultivo)
+    const resultado = await asociarSensor(sensor.valor.id, cultivoId, existeCultivo)
 
     expect(resultado.ok).toBe(true)
     expect(obtenerSensoresDeCultivo(cultivoId)).toHaveLength(1)
   })
 
-  it('rechaza asociar a un cultivo inexistente', () => {
-    const sensor = crearSensor('Sensor B')
+  it('rechaza asociar a un cultivo inexistente', async () => {
+    const sensor = await crearSensor('Sensor B')
     if (!sensor.ok) throw new Error('esperaba crear')
 
-    const resultado = asociarSensor(sensor.valor.id, 'no-existe', existeCultivo)
+    const resultado = await asociarSensor(sensor.valor.id, 'no-existe', existeCultivo)
 
     expect(resultado.ok).toBe(false)
     expect(obtenerSensores()[0].cultivoIds).toEqual([])
   })
 
-  it('rechaza asociar un sensor inexistente', () => {
-    const cultivoId = crearCultivoEjemplo('Huerto')
+  it('rechaza asociar un sensor inexistente', async () => {
+    const cultivoId = await crearCultivoEjemplo('Huerto')
 
-    const resultado = asociarSensor('no-existe', cultivoId, existeCultivo)
+    const resultado = await asociarSensor('no-existe', cultivoId, existeCultivo)
 
     expect(resultado.ok).toBe(false)
   })
 
-  it('AC3: el modelo admite un sensor en varios cultivos (N–N)', () => {
-    const uno = crearCultivoEjemplo('Huerto uno')
-    const dos = crearCultivoEjemplo('Huerto dos')
-    const sensor = crearSensor('Sensor compartido')
+  it('AC3: el modelo admite un sensor en varios cultivos (N–N)', async () => {
+    const uno = await crearCultivoEjemplo('Huerto uno')
+    const dos = await crearCultivoEjemplo('Huerto dos')
+    const sensor = await crearSensor('Sensor compartido')
     if (!sensor.ok) throw new Error('esperaba crear')
 
-    asociarSensor(sensor.valor.id, uno, existeCultivo)
-    const segunda = asociarSensor(sensor.valor.id, dos, existeCultivo)
+    await asociarSensor(sensor.valor.id, uno, existeCultivo)
+    const segunda = await asociarSensor(sensor.valor.id, dos, existeCultivo)
 
     expect(segunda.ok).toBe(true)
     expect(obtenerSensoresDeCultivo(uno)).toHaveLength(1)
@@ -94,38 +97,38 @@ describe('store de sensores (T-18, R-06)', () => {
     expect(obtenerSensores()).toHaveLength(1)
   })
 
-  it('asociar dos veces al mismo cultivo es idempotente', () => {
-    const cultivoId = crearCultivoEjemplo('Huerto')
-    const sensor = crearSensor('Sensor C')
+  it('asociar dos veces al mismo cultivo es idempotente', async () => {
+    const cultivoId = await crearCultivoEjemplo('Huerto')
+    const sensor = await crearSensor('Sensor C')
     if (!sensor.ok) throw new Error('esperaba crear')
 
-    asociarSensor(sensor.valor.id, cultivoId, existeCultivo)
-    asociarSensor(sensor.valor.id, cultivoId, existeCultivo)
+    await asociarSensor(sensor.valor.id, cultivoId, existeCultivo)
+    await asociarSensor(sensor.valor.id, cultivoId, existeCultivo)
 
     expect(obtenerSensores()[0].cultivoIds).toEqual([cultivoId])
   })
 
-  it('quitarAsociaciones elimina el sensor sin cultivos y devuelve su id', () => {
-    const cultivoId = crearCultivoEjemplo('Huerto')
-    const sensor = crearSensor('Sensor D')
+  it('quitarAsociaciones elimina el sensor sin cultivos y devuelve su id', async () => {
+    const cultivoId = await crearCultivoEjemplo('Huerto')
+    const sensor = await crearSensor('Sensor D')
     if (!sensor.ok) throw new Error('esperaba crear')
-    asociarSensor(sensor.valor.id, cultivoId, existeCultivo)
+    await asociarSensor(sensor.valor.id, cultivoId, existeCultivo)
 
-    const borrados = quitarAsociacionesDeCultivo(cultivoId)
+    const borrados = await quitarAsociacionesDeCultivo(cultivoId)
 
     expect(borrados).toEqual([sensor.valor.id])
     expect(obtenerSensores()).toHaveLength(0)
   })
 
-  it('quitarAsociaciones conserva el sensor que sigue en otro cultivo', () => {
-    const uno = crearCultivoEjemplo('Huerto uno')
-    const dos = crearCultivoEjemplo('Huerto dos')
-    const sensor = crearSensor('Sensor E')
+  it('quitarAsociaciones conserva el sensor que sigue en otro cultivo', async () => {
+    const uno = await crearCultivoEjemplo('Huerto uno')
+    const dos = await crearCultivoEjemplo('Huerto dos')
+    const sensor = await crearSensor('Sensor E')
     if (!sensor.ok) throw new Error('esperaba crear')
-    asociarSensor(sensor.valor.id, uno, existeCultivo)
-    asociarSensor(sensor.valor.id, dos, existeCultivo)
+    await asociarSensor(sensor.valor.id, uno, existeCultivo)
+    await asociarSensor(sensor.valor.id, dos, existeCultivo)
 
-    const borrados = quitarAsociacionesDeCultivo(uno)
+    const borrados = await quitarAsociacionesDeCultivo(uno)
 
     expect(borrados).toEqual([])
     expect(obtenerSensores()).toHaveLength(1)

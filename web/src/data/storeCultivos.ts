@@ -1,25 +1,26 @@
-// T-13 — Almacén en memoria de cultivos para la Fase 1 (D6: sin backend).
-// Los datos viven solo durante la sesión de la aplicación: en la Fase 2 este
-// módulo se sustituirá por la capa de datos de Supabase (tarea T-23) sin
-// cambiar las pantallas.
+// T-13/T-23 — Store de cultivos: caché síncrona para la UI (suscripciones y
+// `useSyncExternalStore` sin cambios) + acciones ASÍNCRONAS que delegan en el
+// ProveedorDatos inyectado (capa intercambiable, plan.md §2). La validación
+// barata (nombre, tipo, duplicado, umbrales) sigue siendo local y síncrona;
+// el proveedor aporta la persistencia real (Supabase en la app, memoria en
+// los tests).
 
-import type { Cultivo, UmbralesPorTipo } from '../domain/tipos'
+import type { Cultivo } from '../domain/tipos'
 import { validarUmbrales } from '../domain/umbrales'
 import { umbralesPorDefecto } from './catalogo'
+import {
+  exigirProveedor,
+  type ErrorCampo,
+  type NuevoCultivo,
+  type Resultado,
+} from './datos/proveedorDatos'
 
-export interface NuevoCultivo {
-  nombre: string
-  tipoCultivo: string
-  umbrales: UmbralesPorTipo
-}
+export type { ErrorCampo, NuevoCultivo, Resultado }
 
-export type ErrorCampo = { campo: string; motivo: string }
-export type Resultado<T> =
-  | { ok: true; valor: T }
-  | { ok: false; errores: ErrorCampo[] }
+export type EstadoCarga = 'sin-cargar' | 'cargando' | 'listo' | 'error'
 
 let cultivos: Cultivo[] = []
-let contador = 0
+let estadoCarga: EstadoCarga = 'sin-cargar'
 const oyentes = new Set<() => void>()
 
 function notificar(): void {
@@ -38,6 +39,24 @@ export function obtenerCultivos(): Cultivo[] {
 
 export function obtenerCultivo(id: string): Cultivo | undefined {
   return cultivos.find((c) => c.id === id)
+}
+
+export function obtenerEstadoCarga(): EstadoCarga {
+  return estadoCarga
+}
+
+/** T-23: carga la lista desde el proveedor (la app la llama al abrir sesión). */
+export async function cargarCultivos(): Promise<void> {
+  estadoCarga = 'cargando'
+  notificar()
+  try {
+    cultivos = await exigirProveedor().cargarCultivos()
+    estadoCarga = 'listo'
+  } catch (error) {
+    console.error('No se pudieron cargar los cultivos', error)
+    estadoCarga = 'error'
+  }
+  notificar()
 }
 
 function validar(datos: NuevoCultivo, idPropio?: string): ErrorCampo[] {
@@ -67,47 +86,49 @@ function validar(datos: NuevoCultivo, idPropio?: string): ErrorCampo[] {
   return errores
 }
 
-export function crearCultivo(datos: NuevoCultivo): Resultado<Cultivo> {
+export async function crearCultivo(datos: NuevoCultivo): Promise<Resultado<Cultivo>> {
   const errores = validar(datos)
   if (errores.length > 0) return { ok: false, errores }
 
-  const cultivo: Cultivo = {
-    id: `c${++contador}`,
-    nombre: datos.nombre.trim(),
-    tipoCultivo: datos.tipoCultivo.trim(),
-    umbrales: datos.umbrales,
+  const resultado = await exigirProveedor().crearCultivo(datos)
+  if (resultado.ok) {
+    cultivos.push(resultado.valor)
+    notificar()
   }
-  cultivos.push(cultivo)
-  notificar()
-  return { ok: true, valor: cultivo }
+  return resultado
 }
 
-export function actualizarCultivo(
-  id: string,
-  datos: NuevoCultivo,
-): Resultado<Cultivo> {
+export async function actualizarCultivo(id: string, datos: NuevoCultivo): Promise<Resultado<Cultivo>> {
   const existente = obtenerCultivo(id)
   if (!existente) return { ok: false, errores: [{ campo: 'id', motivo: 'Cultivo no encontrado' }] }
 
   const errores = validar(datos, id)
   if (errores.length > 0) return { ok: false, errores }
 
-  const actualizado: Cultivo = { ...existente, ...datos, nombre: datos.nombre.trim() }
-  cultivos = cultivos.map((c) => (c.id === id ? actualizado : c))
-  notificar()
-  return { ok: true, valor: actualizado }
+  const resultado = await exigirProveedor().actualizarCultivo(id, datos)
+  if (resultado.ok) {
+    cultivos = cultivos.map((c) => (c.id === id ? resultado.valor : c))
+    notificar()
+  }
+  return resultado
 }
 
-export function eliminarCultivo(id: string): void {
+export async function eliminarCultivo(id: string): Promise<void> {
+  await exigirProveedor().eliminarCultivo(id)
   cultivos = cultivos.filter((c) => c.id !== id)
+  notificar()
+}
+
+/** Vacia la caché local sin tocar el proveedor (cierre de sesión / tests). */
+export function vaciarCultivos(): void {
+  cultivos = []
+  estadoCarga = 'sin-cargar'
   notificar()
 }
 
 /** Solo para tests: vuelve al estado inicial. */
 export function reiniciarCultivos(): void {
-  cultivos = []
-  contador = 0
-  notificar()
+  vaciarCultivos()
 }
 
 /** Crea un cultivo a partir del catálogo con sus umbrales por defecto (R-11 AC1). */

@@ -47,6 +47,8 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
   const [tipoCultivo, setTipoCultivo] = useState(inicial.tipoCultivo)
   const [cadenas, setCadenas] = useState<ValoresUmbral>(() => aCadenas(inicial.umbrales))
   const [errores, setErrores] = useState<ErrorCampo[]>([])
+  // T-23: el guardado es asíncrono (BD); el bloqueo evita envíos duplicados.
+  const [guardando, setGuardando] = useState(false)
 
   const esPersonalizado = !CATALOGO_CULTIVOS.some((e) => e.tipoCultivo === tipoCultivo)
 
@@ -64,15 +66,21 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
     setCadenas((prev) => ({ ...prev, [tipo]: { ...prev[tipo], [lado]: valor } }))
   }
 
-  function guardar(evento: React.FormEvent): void {
+  async function guardar(evento: React.FormEvent): Promise<void> {
     evento.preventDefault()
-    const datos = { nombre, tipoCultivo: tipoCultivo.trim() || TIPO_PERSONALIZADO, umbrales: aNumeros(cadenas) }
-    const resultado = existente
-      ? actualizarCultivo(existente.id, datos)
-      : crearCultivo(datos)
+    if (guardando) return
+    setGuardando(true)
+    try {
+      const datos = { nombre, tipoCultivo: tipoCultivo.trim() || TIPO_PERSONALIZADO, umbrales: aNumeros(cadenas) }
+      const resultado = existente
+        ? await actualizarCultivo(existente.id, datos)
+        : await crearCultivo(datos)
 
-    if (resultado.ok) onGuardado()
-    else setErrores(resultado.errores)
+      if (resultado.ok) onGuardado()
+      else setErrores(resultado.errores)
+    } finally {
+      setGuardando(false)
+    }
   }
 
   return (
@@ -160,7 +168,9 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
         </fieldset>
 
         <div className="acciones">
-          <button type="submit">Guardar</button>
+          <button type="submit" disabled={guardando}>
+            {guardando ? 'Guardando…' : 'Guardar'}
+          </button>
           <button type="button" onClick={onCancelar}>
             Cancelar
           </button>

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import App from '../App'
 import { reiniciarCultivos, obtenerCultivos } from '../data/storeCultivos'
 import {
@@ -15,6 +15,8 @@ const existeCultivo = (id: string) => obtenerCultivos().some((c) => c.id === id)
 
 // T-16/T-22: la app está tras un gate de acceso; empieza con sesión abierta
 // (doble de auth inyectado en src/tests/soporte/configurarTests.ts).
+// T-23: crear sensor, asociar y generar lecturas son operaciones asíncronas
+// (ProveedorDatos), por eso cada paso espera su efecto en la interfaz.
 beforeEach(async () => {
   await iniciarSesion('pruebas@agrobits.test', 'secreta')
   reiniciarCultivos()
@@ -22,12 +24,13 @@ beforeEach(async () => {
   reiniciarMediciones()
 })
 
-function crearCultivo(nombre: string): void {
+async function crearCultivo(nombre: string): Promise<void> {
   fireEvent.click(screen.getByRole('button', { name: 'Nuevo cultivo' }))
   fireEvent.change(screen.getByPlaceholderText('Ej.: Tomates del balcón'), {
     target: { value: nombre },
   })
   fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+  await screen.findByText(nombre)
 }
 
 function abrirDetalle(): void {
@@ -39,15 +42,20 @@ function crearSensor(nombre: string): void {
   fireEvent.click(screen.getByTestId('crear-sensor'))
 }
 
-function crearCultivoConDetalle(nombre: string): void {
-  crearCultivo(nombre)
+async function crearCultivoConDetalle(nombre: string): Promise<void> {
+  await crearCultivo(nombre)
   abrirDetalle()
 }
 
-describe('vista de mediciones del cultivo (T-14, R-09)', () => {
-  it('R-09 AC2: sin sensores ni lecturas muestra "sin datos" para los 4 tipos', () => {
+async function generarLectura(): Promise<void> {
+  fireEvent.click(screen.getByTestId('simular-lectura'))
+  await waitFor(() => expect(screen.getByTestId('resumen-medicion').textContent).toMatch(/4 de 4/))
+}
+
+describe('vista de mediciones del cultivo (T-14/T-23, R-09)', () => {
+  it('R-09 AC2: sin sensores ni lecturas muestra "sin datos" para los 4 tipos', async () => {
     render(<App />)
-    crearCultivoConDetalle('Huerto nuevo')
+    await crearCultivoConDetalle('Huerto nuevo')
 
     expect(screen.getByTestId('sin-sensores')).toBeTruthy()
     expect(screen.getByTestId('resumen-medicion').textContent).toMatch(/Sin sensores/)
@@ -58,12 +66,13 @@ describe('vista de mediciones del cultivo (T-14, R-09)', () => {
     expect(screen.queryByTestId('simular-lectura')).toBeNull()
   })
 
-  it('R-09 AC1: tras generar una lectura muestra los 4 tipos con valor, unidad y hora', () => {
+  it('R-09 AC1: tras generar una lectura muestra los 4 tipos con valor, unidad y hora', async () => {
     render(<App />)
-    crearCultivoConDetalle('Huerto con datos')
+    await crearCultivoConDetalle('Huerto con datos')
     crearSensor('Sensor A')
+    await screen.findByTestId('lista-sensores')
 
-    fireEvent.click(screen.getByTestId('simular-lectura'))
+    await generarLectura()
 
     expect(screen.getByTestId('resumen-medicion').textContent).toMatch(/4 de 4/)
     for (const tipo of TIPOS_MEDICION) {
@@ -76,11 +85,12 @@ describe('vista de mediciones del cultivo (T-14, R-09)', () => {
     }
   })
 
-  it('la unidad mostrada corresponde al tipo de medición', () => {
+  it('la unidad mostrada corresponde al tipo de medición', async () => {
     render(<App />)
-    crearCultivoConDetalle('Huerto')
+    await crearCultivoConDetalle('Huerto')
     crearSensor('Sensor B')
-    fireEvent.click(screen.getByTestId('simular-lectura'))
+    await screen.findByTestId('lista-sensores')
+    await generarLectura()
 
     expect(screen.getByTestId('valor-temperatura').textContent).toContain('°C')
     expect(screen.getByTestId('valor-luminosidad').textContent).toContain('lux')
@@ -88,11 +98,12 @@ describe('vista de mediciones del cultivo (T-14, R-09)', () => {
     expect(screen.getByTestId('valor-humedad_ambiental').textContent).toContain('% HR')
   })
 
-  it('los valores simulados caen dentro de los rangos del tipo (contrato R-08)', () => {
+  it('los valores simulados caen dentro de los rangos del tipo (contrato R-08)', async () => {
     render(<App />)
-    crearCultivoConDetalle('Huerto rango')
+    await crearCultivoConDetalle('Huerto rango')
     crearSensor('Sensor C')
-    fireEvent.click(screen.getByTestId('simular-lectura'))
+    await screen.findByTestId('lista-sensores')
+    await generarLectura()
 
     const texto = screen.getByTestId('valor-temperatura').textContent ?? ''
     const numero = Number(texto.replace(/[^\d.,-]/g, '').replace(',', '.'))
@@ -101,9 +112,9 @@ describe('vista de mediciones del cultivo (T-14, R-09)', () => {
     expect(numero).toBeLessThanOrEqual(40)
   })
 
-  it('vuelve a la lista de cultivos', () => {
+  it('vuelve a la lista de cultivos', async () => {
     render(<App />)
-    crearCultivoConDetalle('Huerto ida y vuelta')
+    await crearCultivoConDetalle('Huerto ida y vuelta')
 
     fireEvent.click(screen.getByRole('button', { name: 'Volver' }))
 
@@ -111,46 +122,51 @@ describe('vista de mediciones del cultivo (T-14, R-09)', () => {
   })
 })
 
-describe('registro y asociación de sensores (T-18, R-06)', () => {
-  it('AC1: crea un sensor con nombre y aparece listado', () => {
+describe('registro y asociación de sensores (T-18/T-23, R-06)', () => {
+  it('AC1: crea un sensor con nombre y aparece listado', async () => {
     render(<App />)
-    crearCultivoConDetalle('Huerto con sensor')
+    await crearCultivoConDetalle('Huerto con sensor')
 
     crearSensor('Sensor del balcón')
 
-    expect(screen.getByTestId('lista-sensores').textContent).toContain('Sensor del balcón')
+    await waitFor(() =>
+      expect(screen.getByTestId('lista-sensores').textContent).toContain('Sensor del balcón'),
+    )
     expect(screen.queryByTestId('sin-sensores')).toBeNull()
   })
 
-  it('AC1: rechaza un sensor sin nombre e informa del motivo', () => {
+  it('AC1: rechaza un sensor sin nombre e informa del motivo', async () => {
     render(<App />)
-    crearCultivoConDetalle('Huerto')
+    await crearCultivoConDetalle('Huerto')
 
     crearSensor('   ')
 
+    expect(await screen.findByTestId('error-sensor')).toBeTruthy()
     expect(screen.getByTestId('error-sensor').textContent).toMatch(/obligatorio/)
     expect(screen.queryByTestId('lista-sensores')).toBeNull()
   })
 
-  it('AC2: la asociación se refleja en la visualización de mediciones', () => {
+  it('AC2: la asociación se refleja en la visualización de mediciones', async () => {
     render(<App />)
-    crearCultivoConDetalle('Huerto asociado')
+    await crearCultivoConDetalle('Huerto asociado')
     expect(screen.queryByTestId('simular-lectura')).toBeNull()
 
     crearSensor('Sensor asociado')
+    await waitFor(() => expect(screen.queryByTestId('simular-lectura')).toBeTruthy())
 
     // El sensor ya asociado habilita las lecturas de este cultivo
-    fireEvent.click(screen.getByTestId('simular-lectura'))
+    await generarLectura()
     expect(screen.getByTestId('resumen-medicion').textContent).toMatch(/4 de 4/)
     expect(screen.getByTestId('lista-sensores').textContent).toContain('Sensor asociado')
   })
 
-  it('AC3: el modelo admite N–N y la vista refleja la asociación de un segundo cultivo', () => {
+  it('AC3: el modelo admite N–N y la vista refleja la asociación de un segundo cultivo', async () => {
     render(<App />)
-    crearCultivoConDetalle('Cultivo uno')
+    await crearCultivoConDetalle('Cultivo uno')
     crearSensor('Sensor compartido')
+    await waitFor(() => expect(screen.queryByTestId('lista-sensores')).toBeTruthy())
     fireEvent.click(screen.getByRole('button', { name: 'Volver' }))
-    crearCultivo('Cultivo dos')
+    await crearCultivo('Cultivo dos')
     // Hay dos cultivos en la lista: abrimos el segundo.
     const botones = screen.getAllByRole('button', { name: 'Ver mediciones' })
     fireEvent.click(botones[1])
@@ -161,8 +177,8 @@ describe('registro y asociación de sensores (T-18, R-06)', () => {
     // El modelo (D5) permite la segunda asociación; la vista la refleja al cambiar la store.
     const sensor = obtenerSensores()[0]
     let resultado: unknown
-    act(() => {
-      resultado = asociarSensor(sensor.id, 'c2', existeCultivo)
+    await act(async () => {
+      resultado = await asociarSensor(sensor.id, 'c2', existeCultivo)
     })
     expect(resultado).toEqual(expect.objectContaining({ ok: true }))
 
@@ -171,15 +187,16 @@ describe('registro y asociación de sensores (T-18, R-06)', () => {
     expect(obtenerSensores()[0].cultivoIds).toHaveLength(2)
   })
 
-  it('al eliminar un cultivo se retira su sensor (y sus mediciones)', () => {
+  it('al eliminar un cultivo se retira su sensor (y sus mediciones)', async () => {
     render(<App />)
-    crearCultivoConDetalle('Huerto que se va')
+    await crearCultivoConDetalle('Huerto que se va')
     crearSensor('Sensor efímero')
-    fireEvent.click(screen.getByTestId('simular-lectura'))
+    await waitFor(() => expect(screen.queryByTestId('simular-lectura')).toBeTruthy())
+    await generarLectura()
     fireEvent.click(screen.getByRole('button', { name: 'Volver' }))
     fireEvent.click(screen.getByText('Eliminar'))
 
-    expect(screen.getByTestId('vacio')).toBeTruthy()
+    expect(await screen.findByTestId('vacio')).toBeTruthy()
     expect(obtenerSensores()).toHaveLength(0)
   })
 })

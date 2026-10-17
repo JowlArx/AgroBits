@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import App from './App'
 import { reiniciarCultivos } from './data/storeCultivos'
 import { iniciarSesion } from './data/storeSesion'
@@ -7,6 +7,8 @@ import { iniciarSesion } from './data/storeSesion'
 // T-16/T-22: la app está tras un gate de acceso; estos tests del flujo de
 // cultivos empiezan ya con una sesión abierta (doble de auth inyectado en
 // src/tests/soporte/configurarTests.ts).
+// T-23: guardar/eliminar son asíncronos (ProveedorDatos), por eso los pasos
+// esperan el resultado en la interfaz (findBy/waitFor).
 beforeEach(async () => {
   reiniciarCultivos()
   await iniciarSesion('pruebas@agrobits.test', 'secreta')
@@ -26,16 +28,17 @@ function guardar(): void {
   fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
 }
 
-function crearCultivoRapido(nombre: string): void {
+async function crearCultivoRapido(nombre: string): Promise<void> {
   irANuevoCultivo()
   rellenarNombre(nombre)
   guardar()
+  await screen.findByText(nombre)
 }
 
-describe('flujo de cultivos en la interfaz (T-13)', () => {
-  it('empieza mostrando el estado vacío', () => {
+describe('flujo de cultivos en la interfaz (T-13/T-23)', () => {
+  it('empieza mostrando el estado vacío', async () => {
     render(<App />)
-    expect(screen.getByTestId('vacio')).toBeTruthy()
+    expect(await screen.findByTestId('vacio')).toBeTruthy()
   })
 
   it('R-11 AC1: al elegir un tipo del catálogo se precargan sus umbrales', () => {
@@ -66,14 +69,14 @@ describe('flujo de cultivos en la interfaz (T-13)', () => {
     expect(screen.getByTestId('aviso-catalogo').textContent).toMatch(/orientativa/)
   })
 
-  it('R-04 AC1: crea un cultivo y aparece en la lista', () => {
+  it('R-04 AC1: crea un cultivo y aparece en la lista', async () => {
     render(<App />)
-    crearCultivoRapido('Tomates del balcón')
+    await crearCultivoRapido('Tomates del balcón')
 
     expect(screen.getByTestId('lista-cultivos').textContent).toContain('Tomates del balcón')
   })
 
-  it('R-05 AC2: rechaza umbrales inválidos con mensaje y no guarda', () => {
+  it('R-05 AC2: rechaza umbrales inválidos con mensaje y no guarda', async () => {
     render(<App />)
     irANuevoCultivo()
     rellenarNombre('Cultivo inválido')
@@ -82,45 +85,47 @@ describe('flujo de cultivos en la interfaz (T-13)', () => {
     fireEvent.change(screen.getByTestId('min-temperatura'), { target: { value: '30' } })
     guardar()
 
-    expect(screen.getByRole('alert').textContent).toMatch(/menor/)
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toMatch(/menor/))
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
-    expect(screen.getByTestId('vacio')).toBeTruthy()
+    expect(await screen.findByTestId('vacio')).toBeTruthy()
   })
 
-  it('R-04 AC2: edita el nombre de un cultivo y persiste', () => {
+  it('R-04 AC2: edita el nombre de un cultivo y persiste', async () => {
     render(<App />)
-    crearCultivoRapido('Nombre original')
+    await crearCultivoRapido('Nombre original')
 
     fireEvent.click(screen.getByRole('button', { name: 'Editar' }))
     rellenarNombre('Nombre corregido')
     guardar()
 
-    expect(screen.getByTestId('lista-cultivos').textContent).toContain('Nombre corregido')
+    expect(await screen.findByText('Nombre corregido')).toBeTruthy()
     expect(screen.getByTestId('lista-cultivos').textContent).not.toContain('Nombre original')
   })
 
-  it('R-04 AC3: elimina un cultivo', () => {
+  it('R-04 AC3: elimina un cultivo', async () => {
     render(<App />)
-    crearCultivoRapido('Se va a borrar')
+    await crearCultivoRapido('Se va a borrar')
 
     fireEvent.click(screen.getByText('Eliminar'))
 
-    expect(screen.getByTestId('vacio')).toBeTruthy()
+    expect(await screen.findByTestId('vacio')).toBeTruthy()
   })
 
-  it('R-12 AC1: un umbral editado persiste al reabrir el formulario', () => {
+  it('R-12 AC1: un umbral editado persiste al reabrir el formulario', async () => {
     render(<App />)
-    crearCultivoRapido('Con umbral propio')
+    await crearCultivoRapido('Con umbral propio')
 
     fireEvent.click(screen.getByRole('button', { name: 'Editar' }))
     fireEvent.change(screen.getByTestId('min-temperatura'), { target: { value: '20' } })
     guardar()
+    // El formulario se cierra al guardar de forma asíncrona: se espera la lista.
+    await screen.findByText('Con umbral propio')
 
     fireEvent.click(screen.getByRole('button', { name: 'Editar' }))
     expect((screen.getByTestId('min-temperatura') as HTMLInputElement).value).toBe('20')
   })
 
-  it('permite crear un cultivo de tipo personalizado', () => {
+  it('permite crear un cultivo de tipo personalizado', async () => {
     render(<App />)
     irANuevoCultivo()
 
@@ -131,6 +136,6 @@ describe('flujo de cultivos en la interfaz (T-13)', () => {
     rellenarNombre('Calabacín 1')
     guardar()
 
-    expect(screen.getByTestId('lista-cultivos').textContent).toContain('Calabacines')
+    expect(await screen.findByText('Calabacines')).toBeTruthy()
   })
 })

@@ -61,14 +61,14 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
   const ultimas = ultimasPorTipo(sensores.map((s) => s.id))
   const conDatos = TIPOS_MEDICION.filter((tipo) => ultimas[tipo] !== undefined).length
 
-  function crearYAsociar(evento: React.FormEvent): void {
+  async function crearYAsociar(evento: React.FormEvent): Promise<void> {
     evento.preventDefault()
-    const sensor = crearSensor(nombreSensor)
+    const sensor = await crearSensor(nombreSensor)
     if (!sensor.ok) {
       setErrorSensor(sensor.errores.map((e) => e.motivo).join('. '))
       return
     }
-    const asociacion = asociarSensor(sensor.valor.id, cultivoId, (id) => obtenerCultivo(id) !== undefined)
+    const asociacion = await asociarSensor(sensor.valor.id, cultivoId, (id) => obtenerCultivo(id) !== undefined)
     if (!asociacion.ok) {
       setErrorSensor(asociacion.errores.map((e) => e.motivo).join('. '))
       return
@@ -136,9 +136,12 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
           type="button"
           data-testid="simular-lectura"
           onClick={() => {
-            sensores.forEach((sensor) => generarLectura(sensor.id))
-            // R-13: cada nueva lectura se evalúa contra los umbrales (D14).
-            procesarLecturas(cultivo, ultimasPorTipo(sensores.map((s) => s.id)))
+            void (async () => {
+              // T-23: cada lectura se guarda en la BD antes de mostrarse.
+              for (const sensor of sensores) await generarLectura(sensor.id)
+              // R-13: cada nueva lectura se evalúa contra los umbrales (D14).
+              procesarLecturas(cultivo, ultimasPorTipo(sensores.map((s) => s.id)))
+            })()
           }}
         >
           Generar lectura simulada
@@ -178,8 +181,8 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
       </table>
 
       <p className="aviso">
-        Datos simulados en la interfaz (Fase 1). En la Fase 2 las lecturas llegarán cada 5 minutos
-        por sensor (decisión D15).
+        Lecturas simuladas guardadas en Supabase (T-23). En la Fase 2 un generador las enviará
+        cada 5 minutos por sensor (decisión D15).
       </p>
     </section>
   )

@@ -9,6 +9,9 @@ import { crearCultivo, reiniciarCultivos } from './storeCultivos'
 import type { Medicion, TipoMedicion, UmbralesPorTipo } from '../domain/tipos'
 import { TIPOS_MEDICION, UNIDADES } from '../domain/tipos'
 
+// T-23: crearCultivo pasó a ser asíncrono (ProveedorDatos); las alertas
+// siguen evaluándose en memoria hasta T-25 (su alcance: modelo D14 en BD).
+
 const umbrales: UmbralesPorTipo = {
   humedad_suelo: { min: 30, max: 70 },
   temperatura: { min: 12, max: 28 },
@@ -16,8 +19,8 @@ const umbrales: UmbralesPorTipo = {
   luminosidad: { min: 5_000, max: 40_000 },
 }
 
-function cultivoEjemplo() {
-  const resultado = crearCultivo({ nombre: 'Huerto', tipoCultivo: 'Tomate', umbrales })
+async function cultivoEjemplo() {
+  const resultado = await crearCultivo({ nombre: 'Huerto', tipoCultivo: 'Tomate', umbrales })
   if (!resultado.ok) throw new Error('no se pudo crear el cultivo')
   return resultado.valor
 }
@@ -44,8 +47,8 @@ beforeEach(() => {
 })
 
 describe('store de alertas (T-15, R-13 modelo D14)', () => {
-  it('AC1: medición fuera de rango sin alerta previa → crea una alerta activa', () => {
-    const cultivo = cultivoEjemplo()
+  it('AC1: medición fuera de rango sin alerta previa → crea una alerta activa', async () => {
+    const cultivo = await cultivoEjemplo()
 
     procesarLecturas(cultivo, ultimas({ humedad_suelo: 10 }))
 
@@ -58,8 +61,8 @@ describe('store de alertas (T-15, R-13 modelo D14)', () => {
     expect(alertas[0].creadaEn).toBe('2026-10-17T12:00:00.000Z')
   })
 
-  it('AC2: lecturas sucesivas fuera de rango no duplican la alerta', () => {
-    const cultivo = cultivoEjemplo()
+  it('AC2: lecturas sucesivas fuera de rango no duplican la alerta', async () => {
+    const cultivo = await cultivoEjemplo()
 
     procesarLecturas(cultivo, ultimas({ humedad_suelo: 10 }))
     procesarLecturas(cultivo, ultimas({ humedad_suelo: 8 }))
@@ -70,8 +73,8 @@ describe('store de alertas (T-15, R-13 modelo D14)', () => {
     expect(alertas[0].valor).toBe(5) // refleja la última lectura
   })
 
-  it('AC3: volver al rango con alerta activa → se resuelve', () => {
-    const cultivo = cultivoEjemplo()
+  it('AC3: volver al rango con alerta activa → se resuelve', async () => {
+    const cultivo = await cultivoEjemplo()
     procesarLecturas(cultivo, ultimas({ humedad_suelo: 10 }))
 
     procesarLecturas(cultivo, ultimas({ humedad_suelo: 50 }))
@@ -82,16 +85,16 @@ describe('store de alertas (T-15, R-13 modelo D14)', () => {
     expect(alertas[0].resueltaEn).toBe('2026-10-17T12:00:00.000Z')
   })
 
-  it('AC4: medición dentro del rango sin alerta previa → no crea nada', () => {
-    const cultivo = cultivoEjemplo()
+  it('AC4: medición dentro del rango sin alerta previa → no crea nada', async () => {
+    const cultivo = await cultivoEjemplo()
 
     procesarLecturas(cultivo, ultimas({ humedad_suelo: 50, temperatura: 20 }))
 
     expect(obtenerAlertas()).toHaveLength(0)
   })
 
-  it('tras resolverse, una nueva salida del rango crea OTRA alerta activa', () => {
-    const cultivo = cultivoEjemplo()
+  it('tras resolverse, una nueva salida del rango crea OTRA alerta activa', async () => {
+    const cultivo = await cultivoEjemplo()
     procesarLecturas(cultivo, ultimas({ humedad_suelo: 10 }))
     procesarLecturas(cultivo, ultimas({ humedad_suelo: 50 }))
     procesarLecturas(cultivo, ultimas({ humedad_suelo: 12 }))
@@ -102,16 +105,16 @@ describe('store de alertas (T-15, R-13 modelo D14)', () => {
     expect(alertas.filter((a) => a.estado === 'resuelta')).toHaveLength(1)
   })
 
-  it('los tipos sin lectura se ignoran', () => {
-    const cultivo = cultivoEjemplo()
+  it('los tipos sin lectura se ignoran', async () => {
+    const cultivo = await cultivoEjemplo()
 
     procesarLecturas(cultivo, ultimas({}))
 
     expect(obtenerAlertas()).toHaveLength(0)
   })
 
-  it('T-17: eliminar el cultivo retira sus alertas (activas y resueltas)', () => {
-    const cultivo = cultivoEjemplo()
+  it('T-17: eliminar el cultivo retira sus alertas (activas y resueltas)', async () => {
+    const cultivo = await cultivoEjemplo()
     procesarLecturas(cultivo, ultimas({ humedad_suelo: 10 }))
     procesarLecturas(cultivo, ultimas({ humedad_suelo: 50 }))
 
@@ -120,9 +123,9 @@ describe('store de alertas (T-15, R-13 modelo D14)', () => {
     expect(obtenerAlertas()).toHaveLength(0)
   })
 
-  it('T-17: la limpieza no afecta a las alertas de otros cultivos', () => {
-    const uno = cultivoEjemplo()
-    const dos = crearCultivo({
+  it('T-17: la limpieza no afecta a las alertas de otros cultivos', async () => {
+    const uno = await cultivoEjemplo()
+    const dos = await crearCultivo({
       nombre: 'Otro huerto',
       tipoCultivo: 'Lechuga',
       umbrales,
@@ -137,8 +140,8 @@ describe('store de alertas (T-15, R-13 modelo D14)', () => {
     expect(obtenerAlertas()[0].cultivoId).toBe(dos.valor.id)
   })
 
-  it('evalúa cada tipo por separado con sus propios umbrales', () => {
-    const cultivo = cultivoEjemplo()
+  it('evalúa cada tipo por separado con sus propios umbrales', async () => {
+    const cultivo = await cultivoEjemplo()
 
     procesarLecturas(cultivo, ultimas({ humedad_suelo: 10, temperatura: 20 }))
 

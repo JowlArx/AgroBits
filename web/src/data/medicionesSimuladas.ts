@@ -1,13 +1,15 @@
-// T-14/T-18 — Mediciones simuladas por SENSOR (R-09 + R-06 AC2, Fase 1).
-// Cada sensor tiene su propio historial, que empieza vacío: hasta que no
-// llega una lectura, la vista muestra "sin datos" (R-09 AC2) y nunca inventa
-// valores. Un cultivo ve las mediciones de sus sensores asociados. En la
-// Fase 2 este módulo se sustituirá por la capa de Supabase (T-23) con el
-// mismo contrato de R-08.
+// T-14/T-18/T-23 — Mediciones por SENSOR con contrato R-08/R-09 (Fase 2).
+// Cada sensor tiene su propia serie: hasta que no hay lectura, la vista
+// muestra "sin datos" (R-09 AC2) y nunca inventa valores. La generación sigue
+// siendo determinista en cliente (T-12) pero cada lectura se PERSISTE ahora
+// en Supabase a través del ProveedorDatos (T-23): lo que se muestra es lo que
+// hay guardado en la BD. La frecuencia automática de 5 min/sensor (D15) la
+// aportará T-24; el botón manual de la vista es una herramienta de prueba.
 
 import type { Medicion, TipoMedicion } from '../domain/tipos'
 import { TIPOS_MEDICION } from '../domain/tipos'
 import { INTERVALO_LECTURAS_MS, crearGenerador } from './generador'
+import { exigirProveedor } from './datos/proveedorDatos'
 
 const MAX_LECTURAS_POR_SENSOR = 200
 const VACIO: readonly Medicion[] = []
@@ -29,6 +31,22 @@ export function obtenerMediciones(sensorId: string): readonly Medicion[] {
   return porSensor.get(sensorId) ?? VACIO
 }
 
+/** T-23: carga desde la BD las series de los sensores indicados (las sustituye). */
+export async function cargarMediciones(sensorIds: readonly string[]): Promise<void> {
+  try {
+    const mediciones = await exigirProveedor().cargarMediciones(sensorIds)
+    porSensor.clear()
+    for (const medicion of mediciones) {
+      const serie = porSensor.get(medicion.sensorId) ?? []
+      serie.push(medicion)
+      porSensor.set(medicion.sensorId, serie)
+    }
+    notificar()
+  } catch (error) {
+    console.error('No se pudieron cargar las mediciones', error)
+  }
+}
+
 function semillaDe(sensorId: string): number {
   let hash = 0
   for (const letra of sensorId) hash = (Math.imul(hash, 31) + letra.charCodeAt(0)) | 0
@@ -36,10 +54,12 @@ function semillaDe(sensorId: string): number {
 }
 
 /**
- * Añade una lectura simulada (los 4 tipos) al sensor, con marca de tiempo
- * actual. Determinista por (sensor, nº de lectura).
+ * Añade una lectura simulada (los 4 tipos) al sensor con marca de tiempo
+ * actual, tras persistirla en la BD. Determinista por (sensor, nº de
+ * lectura). Si el proveedor falla, la caché no cambia y no se notifica (no se
+ * muestra como guardada lo que no se guardó).
  */
-export function generarLectura(sensorId: string): readonly Medicion[] {
+export async function generarLectura(sensorId: string): Promise<readonly Medicion[]> {
   const numero = (contadores.get(sensorId) ?? 0) + 1
   contadores.set(sensorId, numero)
 
@@ -49,6 +69,12 @@ export function generarLectura(sensorId: string): readonly Medicion[] {
   const nuevas: Medicion[] = TIPOS_MEDICION.map((tipo) =>
     generador.medicion({ sensorId, tipo, medidaEn: instante }),
   )
+
+  const resultado = await exigirProveedor().registrarLectura(nuevas)
+  if (!resultado.ok) {
+    console.error('No se pudo registrar la lectura', resultado.errores)
+    return porSensor.get(sensorId) ?? VACIO
+  }
 
   const anteriores = porSensor.get(sensorId) ?? []
   const todas = [...anteriores, ...nuevas].slice(-MAX_LECTURAS_POR_SENSOR)
@@ -76,16 +102,28 @@ export function ultimasPorTipo(sensorIds: readonly string[]): Record<TipoMedicio
   return resultado
 }
 
-export function eliminarMediciones(sensorId: string): void {
-  if (porSensor.delete(sensorId)) notificar()
-  contadores.delete(sensorId)
+/** Borra de la BD (y de la caché) las series de los sensores indicados. */
+export async function eliminarMediciones(sensorIds: readonly string[]): Promise<void> {
+  if (sensorIds.length === 0) return
+  await exigirProveedor().eliminarMediciones(sensorIds)
+  let huboCambios = false
+  for (const sensorId of sensorIds) {
+    if (porSensor.delete(sensorId)) huboCambios = true
+    contadores.delete(sensorId)
+  }
+  if (huboCambios) notificar()
+}
+
+/** Vacia la caché local sin tocar el proveedor (cierre de sesión / tests). */
+export function vaciarMediciones(): void {
+  porSensor.clear()
+  contadores.clear()
+  notificar()
 }
 
 /** Solo para tests: vuelve al estado inicial. */
 export function reiniciarMediciones(): void {
-  porSensor.clear()
-  contadores.clear()
-  notificar()
+  vaciarMediciones()
 }
 
 export const INTERVALO_SIMULADO_MS = INTERVALO_LECTURAS_MS // D15 (5 min)

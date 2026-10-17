@@ -1,0 +1,55 @@
+// T-23 — Contrato de la capa de datos INTERCAMBIABLE (plan.md §2 y riesgo de
+// lock-in de Supabase). Las stores de cultivos/sensores/mediciones no conocen
+// la base de datos: delegan en este proveedor, siguiendo el mismo patrón que
+// `ProveedorAuth` (T-22). Inyección: `ProveedorDatosSupabase` en `main.tsx`
+// (aplicación real) y `DatosFalsos` en `src/tests/soporte/configurarTests.ts`.
+
+import type { Cultivo, Medicion, UmbralesPorTipo } from '../../domain/tipos'
+import type { Sensor } from '../storeSensores'
+
+export interface ErrorCampo {
+  campo: string
+  motivo: string
+}
+
+export type Resultado<T> =
+  | { ok: true; valor: T }
+  | { ok: false; errores: ErrorCampo[] }
+
+export interface NuevoCultivo {
+  nombre: string
+  tipoCultivo: string
+  umbrales: UmbralesPorTipo
+}
+
+export interface ProveedorDatos {
+  // Cultivos (R-04, R-05, R-11, R-12)
+  cargarCultivos(): Promise<Cultivo[]>
+  crearCultivo(datos: NuevoCultivo): Promise<Resultado<Cultivo>>
+  actualizarCultivo(id: string, datos: NuevoCultivo): Promise<Resultado<Cultivo>>
+  eliminarCultivo(id: string): Promise<void>
+
+  // Sensores y asociación N–N (R-06)
+  cargarSensores(): Promise<Sensor[]>
+  crearSensor(nombre: string): Promise<Resultado<Sensor>>
+  asociarSensor(sensorId: string, cultivoId: string): Promise<Resultado<Sensor>>
+  /** Quita los enlaces del cultivo y devuelve los ids de sensores huérfanos eliminados. */
+  quitarAsociacionesDeCultivo(cultivoId: string): Promise<string[]>
+
+  // Mediciones (contrato R-08 / R-09)
+  cargarMediciones(sensorIds: readonly string[]): Promise<Medicion[]>
+  registrarLectura(mediciones: readonly Medicion[]): Promise<Resultado<Medicion[]>>
+  eliminarMediciones(sensorIds: readonly string[]): Promise<void>
+}
+
+let proveedor: ProveedorDatos | null = null
+
+/** Inyecta el proveedor de datos (una vez, al arrancar la app o el test). */
+export function configurarProveedorDatos(nuevo: ProveedorDatos): void {
+  proveedor = nuevo
+}
+
+export function exigirProveedor(): ProveedorDatos {
+  if (!proveedor) throw new Error('Proveedor de datos no configurado (ver main.tsx)')
+  return proveedor
+}

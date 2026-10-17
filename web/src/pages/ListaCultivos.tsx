@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react'
 import {
   eliminarCultivo,
   obtenerCultivos,
+  obtenerEstadoCarga,
   suscribirCultivos,
 } from '../data/storeCultivos'
 import { quitarAsociacionesDeCultivo } from '../data/storeSensores'
@@ -17,6 +18,20 @@ interface Props {
 
 export default function ListaCultivos({ onNuevo, onEditar, onVerMediciones }: Props) {
   const cultivos = useSyncExternalStore(suscribirCultivos, obtenerCultivos)
+  const estadoCarga = useSyncExternalStore(suscribirCultivos, obtenerEstadoCarga)
+
+  async function eliminar(cultivoId: string): Promise<void> {
+    // T-23: la cadena va contra la BD (cascada en el servidor para los
+    // enlaces; los sensores huérfanos se borran con sus mediciones).
+    try {
+      const borrados = await quitarAsociacionesDeCultivo(cultivoId)
+      await eliminarMediciones(borrados)
+      eliminarAlertasDeCultivo(cultivoId)
+      await eliminarCultivo(cultivoId)
+    } catch (error) {
+      console.error('No se pudo eliminar el cultivo', error)
+    }
+  }
 
   return (
     <section>
@@ -27,7 +42,11 @@ export default function ListaCultivos({ onNuevo, onEditar, onVerMediciones }: Pr
         </button>
       </header>
 
-      {cultivos.length === 0 ? (
+      {estadoCarga === 'sin-cargar' || estadoCarga === 'cargando' ? (
+        <p data-testid="cargando">Cargando cultivos…</p>
+      ) : estadoCarga === 'error' ? (
+        <p data-testid="error-carga">No se pudieron cargar los cultivos. Inténtalo más tarde.</p>
+      ) : cultivos.length === 0 ? (
         <p data-testid="vacio">
           Todavía no hay cultivos. Crea el primero para ver sus umbrales y, más
           adelante, sus mediciones.
@@ -54,12 +73,8 @@ export default function ListaCultivos({ onNuevo, onEditar, onVerMediciones }: Pr
                     onClick={() => {
                       // T-18: al borrar el cultivo se retiran sus asociaciones;
                       // los sensores que quedan sin cultivos se eliminan junto
-                      // con sus mediciones (simplificación de la Fase 1).
-                      // T-17: y sus alertas no quedan huérfanas.
-                      const borrados = quitarAsociacionesDeCultivo(cultivo.id)
-                      borrados.forEach(eliminarMediciones)
-                      eliminarAlertasDeCultivo(cultivo.id)
-                      eliminarCultivo(cultivo.id)
+                      // con sus mediciones. T-17: sus alertas no quedan huérfanas.
+                      void eliminar(cultivo.id)
                     }}
                   >
                     Eliminar
