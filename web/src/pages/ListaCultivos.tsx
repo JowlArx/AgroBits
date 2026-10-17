@@ -4,14 +4,16 @@ import {
   obtenerCultivos,
   suscribirCultivos,
 } from '../data/storeCultivos'
+import { eliminarMediciones } from '../data/medicionesSimuladas'
 import { TIPOS_MEDICION, UNIDADES } from '../domain/tipos'
 
 interface Props {
   onNuevo: () => void
   onEditar: (id: string) => void
+  onVerMediciones: (id: string) => void
 }
 
-export default function ListaCultivos({ onNuevo, onEditar }: Props) {
+export default function ListaCultivos({ onNuevo, onEditar, onVerMediciones }: Props) {
   const cultivos = useSyncExternalStore(suscribirCultivos, obtenerCultivos)
 
   return (
@@ -38,13 +40,19 @@ export default function ListaCultivos({ onNuevo, onEditar }: Props) {
                   <span className="etiqueta">{cultivo.tipoCultivo}</span>
                 </div>
                 <div className="acciones">
+                  <button type="button" onClick={() => onVerMediciones(cultivo.id)}>
+                    Ver mediciones
+                  </button>
                   <button type="button" onClick={() => onEditar(cultivo.id)}>
                     Editar
                   </button>
                   <button
                     type="button"
                     data-testid={`eliminar-${cultivo.id}`}
-                    onClick={() => eliminarCultivo(cultivo.id)}
+                    onClick={() => {
+                      eliminarMediciones(cultivo.id)
+                      eliminarCultivo(cultivo.id)
+                    }}
                   >
                     Eliminar
                   </button>

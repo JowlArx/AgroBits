@@ -1,8 +1,13 @@
 import { useState } from 'react'
 import ListaCultivos from './pages/ListaCultivos'
 import FormularioCultivo from './pages/FormularioCultivo'
+import DetalleCultivo from './pages/DetalleCultivo'
 
-type Vista = { tipo: 'lista' } | { tipo: 'nuevo' } | { tipo: 'editar'; id: string }
+type Vista =
+  | { tipo: 'lista' }
+  | { tipo: 'nuevo' }
+  | { tipo: 'editar'; id: string }
+  | { tipo: 'detalle'; id: string }
 
 export default function App() {
   const [vista, setVista] = useState<Vista>({ tipo: 'lista' })
@@ -19,6 +24,7 @@ export default function App() {
           <ListaCultivos
             onNuevo={() => setVista({ tipo: 'nuevo' })}
             onEditar={(id) => setVista({ tipo: 'editar', id })}
+            onVerMediciones={(id) => setVista({ tipo: 'detalle', id })}
           />
         )}
         {vista.tipo === 'nuevo' && (
@@ -30,6 +36,9 @@ export default function App() {
             onGuardado={() => setVista({ tipo: 'lista' })}
             onCancelar={() => setVista({ tipo: 'lista' })}
           />
+        )}
+        {vista.tipo === 'detalle' && (
+          <DetalleCultivo cultivoId={vista.id} onVolver={() => setVista({ tipo: 'lista' })} />
         )}
       </main>
     </div>
