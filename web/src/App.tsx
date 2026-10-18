@@ -34,12 +34,7 @@ export default function App() {
       </a>
       <header className="cabecera">
         <h1>
-          <svg className="marca" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path
-              fill="currentColor"
-              d="M12 3c-1.5 3-4 5-7 5.5C6 14 8.5 18 12 21c3.5-3 6-7 7-12.5-3-.5-5.5-2.5-7-5.5Z"
-            />
-          </svg>
+          <img className="marca" src="/logo.png" width="28" height="28" alt="" />
           AgroBits
         </h1>
         <span className="etiqueta">Acceso y datos con Supabase (T-24)</span>
