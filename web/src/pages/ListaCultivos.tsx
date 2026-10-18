@@ -57,7 +57,7 @@ export default function ListaCultivos({ onNuevo, onEditar, onVerMediciones }: Pr
         <ul className="lista-cultivos" data-testid="lista-cultivos">
           {cultivos.map((cultivo) => (
             <li key={cultivo.id} className="tarjeta-cultivo">
-              <div className="fila-entre">
+              <div className="cabecera-tarjeta">
                 <div>
                   <strong>{cultivo.nombre}</strong>{' '}
                   <span className="etiqueta">{cultivo.tipoCultivo}</span>

@@ -375,7 +375,7 @@ legend {
 
 .lista-cultivos {
   list-style: none;
-  margin: 0;
+  margin: var(--espacio-4) 0 0;
   padding: 0;
   display: grid;
   gap: var(--espacio-4);
@@ -392,6 +392,16 @@ legend {
   border: 1px solid var(--borde);
   border-radius: 10px;
   padding: var(--espacio-4);
+}
+
+/* Cabecera de la tarjeta: nombre + chip arriba y acciones siempre en su
+   propia fila, para que todas las tarjetas compartan la misma estructura
+   aunque los nombres tengan longitudes distintas. */
+.cabecera-tarjeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espacio-3);
 }
 
 /* Estados vacíos: invitación a actuar, no decoración */
