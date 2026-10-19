@@ -2,7 +2,7 @@
 // catálogo editable). Los valores son una REFERENCIA ORIENTATIVA y no
 // asesoramiento agronómico certificado (R-11 AC2).
 
-import type { UmbralesPorTipo } from '../domain/tipos'
+import type { ColorSensor, UmbralesPorTipo } from '../domain/tipos'
 
 export interface EntradaCatalogo {
   tipoCultivo: string
@@ -63,4 +63,23 @@ export const ETIQUETAS_MEDICION: Record<string, string> = {
   temperatura: 'Temperatura (°C)',
   humedad_ambiental: 'Humedad ambiental (% HR)',
   luminosidad: 'Luminosidad (lux)',
+}
+
+/** D30: etiquetas y variables CSS del color de línea de cada sensor. */
+export const ETIQUETAS_COLOR_SENSOR: Record<ColorSensor, string> = {
+  verde: 'Verde',
+  azul: 'Azul',
+  violeta: 'Violeta',
+  cian: 'Turquesa',
+  rosa: 'Rosa',
+  gris: 'Gris',
+}
+
+export const VAR_COLOR_SENSOR: Record<ColorSensor, string> = {
+  verde: 'var(--linea-verde)',
+  azul: 'var(--linea-azul)',
+  violeta: 'var(--linea-violeta)',
+  cian: 'var(--linea-cian)',
+  rosa: 'var(--linea-rosa)',
+  gris: 'var(--linea-gris)',
 }

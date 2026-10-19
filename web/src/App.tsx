@@ -4,6 +4,8 @@ import FormularioCultivo from './pages/FormularioCultivo'
 import DetalleCultivo from './pages/DetalleCultivo'
 import Alertas from './pages/Alertas'
 import Autenticacion from './pages/Autenticacion'
+import Cuenta from './pages/Cuenta'
+import Sensores from './pages/Sensores'
 import BarraLateral from './components/BarraLateral'
 import PanelLateral from './components/PanelLateral'
 import Tablero from './components/Tablero'
@@ -16,6 +18,8 @@ type Vista =
   | { tipo: 'editar'; id: string }
   | { tipo: 'detalle'; id: string }
   | { tipo: 'alertas' }
+  | { tipo: 'sensores' }
+  | { tipo: 'cuenta' }
 
 /** Etiqueta del migas (breadcrumb) del topbar según la vista actual. */
 function seccionActual(vista: Vista): string {
@@ -27,6 +31,10 @@ function seccionActual(vista: Vista): string {
     case 'nuevo':
     case 'editar':
       return 'Formulario de cultivo'
+    case 'sensores':
+      return 'Sensores'
+    case 'cuenta':
+      return 'Cuenta'
     default:
       return 'Cultivos'
   }
@@ -72,10 +80,15 @@ export default function App() {
         Saltar al contenido
       </a>
       <BarraLateral
+        enCultivos={vista.tipo === 'lista'}
         enAlertas={vista.tipo === 'alertas'}
+        enSensores={vista.tipo === 'sensores'}
+        enCuenta={vista.tipo === 'cuenta'}
         email={sesion.usuario.email}
         onCultivos={() => setVista({ tipo: 'lista' })}
         onAlertas={() => setVista({ tipo: 'alertas' })}
+        onSensores={() => setVista({ tipo: 'sensores' })}
+        onCuenta={() => setVista({ tipo: 'cuenta' })}
       />
       <div className="zona-derecha">
         <header className="topbar">
@@ -112,6 +125,8 @@ export default function App() {
               <DetalleCultivo cultivoId={vista.id} onVolver={() => setVista({ tipo: 'lista' })} />
             )}
             {vista.tipo === 'alertas' && <Alertas />}
+            {vista.tipo === 'sensores' && <Sensores />}
+            {vista.tipo === 'cuenta' && <Cuenta email={sesion.usuario.email} />}
           </main>
           {vista.tipo === 'lista' && <PanelLateral />}
         </div>

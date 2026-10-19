@@ -5,11 +5,15 @@
 
 import type { Resultado, ErrorCampo } from './datos/proveedorDatos'
 import { exigirProveedor } from './datos/proveedorDatos'
+import type { ColorSensor } from '../domain/tipos'
+import { COLORES_SENSOR } from '../domain/tipos'
 
 export interface Sensor {
   id: string
   nombre: string
   cultivoIds: string[]
+  /** D30: color de la línea del gráfico de este sensor (paleta nombrada). */
+  colorLinea: ColorSensor
 }
 
 let sensores: Sensor[] = []
@@ -109,4 +113,20 @@ export function vaciarSensores(): void {
 /** Solo para tests: vuelve al estado inicial. */
 export function reiniciarSensores(): void {
   vaciarSensores()
+}
+
+/**
+ * D30: cambia el color de la línea del gráfico del sensor (paleta nombrada,
+ * guardada en BD). Rechaza colores fuera de la paleta sin tocar el servidor.
+ */
+export async function actualizarColorSensor(sensorId: string, color: ColorSensor): Promise<Resultado<Sensor>> {
+  if (!COLORES_SENSOR.includes(color)) {
+    return { ok: false, errores: [{ campo: 'color', motivo: 'Color de línea no disponible' }] }
+  }
+  const resultado = await exigirProveedor().actualizarColorSensor(sensorId, color)
+  if (resultado.ok) {
+    sensores = sensores.map((s) => (s.id === sensorId ? resultado.valor : s))
+    notificar()
+  }
+  return resultado
 }

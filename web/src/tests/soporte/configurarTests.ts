@@ -11,18 +11,26 @@ import { configurarProgramadorLecturas } from '../../data/programadorLecturas'
 import { reiniciarCultivos } from '../../data/storeCultivos'
 import { reiniciarSensores } from '../../data/storeSensores'
 import { reiniciarMediciones } from '../../data/medicionesSimuladas'
+import { reiniciarPerfil } from '../../data/storePerfil'
 import { vaciarAlertas } from '../../data/storeAlertas'
 import { AuthFalso } from './authFalso'
 import { DatosFalsos } from './datosFalsos'
 import { ProgramadorFalso } from './programadorFalso'
 
 let actual: AuthFalso | null = null
+let actualDatos: DatosFalsos | null = null
 let actualProgramador: ProgramadorFalso | null = null
 
 /** Instancia del doble activo (para tests que necesitan sembrar más cuentas). */
 export function authFalsoActual(): AuthFalso {
   if (!actual) throw new Error('El doble de auth aún no se ha instalado')
   return actual
+}
+
+/** Instancia del doble de datos activo (D30, para sembrar perfiles). */
+export function datosFalsosActual(): DatosFalsos {
+  if (!actualDatos) throw new Error('El doble de datos aún no se ha instalado')
+  return actualDatos
 }
 
 /** Instancia del programador doble activo (T-24, para verificar programaciones). */
@@ -36,11 +44,13 @@ beforeEach(() => {
   actual.sembrar('pruebas@agrobits.test', 'secreta')
   configurarProveedorAuth(actual)
 
-  configurarProveedorDatos(new DatosFalsos())
+  actualDatos = new DatosFalsos()
+  configurarProveedorDatos(actualDatos)
   actualProgramador = new ProgramadorFalso()
   configurarProgramadorLecturas(actualProgramador)
   reiniciarCultivos()
   reiniciarSensores()
   reiniciarMediciones()
   vaciarAlertas()
+  reiniciarPerfil()
 })

@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { alertasOrdenadas, obtenerAlertas, suscribirAlertas, type Alerta } from '../data/storeAlertas'
 import { obtenerCultivo } from '../data/storeCultivos'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
@@ -43,23 +43,174 @@ function filaAlerta(alerta: Alerta) {
   )
 }
 
+// — Utilidades de rango de tiempo —
+
+/// Devuelve true si `alerta.creadaEn` está dentro del rango [desde, hasta].
+function enRango(alerta: Alerta, desde: Date, hasta: Date): boolean {
+  const creado = new Date(alerta.creadaEn)
+  return creado >= desde && creado <= hasta
+}
+
+interface RangoTiempo {
+  tipo: '5min' | '10min' | '15min' | 'personalizado'
+  desde?: Date
+  hasta?: Date
+}
+
+/// Filtra el array de alertas según el rango seleccionado.
+function aplicarFiltroTiempo(
+  alertas: Alerta[],
+  rango: RangoTiempo
+): Alerta[] {
+  const hacerFiltro = (corte: Date) =>
+    alertas.filter((a) => new Date(a.creadaEn) >= corte)
+  if (rango.tipo === '5min') {
+    return hacerFiltro(new Date(Date.now() - 5 * 60 * 1000)) // hace 5 minutos
+  }
+  if (rango.tipo === '10min') {
+    return hacerFiltro(new Date(Date.now() - 10 * 60 * 1000)) // hace 10 minutos
+  }
+  if (rango.tipo === '15min') {
+    return hacerFiltro(new Date(Date.now() - 15 * 60 * 1000)) // hace 15 minutos
+  }
+  if (rango.tipo === 'personalizado' && rango.desde && rango.hasta) {
+    return alertas.filter((a) => enRango(a, rango.desde!, rango.hasta!))
+  }
+  return alertas // sin filtro
+}
+
 export default function Alertas() {
-  // Snapshot cacheable: la referencia del store solo cambia al notificar.
+  // Estado del rango de tiempo: '5min' | '10min' | '15min' (por defecto) o 'personalizado'.
+  const [rango, setRango] = useState<RangoTiempo>({ tipo: '15min' })
+  const [desde, setDesde] = useState<Date | undefined>(undefined)
+  const [hasta, setHasta] = useState<Date | undefined>(undefined)
+
+  // Cuando cambia el tipo de rango, restablecer los Date personales.
+  useEffect(() => {
+    if (rango.tipo === '15min' || rango.tipo === '5min' || rango.tipo === '10min') {
+      setDesde(undefined)
+      setHasta(undefined)
+    } else {
+      // Por defecto, muestra todo el día de hoy.
+      const ahora = new Date()
+      const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate())
+      const finHoy = new Date(inicioHoy)
+      finHoy.setHours(23, 59, 59, 999)
+      setDesde(inicioHoy)
+      setHasta(finHoy)
+    }
+  }, [rango.tipo])
+
+  // Suscripción al store de alertas.
   useSyncExternalStore(suscribirAlertas, obtenerAlertas)
-  const alertas = alertasOrdenadas()
+
+  // Aplica el filtro de tiempo y ordena.
+  const alertas = useMemo(() => aplicarFiltroTiempo(alertasOrdenadas(), rango), [rango])
+
+  // --- UI ---
 
   return (
     <section>
-      <h2>Alertas</h2>
+      <h2>Alertas Activas</h2>
+
+      {/* --- Controles de rango de tiempo --- */}
+      <div className="fila-entre" style={{ gap: '0.5rem', alignItems: 'center' }}>
+        <button
+          data-testid="rango-5min"
+          className={rango.tipo === '5min' ? 'btn-primario' : 'btn-secundario'}
+          onClick={() => setRango({ tipo: '5min' })}
+        >
+          Últimos 5 min
+        </button>
+        <button
+          data-testid="rango-10min"
+          className={rango.tipo === '10min' ? 'btn-primario' : 'btn-secundario'}
+          onClick={() => setRango({ tipo: '10min' })}
+        >
+          Últimos 10 min
+        </button>
+        <button
+          data-testid="rango-15min"
+          className={rango.tipo === '15min' ? 'btn-primario' : 'btn-secundario'}
+          onClick={() => setRango({ tipo: '15min' })}
+        >
+          Últimos 15 min
+        </button>
+        <button
+          data-testid="rango-personalizado"
+          className={rango.tipo === 'personalizado' ? 'btn-primario' : 'btn-secundario'}
+          onClick={() => setRango({ tipo: 'personalizado' })}
+        >
+          Personalizar
+        </button>
+
+        {rango.tipo === 'personalizado' && (
+          <>
+            <span>Desde</span>
+            <input
+              type="date"
+              value={desde?.toISOString().split('T')[0] ?? ''}
+              onChange={(e) => setDesde(new Date(e.target.value))}
+              style={{ width: '120px' }}
+            />
+            <span>Hasta</span>
+            <input
+              type="date"
+              value={hasta?.toISOString().split('T')[0] ?? ''}
+              onChange={(e) => setHasta(new Date(e.target.value))}
+              style={{ width: '120px' }}
+            />
+          </>
+        )}
+      </div>
+
+      {/* --- Mensaje cuando no hay alertas en el rango --- */}
       {alertas.length === 0 ? (
         <p data-testid="vacio-alertas" className="estado-vacio">
-          No hay alertas: ninguna medición ha salido fuera del rango de sus cultivos.
+          No hay alertas en el rango de tiempo seleccionado.
         </p>
       ) : (
         <ul className="lista-cultivos" data-testid="lista-alertas">
           {alertas.map(filaAlerta)}
         </ul>
       )}
+
+      {/* --- Botón Descargar log --- */}
+      <button
+        data-testid="descargar-log"
+        className="btn-primario"
+        onClick={() => descargarLogAlertas(alertas)}
+        style={{ marginTop: '1rem' }}
+      >
+        Descargar log
+      </button>
     </section>
   )
+}
+
+/// Genera un archivo CSV con las alertas y dispara la descarga.
+function descargarLogAlertas(alertas: Alerta[]): void {
+  if (alertas.length === 0) return
+
+  const cabeceras = ['Cultivo', 'Tipo', 'Valor', 'Estado', 'Hora de creación']
+  const filas = alertas.map((a) => {
+    const cultivo = obtenerCultivo(a.cultivoId)?.nombre ?? 'Cultivo eliminado'
+    return [
+      cultivo,
+      ETIQUETAS_MEDICION[a.tipo] ?? a.tipo,
+      a.valor,
+      a.estado,
+      new Date(a.creadaEn).toLocaleString('es-ES'),
+    ]
+  })
+
+  const csvContent =
+    [cabeceras.join(','), ...filas.map((f) => f.join(','))].join('\n')
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const tmpLink = document.createElement('a')
+  tmpLink.href = url
+  tmpLink.download = `alertas-${new Date().toISOString().split('T')[0]}.csv`
+  tmpLink.click()
+  URL.revokeObjectURL(url)
 }

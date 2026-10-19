@@ -4,7 +4,7 @@
 // `ProveedorAuth` (T-22). Inyección: `ProveedorDatosSupabase` en `main.tsx`
 // (aplicación real) y `DatosFalsos` en `src/tests/soporte/configurarTests.ts`.
 
-import type { Cultivo, Medicion, UmbralesPorTipo } from '../../domain/tipos'
+import type { ColorSensor, Cultivo, Medicion, UmbralesPorTipo } from '../../domain/tipos'
 import type { Sensor } from '../storeSensores'
 import type { Alerta } from '../storeAlertas'
 
@@ -30,6 +30,12 @@ export interface Localidad {
   localidad: string
 }
 
+/** D30 — Perfil editable del usuario (teléfono y localidad, D27). */
+export interface Perfil {
+  telefono: string
+  localidadId: number
+}
+
 export interface ProveedorDatos {
   // Cultivos (R-04, R-05, R-11, R-12)
   cargarCultivos(): Promise<Cultivo[]>
@@ -43,6 +49,8 @@ export interface ProveedorDatos {
   asociarSensor(sensorId: string, cultivoId: string): Promise<Resultado<Sensor>>
   /** Quita los enlaces del cultivo y devuelve los ids de sensores huérfanos eliminados. */
   quitarAsociacionesDeCultivo(cultivoId: string): Promise<string[]>
+  /** D30: color de la línea del gráfico del sensor (paleta nombrada). */
+  actualizarColorSensor(sensorId: string, color: ColorSensor): Promise<Resultado<Sensor>>
 
   // Mediciones (contrato R-08 / R-09)
   cargarMediciones(sensorIds: readonly string[]): Promise<Medicion[]>
@@ -55,6 +63,11 @@ export interface ProveedorDatos {
   // Catálogo de localidades (registro, D27): legible SIN sesión (el registro
   // es anónimo; RLS de `localidades` lo permite).
   cargarLocalidades(): Promise<Localidad[]>
+
+  // Perfil (D30): lectura propia (RLS) y escritura vía RPC `actualizar_perfil`
+  // (único punto servidor, D19/D27). `null` si la cuenta no tiene fila.
+  cargarPerfil(): Promise<Perfil | null>
+  actualizarPerfil(telefono: string, localidadId: number): Promise<Resultado<Perfil>>
 }
 
 let proveedor: ProveedorDatos | null = null

@@ -65,3 +65,15 @@ export interface Alerta {
   valor: number
   estado: EstadoAlerta
 }
+
+// D30 — Paleta nombrada del color de línea de cada sensor. Se persiste el
+// ID (validado con CHECK en BD), nunca un hex: así el tema claro/oscuro
+// decide el valor real vía CSS (var(--linea-<color>)). Sin ámbar/rojo para
+// no competir con la señal de alertas (D20).
+export const COLORES_SENSOR = ['verde', 'azul', 'violeta', 'cian', 'rosa', 'gris'] as const
+
+export type ColorSensor = (typeof COLORES_SENSOR)[number]
+
+export function esColorSensor(valor: string): valor is ColorSensor {
+  return (COLORES_SENSOR as readonly string[]).includes(valor)
+}

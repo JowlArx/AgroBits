@@ -18,10 +18,10 @@ import {
   YAxis,
 } from 'recharts'
 import { obtenerCultivos, suscribirCultivos } from '../data/storeCultivos'
-import { obtenerSensores, suscribirSensores } from '../data/storeSensores'
+import { obtenerSensores, suscribirSensores, type Sensor } from '../data/storeSensores'
 import { obtenerAlertas, suscribirAlertas } from '../data/storeAlertas'
 import { obtenerMediciones, suscribirMediciones, ultimasPorTipo } from '../data/medicionesSimuladas'
-import { ETIQUETAS_MEDICION } from '../data/catalogo'
+import { ETIQUETAS_MEDICION, VAR_COLOR_SENSOR } from '../data/catalogo'
 import { TIPOS_MEDICION, type TipoMedicion } from '../domain/tipos'
 
 /** Escalas solo para dimensionar las barras (los valores mostrados son reales). */
@@ -31,9 +31,6 @@ const ESCALA_MAXIMA: Record<TipoMedicion, number> = {
   humedad_ambiental: 100,
   luminosidad: 60_000,
 }
-
-/** Paleta de líneas con los tokens del tema (sin usar ámbar, que es de alertas). */
-const COLORES_LINEA = ['var(--marca)', 'var(--marca-hover)', 'var(--borde-input)', 'var(--texto-tenue)']
 
 function horaCorta(iso: string): string {
   const fecha = new Date(iso)
@@ -48,14 +45,19 @@ interface PuntoGrafico {
   [sensor: string]: string | number
 }
 
-/** Serie para el gráfico: una columna por sensor, fusionando por instante. */
+interface SerieGrafico {
+  nombre: string
+  color: string
+}
+
+/** Serie para el gráfico: una columna POR SENSOR (con su color, D30). */
 function serieDe(
   tipo: TipoMedicion,
-  sensores: readonly { id: string; nombre: string }[],
-): { puntos: PuntoGrafico[]; nombres: string[] } {
+  sensores: readonly Sensor[],
+): { puntos: PuntoGrafico[]; series: SerieGrafico[] } {
   const porInstante = new Map<string, PuntoGrafico>()
   const nombresUsados = new Set<string>()
-  const nombres: string[] = []
+  const series: SerieGrafico[] = []
 
   for (const sensor of sensores) {
     // Dos sensores pueden llamar igual: se desambigua para no colisionar dataKeys.
@@ -66,7 +68,7 @@ function serieDe(
 
     const serie = obtenerMediciones(sensor.id).filter((m) => m.tipo === tipo)
     if (serie.length === 0) continue
-    nombres.push(nombre)
+    series.push({ nombre, color: VAR_COLOR_SENSOR[sensor.colorLinea] })
 
     for (const medicion of serie) {
       const punto = porInstante.get(medicion.medidaEn) ?? { medidaEn: medicion.medidaEn, hora: horaCorta(medicion.medidaEn) }
@@ -76,7 +78,7 @@ function serieDe(
   }
 
   const puntos = [...porInstante.values()].sort((a, b) => a.medidaEn.localeCompare(b.medidaEn)).slice(-15)
-  return { puntos, nombres }
+  return { puntos, series }
 }
 
 function TarjetaKpi({ etiqueta, valor, nota, alerta }: {
@@ -105,6 +107,8 @@ export default function Tablero() {
   )
 
   const [tipoActivo, setTipoActivo] = useState<TipoMedicion>('temperatura')
+  // D30: sensor cuyas lecturas muestra el widget «Última lectura por tipo».
+  const [sensorWidgetActivoId, setSensorWidgetActivoId] = useState<string | null>(null)
 
   const cultivos = obtenerCultivos()
   const sensores = obtenerSensores()
@@ -112,9 +116,9 @@ export default function Tablero() {
   const activas = alertas.filter((a) => a.estado === 'activa').length
   const lecturas = sensores.reduce((total, s) => total + obtenerMediciones(s.id).length, 0)
 
-  const { puntos, nombres: nombresSensores } = serieDe(tipoActivo, sensores)
+  const { puntos, series } = serieDe(tipoActivo, sensores)
 
-  const ultimas = ultimasPorTipo(sensores.map((s) => s.id))
+  const ultimas = ultimasPorTipo(sensorWidgetActivoId ? [sensorWidgetActivoId] : sensores.map((s) => s.id))
   const hayLecturas = TIPOS_MEDICION.some((tipo) => ultimas[tipo] !== undefined)
 
   return (
@@ -170,13 +174,13 @@ export default function Tablero() {
                     }}
                     formatter={(valor) => [`${valor}`, ETIQUETAS_MEDICION[tipoActivo]]}
                   />
-                  {nombresSensores.length > 1 && <Legend wrapperStyle={{ fontSize: 12 }} />}
-                  {nombresSensores.map((nombre, i) => (
+                  {series.length > 1 && <Legend wrapperStyle={{ fontSize: 12 }} />}
+                  {series.map((serie) => (
                     <Line
-                      key={nombre}
+                      key={serie.nombre}
                       type="monotone"
-                      dataKey={nombre}
-                      stroke={COLORES_LINEA[i % COLORES_LINEA.length]}
+                      dataKey={serie.nombre}
+                      stroke={serie.color}
                       strokeWidth={2}
                       dot={false}
                       isAnimationActive={false}
@@ -191,6 +195,18 @@ export default function Tablero() {
         <article className="widget">
           <header className="cabecera-widget">
             <h3>Última lectura por tipo</h3>
+            <select
+              data-testid="sensor-selector-widget"
+              value={sensorWidgetActivoId ?? ''}
+              onChange={(e) => setSensorWidgetActivoId(e.target.value || null)}
+            >
+              <option value="">Todos los sensores</option>
+              {sensores.map((sensor) => (
+                <option key={sensor.id} value={sensor.id}>
+                  {sensor.nombre}
+                </option>
+              ))}
+            </select>
           </header>
           {!hayLecturas ? (
             <p className="estado-vacio">Aún no hay lecturas: aparecerán aquí al conectar un sensor.</p>

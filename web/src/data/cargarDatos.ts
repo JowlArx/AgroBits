@@ -9,6 +9,7 @@ import { cargarCultivos, vaciarCultivos } from './storeCultivos'
 import { cargarSensores, obtenerSensores, vaciarSensores } from './storeSensores'
 import { cargarMediciones, vaciarMediciones } from './medicionesSimuladas'
 import { cargarAlertas, vaciarAlertas } from './storeAlertas'
+import { cargarPerfil, vaciarPerfil } from './storePerfil'
 import { exigirProgramador } from './programadorLecturas'
 
 export async function cargarDatosSesion(): Promise<void> {
@@ -18,6 +19,8 @@ export async function cargarDatosSesion(): Promise<void> {
   await cargarMediciones(sensores.map((sensor) => sensor.id))
   // T-25: las alertas se evalúan en la BD (trigger); se cargan para la vista.
   await cargarAlertas()
+  // D30: el perfil editable de la vista Cuenta (teléfono y localidad).
+  await cargarPerfil()
   // T-24: con las series ya cargadas, cada sensor queda programado con su
   // próximo tick (inmediato si su última lectura supera los 5 minutos).
   exigirProgramador().programar(sensores.map((sensor) => sensor.id))
@@ -29,4 +32,5 @@ export function vaciarDatosSesion(): void {
   vaciarSensores()
   vaciarMediciones()
   vaciarAlertas()
+  vaciarPerfil()
 }

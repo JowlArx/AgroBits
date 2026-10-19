@@ -9,8 +9,15 @@
 // `supabase/tests/20261017_t25_evaluacion_alertas.sql`.
 
 import { evaluarAlerta } from '../../domain/alertas'
-import { TIPOS_MEDICION, type Cultivo, type Medicion, type TipoMedicion } from '../../domain/tipos'
-import type { ErrorCampo, Localidad, NuevoCultivo, ProveedorDatos, Resultado } from '../../data/datos/proveedorDatos'
+import {
+  TIPOS_MEDICION,
+  esColorSensor,
+  type ColorSensor,
+  type Cultivo,
+  type Medicion,
+  type TipoMedicion,
+} from '../../domain/tipos'
+import type { ErrorCampo, Localidad, NuevoCultivo, Perfil, ProveedorDatos, Resultado } from '../../data/datos/proveedorDatos'
 import type { Sensor } from '../../data/storeSensores'
 import type { Alerta } from '../../data/storeAlertas'
 
@@ -34,6 +41,7 @@ export class DatosFalsos implements ProveedorDatos {
   private mediciones = new Map<string, Medicion[]>()
   private alertas: Alerta[] = []
   private contadorAlerta = 0
+  private perfil: Perfil | null = null
 
   // — Cultivos ————————————————————————————————————————————————
 
@@ -78,7 +86,7 @@ export class DatosFalsos implements ProveedorDatos {
   }
 
   async crearSensor(nombre: string): Promise<Resultado<Sensor>> {
-    const sensor: Sensor = { id: `s${++this.contadorSensor}`, nombre: nombre.trim(), cultivoIds: [] }
+    const sensor: Sensor = { id: `s${++this.contadorSensor}`, nombre: nombre.trim(), cultivoIds: [], colorLinea: 'verde' }
     this.sensores.push(sensor)
     return exito(sensor)
   }
@@ -109,6 +117,16 @@ export class DatosFalsos implements ProveedorDatos {
     }
     this.sensores = restantes
     return borrados
+  }
+
+  /** D30: aplica el color a la caché del doble (emula el update de la BD). */
+  async actualizarColorSensor(sensorId: string, color: ColorSensor): Promise<Resultado<Sensor>> {
+    const sensor = this.sensores.find((s) => s.id === sensorId)
+    if (!sensor) return fallo([{ campo: 'sensor', motivo: 'Sensor no encontrado' }])
+    if (!esColorSensor(color)) return fallo([{ campo: 'color', motivo: 'Color de línea no disponible' }])
+    const actualizado: Sensor = { ...sensor, colorLinea: color }
+    this.sensores = this.sensores.map((s) => (s.id === sensorId ? actualizado : s))
+    return exito({ ...actualizado, cultivoIds: [...actualizado.cultivoIds] })
   }
 
   // — Mediciones —————————————————————————————————————————————
@@ -144,6 +162,26 @@ export class DatosFalsos implements ProveedorDatos {
 
   async cargarLocalidades(): Promise<Localidad[]> {
     return LOCALIDADES_FALSAS.map((l) => ({ ...l }))
+  }
+
+  // — Perfil editable (D30) ————————————————————————————————————
+
+  /** Para tests: siembra el perfil de la cuenta (como si el signup lo creara). */
+  sembrarPerfil(perfil: Perfil | null): void {
+    this.perfil = perfil ? { ...perfil } : null
+  }
+
+  async cargarPerfil(): Promise<Perfil | null> {
+    return this.perfil ? { ...this.perfil } : null
+  }
+
+  async actualizarPerfil(telefono: string, localidadId: number): Promise<Resultado<Perfil>> {
+    // Emula los backstops del RPC `actualizar_perfil` (D30).
+    if (!LOCALIDADES_FALSAS.some((l) => l.id === localidadId)) {
+      return fallo([{ campo: 'general', motivo: 'No se pudo guardar el perfil: La localidad seleccionada ya no está disponible' }])
+    }
+    this.perfil = { telefono: telefono.trim(), localidadId }
+    return exito({ ...this.perfil })
   }
 
   private hayActiva(cultivoId: string, tipo: TipoMedicion): Alerta | undefined {

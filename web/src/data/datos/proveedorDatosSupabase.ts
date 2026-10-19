@@ -10,9 +10,9 @@
 //    UI (R-09: "la más reciente gana") sigan siendo correctas.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Cultivo, Medicion, TipoMedicion, UmbralesPorTipo } from '../../domain/tipos'
-import { TIPOS_MEDICION } from '../../domain/tipos'
-import type { NuevoCultivo, ProveedorDatos, Localidad, Resultado } from './proveedorDatos'
+import type { ColorSensor, Cultivo, Medicion, TipoMedicion, UmbralesPorTipo } from '../../domain/tipos'
+import { TIPOS_MEDICION, esColorSensor } from '../../domain/tipos'
+import type { NuevoCultivo, Perfil, ProveedorDatos, Localidad, Resultado } from './proveedorDatos'
 import type { Sensor } from '../storeSensores'
 import type { Alerta } from '../storeAlertas'
 import { CATALOGO_CULTIVOS } from '../catalogo'
@@ -33,8 +33,11 @@ interface FilaCultivo {
 interface FilaSensor {
   id: string
   name: string
+  color_linea?: string | null
   sensor_crop: { crop_id: string }[] | null
 }
+
+const SELECT_SENSOR = 'id, name, color_linea, sensor_crop(crop_id)'
 
 interface FilaMedicion {
   sensor_id: string
@@ -91,6 +94,8 @@ function aSensor(fila: FilaSensor): Sensor {
     id: fila.id,
     nombre: fila.name,
     cultivoIds: (fila.sensor_crop ?? []).map((enlace) => enlace.crop_id),
+    // D30: si la fila viniera de una versión previa sin color, se usa el verde.
+    colorLinea: esColorSensor(fila.color_linea ?? '') ? (fila.color_linea as ColorSensor) : 'verde',
   }
 }
 
@@ -225,7 +230,7 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
   async cargarSensores(): Promise<Sensor[]> {
     const { data, error } = await this.cliente
       .from('sensors')
-      .select('id, name, sensor_crop(crop_id)')
+      .select(SELECT_SENSOR)
       .order('created_at', { ascending: true })
     if (error) throw new Error(`No se pudieron cargar los sensores (${error.message})`)
     return ((data ?? []) as unknown as FilaSensor[]).map(aSensor)
@@ -245,7 +250,7 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
       return SERVIDOR(error?.message ?? 'sin identificador devuelto', 'guardar el sensor')
     }
     const id = (data as { id: string }).id
-    return { ok: true, valor: { id, nombre: nombre.trim(), cultivoIds: [] } }
+    return { ok: true, valor: { id, nombre: nombre.trim(), cultivoIds: [], colorLinea: 'verde' } }
   }
 
   async asociarSensor(sensorId: string, cultivoId: string): Promise<Resultado<Sensor>> {
@@ -261,12 +266,34 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
 
     const { data, error } = await this.cliente
       .from('sensors')
-      .select('id, name, sensor_crop(crop_id)')
+      .select(SELECT_SENSOR)
       .eq('id', sensorId)
       .single()
     if (error || !data) {
       console.error('asociarSensor (relectura):', error)
       return SERVIDOR(error?.message ?? 'sin datos', 'asociar el sensor')
+    }
+    return { ok: true, valor: aSensor(data as unknown as FilaSensor) }
+  }
+
+  /** D30: persiste el color de la línea del sensor (RLS sensors_update_own). */
+  async actualizarColorSensor(sensorId: string, color: ColorSensor): Promise<Resultado<Sensor>> {
+    if (!esColorSensor(color)) {
+      return { ok: false, errores: [{ campo: 'color', motivo: 'Color de línea no disponible' }] }
+    }
+    const { error } = await this.cliente.from('sensors').update({ color_linea: color }).eq('id', sensorId)
+    if (error) {
+      console.error('actualizarColorSensor:', error)
+      return SERVIDOR(error.message, 'guardar el color del sensor')
+    }
+    const { data, error: relectura } = await this.cliente
+      .from('sensors')
+      .select(SELECT_SENSOR)
+      .eq('id', sensorId)
+      .single()
+    if (relectura || !data) {
+      console.error('actualizarColorSensor (relectura):', relectura)
+      return SERVIDOR(relectura?.message ?? 'sin datos', 'guardar el color del sensor')
     }
     return { ok: true, valor: aSensor(data as unknown as FilaSensor) }
   }
@@ -362,5 +389,41 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
       .order('localidad')
     if (error) throw new Error(`No se pudo cargar el catálogo de localidades (${error.message})`)
     return (data ?? []) as Localidad[]
+  }
+
+  // — Perfil editable (D30) ————————————————————————————————————
+
+  // Lectura propia (RLS `perfiles_select_own`, D27). Cuentas previas a D27
+  // sin fila devuelven `null` y la vista ofrece el formulario vacío.
+  async cargarPerfil(): Promise<Perfil | null> {
+    const { data, error } = await this.cliente.from('perfiles').select('telefono, localidad_id').maybeSingle()
+    if (error) {
+      console.error('cargarPerfil:', error)
+      return null
+    }
+    if (!data) return null
+    const fila = data as { telefono: string; localidad_id: number }
+    return { telefono: fila.telefono, localidadId: fila.localidad_id }
+  }
+
+  // Escritura vía RPC `actualizar_perfil` (SECURITY DEFINER, D19/D27): el
+  // servidor valida teléfono y localidad y hace upsert del perfil propio.
+  async actualizarPerfil(telefono: string, localidadId: number): Promise<Resultado<Perfil>> {
+    const { data, error } = await this.cliente.rpc('actualizar_perfil', {
+      p_telefono: telefono.trim(),
+      p_localidad_id: localidadId,
+    })
+    if (error) {
+      console.error('actualizarPerfil:', error)
+      const motivo = error.message.includes('telefono_invalido')
+        ? 'El teléfono debe tener entre 6 y 20 dígitos (admite +, espacios, paréntesis, puntos y guiones)'
+        : error.message.includes('localidad_inexistente')
+          ? 'La localidad seleccionada ya no está disponible'
+          : error.message
+      return { ok: false, errores: [{ campo: 'general', motivo: `No se pudo guardar el perfil: ${motivo}` }] }
+    }
+    const fila = data as { telefono: string; localidad_id: number } | null
+    if (!fila) return SERVIDOR('sin datos devueltos', 'guardar el perfil')
+    return { ok: true, valor: { telefono: fila.telefono, localidadId: fila.localidad_id } }
   }
 }

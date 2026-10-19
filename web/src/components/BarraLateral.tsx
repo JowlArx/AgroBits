@@ -2,16 +2,23 @@
 // Figma «Snow Dashboard», node 98469:145265). Conserva los data-testid de la
 // navegación (nav-cultivos / nav-alertas) y de la sesión (sesion-usuario /
 // cerrar-sesion) que exigen los E2E: solo cambia la disposición, no el
-// contrato. Los iconos son SVG en línea con currentColor (sin assets
-// externos) para que sigan el token de color de cada tema.
+// contrato. D30: se añaden «Sensores» (nav-sensores) y la entrada de cuenta
+// (nav-cuenta) junto al cierre de sesión. Los iconos son SVG en línea con
+// currentColor (sin assets externos) para que sigan el token de color de cada
+// tema.
 
 import { cerrarSesion } from '../data/storeSesion'
 
 interface Props {
+  enCultivos: boolean
   enAlertas: boolean
+  enSensores: boolean
+  enCuenta: boolean
   email: string
   onCultivos: () => void
   onAlertas: () => void
+  onSensores: () => void
+  onCuenta: () => void
 }
 
 const iconoHoja = (
@@ -40,7 +47,22 @@ const iconoCampana = (
   </svg>
 )
 
-export default function BarraLateral({ enAlertas, email, onCultivos, onAlertas }: Props) {
+const iconoSensor = (
+  <svg className="icono-nav" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+    <circle cx="8" cy="11" r="1.6" fill="currentColor" />
+    <path d="M4.8 8.2a4.5 4.5 0 0 1 6.4 0" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    <path d="M2.6 5.9a7.6 7.6 0 0 1 10.8 0" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+  </svg>
+)
+
+const iconoCuenta = (
+  <svg className="icono-nav" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+    <circle cx="8" cy="5.5" r="2.8" fill="none" stroke="currentColor" strokeWidth="1.4" />
+    <path d="M2.8 14c.6-2.8 2.7-4.2 5.2-4.2s4.6 1.4 5.2 4.2" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+  </svg>
+)
+
+export default function BarraLateral({ enCultivos, enAlertas, enSensores, enCuenta, email, onCultivos, onAlertas, onSensores, onCuenta }: Props) {
   return (
     <aside className="barra-lateral">
       <h1>
@@ -51,7 +73,7 @@ export default function BarraLateral({ enAlertas, email, onCultivos, onAlertas }
         <button
           type="button"
           data-testid="nav-cultivos"
-          aria-current={enAlertas ? undefined : 'page'}
+          aria-current={enCultivos ? 'page' : undefined}
           onClick={onCultivos}
         >
           {iconoHoja}
@@ -61,11 +83,24 @@ export default function BarraLateral({ enAlertas, email, onCultivos, onAlertas }
           {iconoCampana}
           Alertas
         </button>
+        <button type="button" data-testid="nav-sensores" aria-current={enSensores ? 'page' : undefined} onClick={onSensores}>
+          {iconoSensor}
+          Sensores
+        </button>
       </nav>
       <div className="pie-sesion">
-        <span className="etiqueta" data-testid="sesion-usuario">
-          {email}
-        </span>
+        <button
+          type="button"
+          className="btn-cuenta"
+          data-testid="nav-cuenta"
+          aria-current={enCuenta ? 'page' : undefined}
+          onClick={onCuenta}
+        >
+          {iconoCuenta}
+          <span className="etiqueta" data-testid="sesion-usuario">
+            {email}
+          </span>
+        </button>
         <button type="button" data-testid="cerrar-sesion" onClick={() => void cerrarSesion()}>
           Cerrar sesión
         </button>

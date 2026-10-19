@@ -543,7 +543,9 @@ dd {
 .estructura {
   display: grid;
   grid-template-columns: 15rem minmax(0, 1fr);
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .barra-lateral {
@@ -607,6 +609,8 @@ dd {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .topbar {
@@ -642,6 +646,10 @@ dd {
   gap: var(--espacio-5);
   padding: var(--espacio-5);
   align-items: start;
+  /* La columna principal scrollea dentro del shell; el sidebar queda fijo. */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .cuerpo.con-panel {
@@ -948,5 +956,181 @@ dd {
 
   button:active {
     transform: none;
+  }
+}
+
+/* ==========================================================================
+   D30 — Color de línea por sensor, barra lateral fija y vistas nuevas
+   ========================================================================== */
+
+/* Tokens de color de línea (sin ámbar/rojo para no competir con las alertas) */
+:root {
+  --linea-verde: #1e5b3d;
+  --linea-azul: #1d4ed8;
+  --linea-violeta: #6d28d9;
+  --linea-cian: #0e7490;
+  --linea-rosa: #be185d;
+  --linea-gris: #5b6660;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --linea-verde: #74c894;
+    --linea-azul: #7aa2f7;
+    --linea-violeta: #b490f5;
+    --linea-cian: #52c4dd;
+    --linea-rosa: #f472b6;
+    --linea-gris: #9daa9f;
+  }
+}
+
+/* Barra lateral FIJA: ocupa siempre todo el alto de la pantalla; el
+   contenido scrollea a su lado y el cierre de sesión queda siempre abajo. */
+.barra-lateral {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.pie-sesion {
+  margin-top: auto;
+  background: var(--superficie);
+  border-top: 1px solid var(--borde);
+  padding: var(--espacio-3) var(--espacio-4);
+  width: 100%;
+}
+
+/* Entrada de cuenta en el pie (mismo look que la navegación) */
+.btn-cuenta {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  justify-content: flex-start;
+  border-color: transparent;
+  background: transparent;
+  color: var(--texto-tenue);
+  font-weight: 400;
+  width: 100%;
+  text-align: left;
+}
+
+.btn-cuenta:hover {
+  border-color: var(--borde);
+}
+
+.btn-cuenta[aria-current='page'] {
+  color: var(--marca);
+  font-weight: 700;
+  background: var(--fondo);
+  box-shadow: inset 2px 0 0 var(--marca);
+}
+
+.btn-cuenta .etiqueta {
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+
+/* Vista de sensores */
+.lista-sensores-panel {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--espacio-3);
+}
+
+.tarjeta-sensor {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: var(--espacio-4);
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-4);
+  flex-wrap: wrap;
+}
+
+.datos-sensor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+  min-width: 12rem;
+  flex: 1;
+}
+
+.nombre-sensor-panel {
+  font-family: var(--fuente-titulo);
+  font-size: 1.1rem;
+}
+
+.vinculos-sensor,
+.ultima-lectura-sensor {
+  font-size: 0.85rem;
+  color: var(--texto-tenue);
+}
+
+.paleta-colores {
+  display: flex;
+  gap: var(--espacio-2);
+  flex-wrap: wrap;
+}
+
+.muestra-color {
+  width: 1.5rem;
+  height: 1.5rem;
+  min-height: 1.5rem;
+  padding: 0;
+  border-radius: 999px;
+  border: 2px solid var(--borde);
+  cursor: pointer;
+}
+
+.muestra-color[aria-pressed='true'] {
+  border-color: var(--texto);
+  box-shadow: 0 0 0 2px var(--fondo), 0 0 0 4px var(--texto);
+}
+
+.detalle-sensor {
+  margin-top: var(--espacio-5);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: var(--espacio-4);
+}
+
+.chip-color {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--borde);
+  vertical-align: middle;
+  margin-right: var(--espacio-2);
+}
+
+/* Vista de cuenta */
+.perfil-cuenta {
+  max-width: 30rem;
+}
+
+.aviso-exito {
+  color: var(--marca);
+  font-weight: 700;
+  margin: var(--espacio-3) 0 0;
+}
+
+/* En móvil la barra lateral vuelve a ser una franja horizontal (no sticky) */
+@media (max-width: 48rem) {
+  .barra-lateral {
+    position: static;
+    align-self: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .pie-sesion {
+    border-top: none;
+    padding: 0;
+    width: auto;
   }
 }
