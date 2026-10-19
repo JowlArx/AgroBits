@@ -8,6 +8,8 @@ import { authFalsoActual } from '../tests/soporte/configurarTests'
 // delega en el proveedor; los tests corren con el doble en memoria que
 // reproduce el contrato de Supabase Auth (duplicados rechazados, login con
 // cuenta previa). El E2E contra el servidor real se verifica en navegador.
+// T-27 (D27, R-01 v3): el registro añade confirmación, teléfono y localidad
+// (cascada provincia→localidad desde el catálogo del doble de datos).
 
 beforeEach(() => {
   reiniciarCultivos()
@@ -19,6 +21,35 @@ function enviarAcceso(email: string, clave: string): void {
   fireEvent.change(screen.getByTestId('email'), { target: { value: email } })
   fireEvent.change(screen.getByTestId('clave'), { target: { value: clave } })
   fireEvent.click(screen.getByTestId('enviar-acceso'))
+}
+
+async function enviarRegistro(datos: {
+  email: string
+  clave: string
+  confirmacion?: string
+  telefono?: string
+  provincia?: string
+  localidad?: string
+}): Promise<void> {
+  fireEvent.click(screen.getByTestId('cambiar-modo'))
+  // El catálogo llega asíncrono (DatosFalsos): espera antes de elegir.
+  await screen.findByRole('option', { name: 'Santa Fe' })
+  fireEvent.change(screen.getByTestId('email'), { target: { value: datos.email } })
+  fireEvent.change(screen.getByTestId('clave'), { target: { value: datos.clave } })
+  fireEvent.change(screen.getByTestId('confirmar-clave'), {
+    target: { value: datos.confirmacion ?? datos.clave },
+  })
+  fireEvent.change(screen.getByTestId('telefono'), {
+    target: { value: datos.telefono ?? '+54 9 261 555-1234' },
+  })
+  // Por defecto: Santa Fe (id 4 → Rosario en el catálogo del doble).
+  fireEvent.change(screen.getByTestId('provincia'), { target: { value: datos.provincia ?? 'Santa Fe' } })
+  fireEvent.change(screen.getByTestId('localidad'), { target: { value: datos.localidad ?? '4' } })
+  fireEvent.click(screen.getByTestId('enviar-acceso'))
+}
+
+function opcionesDeLocalidad(): string[] {
+  return [...(screen.getByTestId('localidad') as HTMLSelectElement).options].map((o) => o.textContent ?? '')
 }
 
 describe('acceso real (T-22, Supabase Auth vía doble de contrato)', () => {
@@ -50,10 +81,7 @@ describe('acceso real (T-22, Supabase Auth vía doble de contrato)', () => {
   it('registro de cuenta nueva entra en la aplicación (R-01 AC1)', async () => {
     render(<App />)
 
-    fireEvent.click(screen.getByTestId('cambiar-modo'))
-    expect(screen.getByRole('heading', { name: 'Crear cuenta' })).toBeTruthy()
-
-    enviarAcceso('nueva@ejemplo.com', 'secreta1')
+    await enviarRegistro({ email: 'nueva@ejemplo.com', clave: 'secreta1' })
 
     expect(await screen.findByText('Mis cultivos')).toBeTruthy()
     expect(screen.getByTestId('sesion-usuario').textContent).toBe('nueva@ejemplo.com')
@@ -62,8 +90,7 @@ describe('acceso real (T-22, Supabase Auth vía doble de contrato)', () => {
   it('registro con email ya registrado muestra el error (R-01 AC2)', async () => {
     render(<App />)
 
-    fireEvent.click(screen.getByTestId('cambiar-modo'))
-    enviarAcceso('persona@ejemplo.com', 'secreta1')
+    await enviarRegistro({ email: 'persona@ejemplo.com', clave: 'secreta1' })
 
     const error = await screen.findByTestId('error-acceso')
     expect(error.textContent).toMatch(/Ya existe una cuenta/)
@@ -111,5 +138,96 @@ describe('acceso real (T-22, Supabase Auth vía doble de contrato)', () => {
     fireEvent.click(screen.getByTestId('cambiar-modo'))
 
     expect(screen.queryByTestId('error-acceso')).toBeNull()
+  })
+})
+
+describe('registro enriquecido (T-27, R-01 v3 / D27)', () => {
+  it('el modo registro muestra confirmación, teléfono y localidad (D27)', () => {
+    render(<App />)
+
+    fireEvent.click(screen.getByTestId('cambiar-modo'))
+
+    expect(screen.getByTestId('confirmar-clave')).toBeTruthy()
+    expect(screen.getByTestId('telefono')).toBeTruthy()
+    expect(screen.getByTestId('provincia')).toBeTruthy()
+    expect(screen.getByTestId('localidad')).toBeTruthy()
+  })
+
+  it('la localidad empieza deshabilitada hasta elegir provincia', () => {
+    render(<App />)
+
+    fireEvent.click(screen.getByTestId('cambiar-modo'))
+
+    expect((screen.getByTestId('localidad') as HTMLSelectElement).disabled).toBe(true)
+  })
+
+  it('la cascada provincia→localidad filtra las opciones del catálogo', async () => {
+    render(<App />)
+
+    fireEvent.click(screen.getByTestId('cambiar-modo'))
+    await screen.findByRole('option', { name: 'Buenos Aires' }) // catálogo cargado
+    fireEvent.change(screen.getByTestId('provincia'), { target: { value: 'Buenos Aires' } })
+
+    expect(opcionesDeLocalidad()).toContain('La Plata')
+    expect(opcionesDeLocalidad()).toContain('Mar del Plata')
+    expect(opcionesDeLocalidad()).not.toContain('Córdoba')
+
+    fireEvent.change(screen.getByTestId('provincia'), { target: { value: 'Córdoba' } })
+
+    expect(opcionesDeLocalidad()).toContain('Córdoba')
+    expect(opcionesDeLocalidad()).not.toContain('La Plata')
+  })
+
+  it('cambiar de provincia resetea la localidad elegida', async () => {
+    render(<App />)
+
+    fireEvent.click(screen.getByTestId('cambiar-modo'))
+    await screen.findByRole('option', { name: 'Santa Fe' }) // catálogo cargado
+    fireEvent.change(screen.getByTestId('provincia'), { target: { value: 'Santa Fe' } })
+    fireEvent.change(screen.getByTestId('localidad'), { target: { value: '4' } })
+
+    fireEvent.change(screen.getByTestId('provincia'), { target: { value: 'Buenos Aires' } })
+
+    expect((screen.getByTestId('localidad') as HTMLSelectElement).value).toBe('')
+  })
+
+  it('AC4: la confirmación que no coincide se rechaza en pantalla sin entrar', async () => {
+    render(<App />)
+
+    await enviarRegistro({ email: 'nueva@ejemplo.com', clave: 'secreta1', confirmacion: 'distinta1' })
+
+    const error = await screen.findByTestId('error-acceso')
+    expect(error.textContent).toMatch(/Las contraseñas no coinciden/)
+    expect(screen.queryByText('Mis cultivos')).toBeNull()
+  })
+
+  it('AC5: el teléfono vacío se rechaza indicando el campo', async () => {
+    render(<App />)
+
+    await enviarRegistro({ email: 'nueva@ejemplo.com', clave: 'secreta1', telefono: '' })
+
+    const error = await screen.findByTestId('error-acceso')
+    expect(error.textContent).toMatch(/El teléfono es obligatorio/)
+    expect(screen.queryByText('Mis cultivos')).toBeNull()
+  })
+
+  it('AC5: el teléfono con menos de 6 dígitos se rechaza indicando el formato', async () => {
+    render(<App />)
+
+    await enviarRegistro({ email: 'nueva@ejemplo.com', clave: 'secreta1', telefono: '123' })
+
+    const error = await screen.findByTestId('error-acceso')
+    expect(error.textContent).toMatch(/entre 6 y 20 dígitos/)
+    expect(screen.queryByText('Mis cultivos')).toBeNull()
+  })
+
+  it('AC5: sin localidad seleccionada se rechaza indicando la selección', async () => {
+    render(<App />)
+
+    await enviarRegistro({ email: 'nueva@ejemplo.com', clave: 'secreta1', localidad: '' })
+
+    const error = await screen.findByTestId('error-acceso')
+    expect(error.textContent).toMatch(/Selecciona una provincia y una localidad/)
+    expect(screen.queryByText('Mis cultivos')).toBeNull()
   })
 })

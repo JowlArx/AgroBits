@@ -12,7 +12,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Cultivo, Medicion, TipoMedicion, UmbralesPorTipo } from '../../domain/tipos'
 import { TIPOS_MEDICION } from '../../domain/tipos'
-import type { NuevoCultivo, ProveedorDatos, Resultado } from './proveedorDatos'
+import type { NuevoCultivo, ProveedorDatos, Localidad, Resultado } from './proveedorDatos'
 import type { Sensor } from '../storeSensores'
 import type { Alerta } from '../storeAlertas'
 import { CATALOGO_CULTIVOS } from '../catalogo'
@@ -347,5 +347,20 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
       .order('created_at', { ascending: false })
     if (error) throw new Error(`No se pudieron cargar las alertas (${error.message})`)
     return ((data ?? []) as unknown as FilaAlerta[]).map(aAlerta)
+  }
+
+  // — Catálogo de localidades (registro, D27 / R-01 v3) ————————————
+
+  // Legible SIN sesión: el formulario de registro se carga antes del login y
+  // la política `localidades_read` permite a `anon` y `authenticated` leer el
+  // catálogo (dato de referencia sin datos personales).
+  async cargarLocalidades(): Promise<Localidad[]> {
+    const { data, error } = await this.cliente
+      .from('localidades')
+      .select('id, provincia, localidad')
+      .order('provincia')
+      .order('localidad')
+    if (error) throw new Error(`No se pudo cargar el catálogo de localidades (${error.message})`)
+    return (data ?? []) as Localidad[]
   }
 }

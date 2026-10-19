@@ -4,16 +4,19 @@
 // sesión exige una cuenta previa con esa clave (R-01 AC1). No toca red.
 
 import type { Resultado } from '../../data/storeCultivos'
-import type { ProveedorAuth, Sesion } from '../../data/sesion/proveedorAuth'
+import type { PerfilRegistro, ProveedorAuth, Sesion } from '../../data/sesion/proveedorAuth'
+
+/** Perfil por defecto de las cuentas sembradas en tests (D27). */
+const PERFIL_PRUEBA: PerfilRegistro = { telefono: '2615550000', localidadId: 1 }
 
 export class AuthFalso implements ProveedorAuth {
-  private readonly cuentas = new Map<string, string>()
+  private readonly cuentas = new Map<string, { clave: string; perfil: PerfilRegistro }>()
   private sesion: Sesion | null = null
   private readonly oyentes = new Set<() => void>()
 
   /** Registra una cuenta directamente (para preparar escenarios de test). */
-  sembrar(email: string, clave: string): void {
-    this.cuentas.set(email, clave)
+  sembrar(email: string, clave: string, perfil: PerfilRegistro = PERFIL_PRUEBA): void {
+    this.cuentas.set(email, { clave, perfil })
   }
 
   sesionActual(): Sesion | null {
@@ -28,17 +31,17 @@ export class AuthFalso implements ProveedorAuth {
   }
 
   async iniciarSesion(email: string, clave: string): Promise<Resultado<Sesion>> {
-    if (this.cuentas.get(email) !== clave) {
+    if (this.cuentas.get(email)?.clave !== clave) {
       return { ok: false, errores: [{ campo: 'clave', motivo: 'Email o contraseña incorrectos.' }] }
     }
     return this.abrir(email)
   }
 
-  async registrarse(email: string, clave: string): Promise<Resultado<Sesion>> {
+  async registrarse(email: string, clave: string, perfil: PerfilRegistro): Promise<Resultado<Sesion>> {
     if (this.cuentas.has(email)) {
       return { ok: false, errores: [{ campo: 'email', motivo: 'Ya existe una cuenta con ese email.' }] }
     }
-    this.cuentas.set(email, clave)
+    this.cuentas.set(email, { clave, perfil })
     return this.abrir(email)
   }
 

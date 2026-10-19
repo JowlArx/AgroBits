@@ -23,8 +23,8 @@ alter table public.t_t21_resultados disable row level security;
 -- ===== SETUP (rol propietario: usuarios A y B + sus datos) =====
 insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
 values
-  ('00000000-0000-0000-0000-000000000000','11111111-1111-1111-1111-111111111111','authenticated','authenticated','agrobits-t21-a@test.local','placeholder-no-hash',now(),now(),now(),'{"provider":"email","providers":["email"]}','{}'),
-  ('00000000-0000-0000-0000-000000000000','22222222-2222-2222-2222-222222222222','authenticated','authenticated','agrobits-t21-b@test.local','placeholder-no-hash',now(),now(),now(),'{"provider":"email","providers":["email"]}','{}')
+  ('00000000-0000-0000-0000-000000000000','11111111-1111-1111-1111-111111111111','authenticated','authenticated','agrobits-t21-a@test.local','placeholder-no-hash',now(),now(),now(),'{"provider":"email","providers":["email"]}', jsonb_build_object('telefono','2600000000','localidad_id',(select id from public.localidades limit 1))),
+  ('00000000-0000-0000-0000-000000000000','22222222-2222-2222-2222-222222222222','authenticated','authenticated','agrobits-t21-b@test.local','placeholder-no-hash',now(),now(),now(),'{"provider":"email","providers":["email"]}', jsonb_build_object('telefono','2600000001','localidad_id',(select id from public.localidades limit 1)))
 on conflict (id) do nothing;
 
 insert into public.crops (id, user_id, name, crop_type, es_personalizado) values

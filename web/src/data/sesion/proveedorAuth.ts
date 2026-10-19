@@ -10,12 +10,18 @@ export interface Sesion {
   usuario: { email: string }
 }
 
+/** Datos de perfil del registro (R-01 v3, D27): van como metadata del signup. */
+export interface PerfilRegistro {
+  telefono: string
+  localidadId: number
+}
+
 export interface ProveedorAuth {
   /** Instantánea síncrona y estable para `useSyncExternalStore`. */
   sesionActual(): Sesion | null
   /** Suscripción a cambios de sesión (login, logout, expiración). */
   suscribir(oyente: () => void): () => void
   iniciarSesion(email: string, clave: string): Promise<Resultado<Sesion>>
-  registrarse(email: string, clave: string): Promise<Resultado<Sesion>>
+  registrarse(email: string, clave: string, perfil: PerfilRegistro): Promise<Resultado<Sesion>>
   cerrarSesion(): Promise<void>
 }

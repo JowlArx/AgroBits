@@ -5,7 +5,7 @@
 
 import type { AuthError, Session, SupabaseClient } from '@supabase/supabase-js'
 import type { Resultado } from '../storeCultivos'
-import type { ProveedorAuth, Sesion } from './proveedorAuth'
+import type { PerfilRegistro, ProveedorAuth, Sesion } from './proveedorAuth'
 
 /** Traduce los errores habituales de GoTrue a mensajes comprensibles. */
 export function mensajeAuth(error: AuthError): string {
@@ -64,8 +64,14 @@ export class ProveedorSupabase implements ProveedorAuth {
     return { ok: true, valor: { usuario: { email: data.user.email ?? email } } }
   }
 
-  async registrarse(email: string, clave: string): Promise<Resultado<Sesion>> {
-    const { data, error } = await this.cliente.auth.signUp({ email, password: clave })
+  async registrarse(email: string, clave: string, perfil: PerfilRegistro): Promise<Resultado<Sesion>> {
+    // T-27 (D27): el teléfono y la localidad viajan como metadata del signup;
+    // el trigger de la BD (`crear_perfil_de_usuario`) los copia a `perfiles`.
+    const { data, error } = await this.cliente.auth.signUp({
+      email,
+      password: clave,
+      options: { data: { telefono: perfil.telefono, localidad_id: perfil.localidadId } },
+    })
     if (error) return { ok: false, errores: [{ campo: 'clave', motivo: mensajeAuth(error) }] }
     if (!data.session) {
       // GoTrue OFUSCA los emails ya registrados (anti-enumeración): responde
