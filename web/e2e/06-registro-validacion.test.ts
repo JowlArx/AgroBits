@@ -19,7 +19,7 @@ function cuentadorDeSignups(page: Page): { total: () => number } {
 }
 
 async function abrirRegistro(page: Page): Promise<void> {
-  await page.goto('/')
+  await page.goto('/app.html')
   await page.getByTestId('cambiar-modo').click()
   await expect(page.getByRole('heading', { name: 'Crear cuenta' })).toBeVisible()
   // Espera a que el catálogo anónimo cargue (provincias > placeholder).

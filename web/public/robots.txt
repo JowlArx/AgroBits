@@ -1,0 +1,7 @@
+# AgroBits — robots.txt
+# La raíz es la landing de presentación (index.html estático); la aplicación
+# (app.html) es navegable pero no aporta contenido indexable.
+User-agent: *
+Allow: /
+
+Sitemap: https://web-omega-eight-80.vercel.app/sitemap.xml

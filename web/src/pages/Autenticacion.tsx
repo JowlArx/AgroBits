@@ -15,7 +15,12 @@ import type { Localidad } from '../data/datos/proveedorDatos'
 type Modo = 'sesion' | 'registro'
 
 export default function Autenticacion() {
-  const [modo, setModo] = useState<Modo>('sesion')
+  // La landing (`index.html`, servida en `/`) enlaza a `/app.html?acceso=registro`:
+  // el SPA abre directamente en modo registro (R-01). Sin parámetro, inicio de
+  // sesión como siempre.
+  const [modo, setModo] = useState<Modo>(() =>
+    new URLSearchParams(window.location.search).get('acceso') === 'registro' ? 'registro' : 'sesion',
+  )
   const [email, setEmail] = useState('')
   const [clave, setClave] = useState('')
   const [confirmacion, setConfirmacion] = useState('')

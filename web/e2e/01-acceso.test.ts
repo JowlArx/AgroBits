@@ -9,7 +9,7 @@ import { test, expect } from '@playwright/test'
 import { cuentaA, cerrarSesion, iniciarSesion, sello } from './entorno'
 
 test('R-01 AC3: la contraseña corta se rechaza con el motivo en pantalla', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/app.html')
   await page.getByTestId('cambiar-modo').click()
   await expect(page.getByRole('heading', { name: 'Crear cuenta' })).toBeVisible()
 

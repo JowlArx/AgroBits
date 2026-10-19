@@ -41,7 +41,7 @@ export async function iniciarSesion(
   page: Page,
   cuenta: { correo: string; clave: string },
 ): Promise<void> {
-  await page.goto('/')
+  await page.goto('/app.html')
   await expect(page.getByTestId('pantalla-acceso')).toBeVisible()
   await page.getByTestId('email').fill(cuenta.correo)
   await page.getByTestId('clave').fill(cuenta.clave)

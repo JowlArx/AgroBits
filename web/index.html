@@ -3,9 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="AgroBits — monitoreo agrícola con sensores: cultivos, umbrales y alertas." />
+    <meta
+      name="description"
+      content="AgroBits — monitoreo agrícola con sensores: cultivos, umbrales y alertas."
+    />
     <meta name="theme-color" content="#f6f8f4" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0e1712" media="(prefers-color-scheme: dark)" />
+    <link rel="canonical" href="https://web-omega-eight-80.vercel.app/" />
     <link rel="icon" type="image/png" href="/logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,10 +17,535 @@
       href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fraunces:opsz,wght@9..144,600..700&display=swap"
       rel="stylesheet"
     />
-    <title>AgroBits</title>
+    <title>AgroBits | Monitoreo agrícola con sensores y alertas</title>
+    <style>
+      /* Landing estática de presentación (SEO de la raíz). Comparte los tokens
+         del sistema de estilos de la app (D20): papel blanco-verdoso, tinta
+         verde-negra, verde botánico como marca y ámbar-señal reservado a las
+         alertas. Sin dependencias de la SPA: se sirve igual con y sin JS. */
+      :root {
+        color-scheme: light dark;
+        --fuente-titulo: 'Fraunces', Georgia, 'Times New Roman', serif;
+        --fuente-texto: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        --fondo: #f6f8f4;
+        --superficie: #ffffff;
+        --texto: #12211a;
+        --texto-tenue: #5b6660;
+        --marca: #1e5b3d;
+        --marca-hover: #2e7d57;
+        --sobre-marca: #ffffff;
+        --senal: #c2410c;
+        --senal-suave: #fdf0e7;
+        --borde: #d8dfd6;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --fondo: #0e1712;
+          --superficie: #16211b;
+          --texto: #e7ede7;
+          --texto-tenue: #9daa9f;
+          --marca: #74c894;
+          --marca-hover: #93d8ad;
+          --sobre-marca: #0e1712;
+          --senal: #f97316;
+          --senal-suave: #2c1a0e;
+          --borde: #2a3830;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--fondo);
+        color: var(--texto);
+        font-family: var(--fuente-texto);
+        font-size: 1rem;
+        line-height: 1.55;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: var(--fuente-titulo);
+        line-height: 1.15;
+        margin: 0 0 0.5rem;
+      }
+
+      a {
+        color: var(--marca);
+      }
+
+      a:focus-visible,
+      .boton:focus-visible {
+        outline: 2px solid var(--marca);
+        outline-offset: 2px;
+      }
+
+      .saltar {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        background: var(--marca);
+        color: var(--sobre-marca);
+        padding: 0.5rem 1rem;
+        z-index: 10;
+      }
+
+      .saltar:focus {
+        left: 0.5rem;
+        top: 0.5rem;
+      }
+
+      .envoltorio {
+        max-width: 64rem;
+        margin: 0 auto;
+        padding: 0 1rem;
+      }
+
+      /* Cabecera ---------------------------------------------------------- */
+      .cabecera {
+        border-bottom: 1px solid var(--borde);
+      }
+
+      .cabecera .envoltorio {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        min-height: 4rem;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+      }
+
+      .marca {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: var(--fuente-titulo);
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--texto);
+        text-decoration: none;
+        margin-right: auto;
+      }
+
+      .marca img {
+        width: 28px;
+        height: 28px;
+      }
+
+      .cabecera nav {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.25rem;
+      }
+
+      .cabecera nav a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.75rem;
+        padding: 0 0.75rem;
+        color: var(--texto);
+        text-decoration: none;
+        border-radius: 6px;
+      }
+
+      .cabecera nav a:hover {
+        color: var(--marca);
+        background: var(--superficie);
+      }
+
+      /* Botones ----------------------------------------------------------- */
+      .boton {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.75rem;
+        padding: 0 1.25rem;
+        border: 1px solid var(--marca);
+        border-radius: 6px;
+        font: inherit;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+      }
+
+      .boton-primario {
+        background: var(--marca);
+        color: var(--sobre-marca);
+      }
+
+      .boton-primario:hover {
+        background: var(--marca-hover);
+        border-color: var(--marca-hover);
+      }
+
+      .boton-secundario {
+        background: transparent;
+        color: var(--marca);
+      }
+
+      .boton-secundario:hover {
+        background: var(--superficie);
+      }
+
+      /* Héroe ------------------------------------------------------------- */
+      .portada {
+        display: grid;
+        gap: 2.5rem;
+        padding: 3rem 0 2.5rem;
+      }
+
+      @media (min-width: 56rem) {
+        .portada {
+          grid-template-columns: 3fr 2fr;
+          align-items: center;
+        }
+      }
+
+      .portada h1 {
+        font-size: clamp(1.9rem, 4.5vw, 2.75rem);
+      }
+
+      .portada .entrada {
+        font-size: 1.1rem;
+        color: var(--texto-tenue);
+        max-width: 34rem;
+      }
+
+      .acciones {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+      }
+
+      /* Panel de lecturas (ejemplo) --------------------------------------- */
+      .panel {
+        background: var(--superficie);
+        border: 1px solid var(--borde);
+        border-radius: 8px;
+        padding: 1.25rem;
+      }
+
+      .panel h2 {
+        font-family: var(--fuente-texto);
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--texto-tenue);
+        margin-bottom: 1rem;
+      }
+
+      .lecturas {
+        margin: 0;
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .lecturas div {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 1rem;
+        border-bottom: 1px solid var(--borde);
+        padding-bottom: 0.5rem;
+      }
+
+      .lecturas div:last-child {
+        border-bottom: none;
+      }
+
+      .lecturas dt {
+        color: var(--texto-tenue);
+      }
+
+      .lecturas dd {
+        margin: 0;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .ejemplo-alerta {
+        margin: 1rem 0 0;
+        padding: 0.6rem 0.75rem;
+        border-left: 3px solid var(--senal);
+        background: var(--senal-suave);
+        color: var(--texto);
+        font-size: 0.9rem;
+        border-radius: 0 6px 6px 0;
+      }
+
+      .ejemplo-alerta strong {
+        color: var(--senal);
+      }
+
+      /* Secciones --------------------------------------------------------- */
+      section {
+        border-top: 1px solid var(--borde);
+        padding: 2.5rem 0;
+      }
+
+      section h2 {
+        font-size: 1.6rem;
+        margin-bottom: 1rem;
+      }
+
+      .columnas {
+        display: grid;
+        gap: 1.5rem;
+      }
+
+      @media (min-width: 48rem) {
+        .columnas {
+          grid-template-columns: repeat(4, 1fr);
+        }
+
+        .columnas.dos {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      .tarjeta {
+        background: var(--superficie);
+        border: 1px solid var(--borde);
+        border-radius: 8px;
+        padding: 1rem;
+      }
+
+      .tarjeta h3 {
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+      }
+
+      .tarjeta .unidad {
+        font-weight: 700;
+        color: var(--marca);
+        font-size: 0.9rem;
+      }
+
+      .tarjeta p {
+        margin: 0.5rem 0 0;
+        color: var(--texto-tenue);
+        font-size: 0.95rem;
+      }
+
+      ol.pasos {
+        margin: 0;
+        padding-left: 1.25rem;
+        display: grid;
+        gap: 1rem;
+      }
+
+      ol.pasos li::marker {
+        font-weight: 700;
+        color: var(--marca);
+      }
+
+      ol.pasos strong {
+        display: block;
+      }
+
+      ol.pasos span {
+        color: var(--texto-tenue);
+      }
+
+      /* Pie --------------------------------------------------------------- */
+      .pie {
+        border-top: 1px solid var(--borde);
+        padding: 2rem 0 3rem;
+        color: var(--texto-tenue);
+        font-size: 0.9rem;
+      }
+
+      .pie nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .pie p {
+        margin: 0.5rem 0 0;
+        max-width: 44rem;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .boton {
+          transition: none;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+    <header class="cabecera">
+      <div class="envoltorio">
+        <a class="marca" href="/">
+          <img src="/logo.png" width="28" height="28" alt="" />
+          AgroBits
+        </a>
+        <nav aria-label="Secciones">
+          <a href="#mide">Qué mide</a>
+          <a href="#como-funciona">Cómo funciona</a>
+          <a href="#alertas">Alertas</a>
+          <a href="/app.html">Iniciar sesión</a>
+          <a href="/app.html?acceso=registro">Crear cuenta</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="contenido">
+      <div class="envoltorio">
+        <div class="portada">
+          <div>
+            <h1>AgroBits: monitoreo agrícola con sensores, umbrales y alertas</h1>
+            <p class="entrada">
+              Da de alta tus cultivos, define para cada uno los límites que necesita y consulta
+              las lecturas de humedad, temperatura y luz cuando te convenga. Si una medición se
+              sale de rango, AgroBits te avisa y la alerta se resuelve sola al volver a la
+              normalidad.
+            </p>
+            <p class="acciones">
+              <a class="boton boton-primario" href="/app.html?acceso=registro">Crear cuenta</a>
+              <a class="boton boton-secundario" href="/app.html">Iniciar sesión</a>
+            </p>
+          </div>
+
+          <aside class="panel" aria-label="Ejemplo de lectura de un cultivo">
+            <h2>Ejemplo de lectura — cultivo «Tomate»</h2>
+            <dl class="lecturas">
+              <div>
+                <dt>Humedad de suelo</dt>
+                <dd>62 % vol</dd>
+              </div>
+              <div>
+                <dt>Temperatura</dt>
+                <dd>24 °C</dd>
+              </div>
+              <div>
+                <dt>Humedad ambiental</dt>
+                <dd>58 % HR</dd>
+              </div>
+              <div>
+                <dt>Luminosidad</dt>
+                <dd>18 000 lux</dd>
+              </div>
+            </dl>
+            <p class="ejemplo-alerta">
+              <strong>Alerta activa</strong> — Temperatura 34 °C, por encima del máximo del
+              cultivo (28 °C).
+            </p>
+          </aside>
+        </div>
+      </div>
+
+      <section id="mide" aria-labelledby="titulo-mide">
+        <div class="envoltorio">
+          <h2 id="titulo-mide">Qué mide AgroBits</h2>
+          <div class="columnas">
+            <article class="tarjeta">
+              <h3>Humedad de suelo</h3>
+              <span class="unidad">% vol</span>
+              <p>Cuánta agua disponible tiene la raíz: la señal principal para saber cuándo regar.</p>
+            </article>
+            <article class="tarjeta">
+              <h3>Temperatura</h3>
+              <span class="unidad">°C</span>
+              <p>Las extremas de frío o calor estresan al cultivo antes de que se vea a simple vista.</p>
+            </article>
+            <article class="tarjeta">
+              <h3>Humedad ambiental</h3>
+              <span class="unidad">% HR</span>
+              <p>Condiciona la evapotranspiración y la aparición de hongos en hojas y frutos.</p>
+            </article>
+            <article class="tarjeta">
+              <h3>Luminosidad</h3>
+              <span class="unidad">lux</span>
+              <p>Determina cuánta radiación recibe el cultivo a lo largo del día.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="como-funciona" aria-labelledby="titulo-como">
+        <div class="envoltorio">
+          <h2 id="titulo-como">Cómo funciona</h2>
+          <div class="columnas dos">
+            <div>
+              <ol class="pasos">
+                <li>
+                  <strong>Crea tu cuenta</strong>
+                  <span>Solo necesitas email y contraseña, junto a un teléfono y tu localidad.</span>
+                </li>
+                <li>
+                  <strong>Da de alta tus cultivos</strong>
+                  <span>
+                    Nombre, tipo y zona. Puedes partir del catálogo orientativo (tomate, lechuga,
+                    albahaca, pimiento) o definir tus propios umbrales.
+                  </span>
+                </li>
+                <li>
+                  <strong>Asocia sensores y consulta lecturas</strong>
+                  <span>Cada sensor envía sus mediciones y las ves por cultivo, con su hora.</span>
+                </li>
+                <li>
+                  <strong>Revisa y resuelve alertas</strong>
+                  <span>
+                    Cuando una medición sale del rango del cultivo aparece una alerta; al volver
+                    al rango, se marca resuelta.
+                  </span>
+                </li>
+              </ol>
+            </div>
+            <div class="tarjeta">
+              <h3>Umbrales a tu medida</h3>
+              <p>
+                Cada cultivo tiene un límite inferior y uno superior por tipo de medición. Los
+                valores del catálogo son una referencia orientativa, no asesoramiento agronómico:
+                ajústalos a las condiciones reales de tu balcón o huerto.
+              </p>
+              <p>
+                Las alertas son binarias y una sola puede estar activa a la vez por cada par
+                cultivo-tipo de medición: sin listas interminables, con lo justo para actuar.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="alertas" aria-labelledby="titulo-alertas">
+        <div class="envoltorio">
+          <h2 id="titulo-alertas">Alertas que se resuelven solas</h2>
+          <p>
+            El sistema vigila cada medición contra los umbrales de su cultivo en el momento de
+            registrarla. Si se sale del rango, se levanta una alerta; si la siguiente medición
+            vuelve a estar dentro, la alerta se cierra automáticamente. Tú solo ves las que están
+            activas y el historial de las resueltas.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="pie">
+      <div class="envoltorio">
+        <nav aria-label="Acceso">
+          <a href="/app.html">Iniciar sesión</a>
+          <a href="/app.html?acceso=registro">Crear cuenta</a>
+          <a href="#mide">Qué mide</a>
+          <a href="#como-funciona">Cómo funciona</a>
+        </nav>
+        <p>
+          AgroBits es un proyecto de monitoreo agrícola para cultivadores pequeños (balcón y
+          huerto). Versión en pruebas: las mediciones se generan de forma simulada mientras se
+          integra el hardware de sensores.
+        </p>
+      </div>
+    </footer>
   </body>
 </html>
