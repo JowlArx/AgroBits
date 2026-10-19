@@ -312,3 +312,36 @@ describe('ProveedorDatosSupabase — sensores', () => {
     if (resultado.ok) expect(resultado.valor).toEqual({ id: 's9', nombre: 'Sensor A', cultivoIds: [] })
   })
 })
+
+describe('ProveedorDatosSupabase — catálogo de localidades (registro, D27)', () => {
+  it('cargarLocalidades pide el catálogo ordenado y mapea las filas', async () => {
+    const capturas: Captura[] = []
+    const proveedor = new ProveedorDatosSupabase(
+      clienteFalso((captura) => {
+        capturas.push(captura)
+        return {
+          data: [
+            { id: 1, provincia: 'Buenos Aires', localidad: 'La Plata' },
+            { id: 4, provincia: 'Santa Fe', localidad: 'Rosario' },
+          ],
+          error: null,
+        }
+      }),
+    )
+
+    const localidades = await proveedor.cargarLocalidades()
+
+    expect(localidades).toEqual([
+      { id: 1, provincia: 'Buenos Aires', localidad: 'La Plata' },
+      { id: 4, provincia: 'Santa Fe', localidad: 'Rosario' },
+    ])
+    expect(capturas[0].tabla).toBe('localidades')
+    expect(capturas[0].operaciones).toEqual(['select id, provincia, localidad', 'order provincia', 'order localidad'])
+  })
+
+  it('cargarLocalidades propaga el error del servidor', async () => {
+    const proveedor = new ProveedorDatosSupabase(clienteFalso(() => ({ data: null, error: { message: 'down' } })))
+
+    await expect(proveedor.cargarLocalidades()).rejects.toThrow(/catálogo de localidades/)
+  })
+})

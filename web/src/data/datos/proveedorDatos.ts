@@ -23,6 +23,13 @@ export interface NuevoCultivo {
   umbrales: UmbralesPorTipo
 }
 
+/** Fila del catálogo de localidades (registro, R-01 v3 / D27). */
+export interface Localidad {
+  id: number
+  provincia: string
+  localidad: string
+}
+
 export interface ProveedorDatos {
   // Cultivos (R-04, R-05, R-11, R-12)
   cargarCultivos(): Promise<Cultivo[]>
@@ -44,6 +51,10 @@ export interface ProveedorDatos {
 
   // Alertas (R-13/R-14): T-25 evalúa en la BD (trigger); el cliente solo lee.
   cargarAlertas(): Promise<Alerta[]>
+
+  // Catálogo de localidades (registro, D27): legible SIN sesión (el registro
+  // es anónimo; RLS de `localidades` lo permite).
+  cargarLocalidades(): Promise<Localidad[]>
 }
 
 let proveedor: ProveedorDatos | null = null

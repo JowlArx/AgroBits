@@ -12,11 +12,17 @@ interface Respuesta {
   error: AuthError | null
 }
 
-function clienteFalso(respuesta: Respuesta): SupabaseClient {
+/** Perfil del registro (D27): teléfono y localidad de la fila del catálogo. */
+const PERFIL_PRUEBA = { telefono: '+54 9 261 555-1234', localidadId: 7 }
+
+function clienteFalso(respuesta: Respuesta, alRegistrarse?: (argumentos: Record<string, unknown>) => void): SupabaseClient {
   return {
     auth: {
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-      signUp: async () => respuesta,
+      signUp: async (argumentos: Record<string, unknown>) => {
+        alRegistrarse?.(argumentos)
+        return respuesta
+      },
       signInWithPassword: async () => respuesta,
       signOut: async () => ({ error: null }),
     },
@@ -39,10 +45,37 @@ describe('ProveedorSupabase.registrarse', () => {
       }),
     )
 
-    const resultado = await p.registrarse('nueva@example.com', 'secreta1')
+    const resultado = await p.registrarse('nueva@example.com', 'secreta1', PERFIL_PRUEBA)
 
     expect(resultado.ok).toBe(true)
     if (resultado.ok) expect(resultado.valor.usuario.email).toBe('nueva@example.com')
+  })
+
+  it('envía teléfono y localidad como metadata del signup (D27, AC6)', async () => {
+    let argumentos: Record<string, unknown> | undefined
+    const p = new ProveedorSupabase(
+      clienteFalso(
+        {
+          data: {
+            user: { email: 'nueva@example.com', identities: [{ provider: 'email' }] },
+            session: { access_token: 'tok' },
+          },
+          error: null,
+        },
+        (a) => {
+          argumentos = a
+        },
+      ),
+    )
+
+    await p.registrarse('nueva@example.com', 'secreta1', PERFIL_PRUEBA)
+
+    // El trigger de la BD (crear_perfil_de_usuario) lee exactamente esta metadata.
+    expect(argumentos).toEqual({
+      email: 'nueva@example.com',
+      password: 'secreta1',
+      options: { data: { telefono: PERFIL_PRUEBA.telefono, localidad_id: PERFIL_PRUEBA.localidadId } },
+    })
   })
 
   it('sin sesión e identidades presentes, informa la confirmación de email', async () => {
@@ -56,7 +89,7 @@ describe('ProveedorSupabase.registrarse', () => {
       }),
     )
 
-    const resultado = await p.registrarse('nueva@example.com', 'secreta1')
+    const resultado = await p.registrarse('nueva@example.com', 'secreta1', PERFIL_PRUEBA)
 
     expect(resultado.ok).toBe(false)
     if (!resultado.ok) expect(resultado.errores[0].motivo).toMatch(/revisa tu correo/)
@@ -70,7 +103,7 @@ describe('ProveedorSupabase.registrarse', () => {
       }),
     )
 
-    const resultado = await p.registrarse('ocupada@example.com', 'secreta1')
+    const resultado = await p.registrarse('ocupada@example.com', 'secreta1', PERFIL_PRUEBA)
 
     expect(resultado.ok).toBe(false)
     if (!resultado.ok) expect(resultado.errores[0].motivo).toBe('Ya existe una cuenta con ese email.')
@@ -84,7 +117,7 @@ describe('ProveedorSupabase.registrarse', () => {
       }),
     )
 
-    const resultado = await p.registrarse('nueva@example.com', 'corta')
+    const resultado = await p.registrarse('nueva@example.com', 'corta', PERFIL_PRUEBA)
 
     expect(resultado.ok).toBe(false)
     if (!resultado.ok) expect(resultado.errores[0].motivo).toMatch(/al menos 6 caracteres/)

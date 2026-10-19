@@ -10,9 +10,18 @@
 
 import { evaluarAlerta } from '../../domain/alertas'
 import { TIPOS_MEDICION, type Cultivo, type Medicion, type TipoMedicion } from '../../domain/tipos'
-import type { ErrorCampo, NuevoCultivo, ProveedorDatos, Resultado } from '../../data/datos/proveedorDatos'
+import type { ErrorCampo, Localidad, NuevoCultivo, ProveedorDatos, Resultado } from '../../data/datos/proveedorDatos'
 import type { Sensor } from '../../data/storeSensores'
 import type { Alerta } from '../../data/storeAlertas'
+
+/** Catálogo mínimo para los tests de UI del registro (D27). */
+const LOCALIDADES_FALSAS: Localidad[] = [
+  { id: 1, provincia: 'Buenos Aires', localidad: 'La Plata' },
+  { id: 2, provincia: 'Buenos Aires', localidad: 'Mar del Plata' },
+  { id: 3, provincia: 'Córdoba', localidad: 'Córdoba' },
+  { id: 4, provincia: 'Santa Fe', localidad: 'Rosario' },
+  { id: 5, provincia: 'Mendoza', localidad: 'Mendoza' },
+]
 
 const exito = <T>(valor: T): Resultado<T> => ({ ok: true, valor })
 const fallo = (errores: ErrorCampo[]): Resultado<never> => ({ ok: false, errores })
@@ -129,6 +138,12 @@ export class DatosFalsos implements ProveedorDatos {
 
   async cargarAlertas(): Promise<Alerta[]> {
     return this.alertas.map((a) => ({ ...a }))
+  }
+
+  // — Catálogo de localidades (registro, D27) ——————————————————————
+
+  async cargarLocalidades(): Promise<Localidad[]> {
+    return LOCALIDADES_FALSAS.map((l) => ({ ...l }))
   }
 
   private hayActiva(cultivoId: string, tipo: TipoMedicion): Alerta | undefined {
