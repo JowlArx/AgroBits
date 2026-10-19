@@ -538,7 +538,377 @@ dd {
   width: 100%;
 }
 
+/* Estructura de panel: barra lateral + topbar + área principal + panel ----- */
+
+.estructura {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.barra-lateral {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-5);
+  border-right: 1px solid var(--borde);
+  padding: var(--espacio-5) var(--espacio-4);
+  background: var(--superficie);
+}
+
+.barra-lateral h1 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  font-size: 1.25rem;
+}
+
+.nav-lateral {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+}
+
+.nav-lateral button {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  justify-content: flex-start;
+  border-color: transparent;
+  background: transparent;
+  color: var(--texto-tenue);
+  font-weight: 400;
+}
+
+.nav-lateral button:hover {
+  border-color: var(--borde);
+}
+
+.nav-lateral button[aria-current='page'] {
+  color: var(--marca);
+  font-weight: 700;
+  background: var(--fondo);
+  box-shadow: inset 2px 0 0 var(--marca);
+}
+
+.icono-nav {
+  flex: none;
+}
+
+.pie-sesion {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espacio-2);
+}
+
+.zona-derecha {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--espacio-3);
+  border-bottom: 1px solid var(--borde);
+  padding: var(--espacio-3) var(--espacio-5);
+}
+
+/* El chip informativo se alinea a la derecha del topbar (como en el diseño). */
+.topbar .etiqueta {
+  margin-left: auto;
+}
+
+.migas {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--texto-tenue);
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+.migas strong {
+  color: var(--texto);
+}
+
+.cuerpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espacio-5);
+  padding: var(--espacio-5);
+  align-items: start;
+}
+
+.cuerpo.con-panel {
+  grid-template-columns: minmax(0, 1fr) 19rem;
+}
+
+.cuerpo main {
+  min-width: 0;
+}
+
+/* Tablero: KPIs ----------------------------------------------------------- */
+
+.fila-kpis {
+  list-style: none;
+  margin: 0 0 var(--espacio-4);
+  padding: 0;
+  display: grid;
+  gap: var(--espacio-3);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+}
+
+.tarjeta-kpi {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: var(--espacio-3) var(--espacio-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+  min-width: 0;
+}
+
+.kpi-etiqueta {
+  font-size: 0.85rem;
+  color: var(--texto-tenue);
+}
+
+.kpi-valor {
+  font-family: var(--fuente-titulo);
+  font-size: 1.75rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-nota {
+  font-size: 0.8rem;
+  color: var(--texto-tenue);
+}
+
+/* La señal ámbar solo cuando hay alertas activas (D20) */
+.tarjeta-kpi.kpi-alerta {
+  border-color: var(--senal);
+}
+
+.tarjeta-kpi.kpi-alerta .kpi-valor {
+  color: var(--senal);
+}
+
+/* Tablero: widgets de gráficos -------------------------------------------- */
+
+.fila-widgets {
+  display: grid;
+  gap: var(--espacio-4);
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+}
+
+.widget {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: var(--espacio-4);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cabecera-widget {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+  margin-bottom: var(--espacio-3);
+}
+
+.cabecera-widget h3 {
+  margin: 0;
+}
+
+.pestanas-widget {
+  display: flex;
+  gap: var(--espacio-1);
+  flex-wrap: wrap;
+}
+
+.pestanas-widget button {
+  min-height: 2rem;
+  font-size: 0.8rem;
+  font-weight: 400;
+  border-color: transparent;
+  background: transparent;
+  color: var(--texto-tenue);
+}
+
+.pestanas-widget button:hover {
+  border-color: var(--borde-input);
+}
+
+.pestanas-widget button[aria-pressed='true'] {
+  color: var(--marca);
+  font-weight: 700;
+  box-shadow: inset 0 -2px 0 var(--marca);
+}
+
+.grafico-lineas {
+  width: 100%;
+}
+
+.barras-tipo {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-evenly;
+  gap: var(--espacio-3);
+}
+
+.barras-tipo li {
+  display: grid;
+  grid-template-columns: 13rem minmax(0, 1fr) 6.5rem;
+  align-items: center;
+  gap: var(--espacio-3);
+  font-size: 0.9rem;
+}
+
+.barra-etiqueta {
+  color: var(--texto-tenue);
+}
+
+.barra-ruta {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  overflow: hidden;
+}
+
+.barra-relleno {
+  display: block;
+  height: 100%;
+  background: var(--marca);
+  border-radius: 999px;
+}
+
+.barra-valor {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Panel lateral: alertas y lecturas recientes ----------------------------- */
+
+.panel-lateral {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-5);
+  min-width: 0;
+}
+
+.panel-lateral h2 {
+  font-size: 1.05rem;
+  margin: 0 0 var(--espacio-3);
+}
+
+.panel-vacio {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--texto-tenue);
+}
+
+.lista-panel {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+}
+
+.item-panel {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: var(--espacio-2) var(--espacio-3);
+  font-size: 0.9rem;
+  min-width: 0;
+}
+
+.item-panel.item-alerta {
+  border-color: var(--senal);
+}
+
+.item-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+.item-detalles {
+  margin: var(--espacio-1) 0 0;
+  color: var(--texto-tenue);
+  font-variant-numeric: tabular-nums;
+}
+
+.item-hora {
+  display: block;
+  margin-top: var(--espacio-1);
+  font-size: 0.75rem;
+  color: var(--texto-tenue);
+}
+
 /* Responsivo -------------------------------------------------------------- */
+
+@media (max-width: 62rem) {
+  .cuerpo.con-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .fila-widgets {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 48rem) {
+  .estructura {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .barra-lateral {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--espacio-3);
+    border-right: none;
+    border-bottom: 1px solid var(--borde);
+    padding: var(--espacio-3) var(--espacio-4);
+  }
+
+  .nav-lateral {
+    flex-direction: row;
+  }
+
+  .pie-sesion {
+    margin-top: 0;
+    margin-left: auto;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .topbar,
+  .cuerpo {
+    padding-left: var(--espacio-4);
+    padding-right: var(--espacio-4);
+  }
+}
 
 @media (max-width: 34rem) {
   .fila-umbral {
@@ -552,6 +922,15 @@ dd {
   .cabecera nav {
     margin-left: 0;
     width: 100%;
+  }
+
+  .barras-tipo li {
+    grid-template-columns: minmax(0, 1fr) 5.5rem;
+    gap: var(--espacio-2);
+  }
+
+  .barra-etiqueta {
+    grid-column: 1 / -1;
   }
 }
 

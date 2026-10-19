@@ -4,7 +4,10 @@ import FormularioCultivo from './pages/FormularioCultivo'
 import DetalleCultivo from './pages/DetalleCultivo'
 import Alertas from './pages/Alertas'
 import Autenticacion from './pages/Autenticacion'
-import { cerrarSesion, obtenerSesion, suscribirSesion } from './data/storeSesion'
+import BarraLateral from './components/BarraLateral'
+import PanelLateral from './components/PanelLateral'
+import Tablero from './components/Tablero'
+import { obtenerSesion, suscribirSesion } from './data/storeSesion'
 import { cargarDatosSesion, vaciarDatosSesion } from './data/cargarDatos'
 
 type Vista =
@@ -13,6 +16,21 @@ type Vista =
   | { tipo: 'editar'; id: string }
   | { tipo: 'detalle'; id: string }
   | { tipo: 'alertas' }
+
+/** Etiqueta del migas (breadcrumb) del topbar según la vista actual. */
+function seccionActual(vista: Vista): string {
+  switch (vista.tipo) {
+    case 'alertas':
+      return 'Alertas'
+    case 'detalle':
+      return 'Detalle del cultivo'
+    case 'nuevo':
+    case 'editar':
+      return 'Formulario de cultivo'
+    default:
+      return 'Cultivos'
+  }
+}
 
 export default function App() {
   const [vista, setVista] = useState<Vista>({ tipo: 'lista' })
@@ -26,59 +44,59 @@ export default function App() {
     else vaciarDatosSesion()
   }, [sesion])
 
+  if (!sesion) {
+    return (
+      <div className="app">
+        {/* WCAG 2.4.1: el teclado puede saltarse la cabecera. */}
+        <a className="saltar-contenido" href="#contenido">
+          Saltar al contenido
+        </a>
+        <header className="cabecera">
+          <h1>
+            <img className="marca" src="/logo.png" width="28" height="28" alt="" />
+            AgroBits
+          </h1>
+          <span className="etiqueta">Acceso y datos con Supabase (T-24)</span>
+        </header>
+        <main id="contenido">
+          <Autenticacion />
+        </main>
+      </div>
+    )
+  }
+
   return (
-    <div className="app">
-      {/* WCAG 2.4.1: el teclado puede saltarse la cabecera. */}
+    <div className="estructura">
+      {/* WCAG 2.4.1: el teclado puede saltarse la barra lateral. */}
       <a className="saltar-contenido" href="#contenido">
         Saltar al contenido
       </a>
-      <header className="cabecera">
-        <h1>
-          <img className="marca" src="/logo.png" width="28" height="28" alt="" />
-          AgroBits
-        </h1>
-        <span className="etiqueta">Acceso y datos con Supabase (T-24)</span>
-        {sesion && (
-          <>
-            <span className="etiqueta" data-testid="sesion-usuario">
-              {sesion.usuario.email}
-            </span>
-            <button type="button" data-testid="cerrar-sesion" onClick={() => void cerrarSesion()}>
-              Cerrar sesión
-            </button>
-            <nav aria-label="Principal">
-              <button
-                type="button"
-                data-testid="nav-cultivos"
-                aria-current={vista.tipo === 'alertas' ? undefined : 'page'}
-                onClick={() => setVista({ tipo: 'lista' })}
-              >
-                Cultivos
-              </button>
-              <button
-                type="button"
-                data-testid="nav-alertas"
-                aria-current={vista.tipo === 'alertas' ? 'page' : undefined}
-                onClick={() => setVista({ tipo: 'alertas' })}
-              >
-                Alertas
-              </button>
-            </nav>
-          </>
-        )}
-      </header>
-
-      <main id="contenido">
-        {!sesion ? (
-          <Autenticacion />
-        ) : (
-          <>
+      <BarraLateral
+        enAlertas={vista.tipo === 'alertas'}
+        email={sesion.usuario.email}
+        onCultivos={() => setVista({ tipo: 'lista' })}
+        onAlertas={() => setVista({ tipo: 'alertas' })}
+      />
+      <div className="zona-derecha">
+        <header className="topbar">
+          <nav aria-label="Migas">
+            <p className="migas">
+              AgroBits <span aria-hidden="true">/</span> <strong>{seccionActual(vista)}</strong>
+            </p>
+          </nav>
+          <span className="etiqueta">Acceso y datos con Supabase (T-24)</span>
+        </header>
+        <div className={vista.tipo === 'lista' ? 'cuerpo con-panel' : 'cuerpo'}>
+          <main id="contenido">
             {vista.tipo === 'lista' && (
-              <ListaCultivos
-                onNuevo={() => setVista({ tipo: 'nuevo' })}
-                onEditar={(id) => setVista({ tipo: 'editar', id })}
-                onVerMediciones={(id) => setVista({ tipo: 'detalle', id })}
-              />
+              <>
+                <Tablero />
+                <ListaCultivos
+                  onNuevo={() => setVista({ tipo: 'nuevo' })}
+                  onEditar={(id) => setVista({ tipo: 'editar', id })}
+                  onVerMediciones={(id) => setVista({ tipo: 'detalle', id })}
+                />
+              </>
             )}
             {vista.tipo === 'nuevo' && (
               <FormularioCultivo onGuardado={() => setVista({ tipo: 'lista' })} onCancelar={() => setVista({ tipo: 'lista' })} />
@@ -94,9 +112,10 @@ export default function App() {
               <DetalleCultivo cultivoId={vista.id} onVolver={() => setVista({ tipo: 'lista' })} />
             )}
             {vista.tipo === 'alertas' && <Alertas />}
-          </>
-        )}
-      </main>
+          </main>
+          {vista.tipo === 'lista' && <PanelLateral />}
+        </div>
+      </div>
     </div>
   )
 }
