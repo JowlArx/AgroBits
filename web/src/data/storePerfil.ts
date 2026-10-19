@@ -5,7 +5,7 @@
 // localidad del catálogo (>0). La escritura REAL es del RPC
 // `actualizar_perfil` (único punto servidor, D19/D27).
 
-import type { Resultado, Perfil } from './datos/proveedorDatos'
+import type { Resultado, Perfil } from '../data/datos/proveedorDatos'
 import { exigirProveedor } from './datos/proveedorDatos'
 import { telefonoValido } from './storeSesion'
 
