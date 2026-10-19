@@ -148,6 +148,19 @@ Reglas:
 
 ---
 
+## M5 — Registro enriquecido (hito M5, alcance aprobado el 19/10/2026)
+
+### T-27 — Registro con perfil: teléfono, localidad y confirmación de contraseña
+- **Objetivo:** implementar la enmienda D27 de R-01 (spec v3): formulario de registro con confirmación de contraseña, teléfono y localidad obligatoria (catálogo provincia×ciudad en BD), con el perfil persistido para la futura capa analítica.
+- **Dependencias:** spec v3 (D27) aprobada; T-20…T-26 verdes.
+- **Archivos afectados:** migración nueva en `supabase/migrations/` (tablas `localidades` y `perfiles`, trigger de alta en `auth.users`, RLS y semilla); `web/src/data/sesion/*` (contrato `ProveedorAuth`, `ProveedorSupabase`, `AuthFalso`, `storeSesion`); `web/src/data/datos/*` (`cargarLocalidades` en `ProveedorDatos` + dobles); `web/src/pages/Autenticacion.tsx` (+ tests); `web/e2e/` (spec de validación de registro); `supabase/tests/` (suite SQL de perfiles y RLS).
+- **Criterios de aceptación:** R-01 AC4 (mismatch de confirmación rechazado en cliente sin llamar al servidor), AC5 (teléfono vacío/inválido o localidad sin seleccionar rechazado indicando el campo) y AC6 (teléfono y localidad persistidos en `perfiles` y login posible); AC1–AC3 siguen verdes; sin escritura de perfiles desde el cliente (RLS); catálogo `localidades` legible sin sesión; tríada verde; migración versionada y aplicada.
+- **Pruebas requeridas:** unitarias (validación de store y proveedores, cascada provincia→localidad, mapeo PostgREST), E2E de cliente (AC4/AC5: no consumen cuota de signup), suite SQL estilo T-21/T-25 (AC6, RLS y backstop del trigger, con ROLLBACK y residuo 0) y pasada manual/SQL del happy path con perfil (cuota free tier).
+- **Riesgos:** localidad ausente de la semilla impide registrarse (mitigación: semilla amplia y migración de ampliación); fricción de 5 campos en el alta; cuota de signup limita la E2E automatizada del registro (sigue fuera de suite por D21); los usuarios existentes no tienen perfil (perfil editable fuera de alcance).
+- **Fuente del catálogo:** provincias argentinas (24, incluida la Ciudad Autónoma) + localidades de referencia por provincia; dato público de referencia, ampliable por migración.
+
+---
+
 ## Registro de verificación
 
 - **T-10 — Completada el 17/10/2026.** Verificado: `npm run test` (1 test de humo, aprobado), `npm run build` (tsc + vite build sin errores), `npm run lint` (sin incidencias). Dependencias instaladas con autorización: react@19.3.1, vite@8.3.4, vitest@4.1.12, typescript@6.0.3, eslint@10.13.0; 0 vulnerabilidades reportadas. Estructura creada en `web/` (decisión aprobada). Desviación menor del criterio original: en vez de "0 tests", se incluyó un test de humo para comprobar que la infraestructura de tests realmente ejecuta — se declara explícitamente.
@@ -207,6 +220,6 @@ Reglas:
 - **T-11 — Completada el 17/10/2026.** Verificado: `npm run test` → 4 archivos y 16 tests aprobados (Vitest); `npm run build` (tsc + vite) sin errores; `npm run lint` sin incidencias. Archivos: `src/domain/tipos.ts` (4 tipos D2, unidades, contrato de medición R-08), `src/domain/umbrales.ts` (validación R-05 AC1/AC2), `src/domain/alertas.ts` (evaluación R-13 AC1–AC4, modelo D14) y sus 3 suites de tests. Criterios cubiertos: R-05 AC1/AC2 y R-13 AC1–AC4 con casos de frontera (valor exacto en el límite = dentro de rango).
 - **`opencode.json` — Resuelto el 17/10/2026 (decisión del agente, delegada por JowlArx):** se versiona el archivo con la API key de Context7 externalizada a `{env:CONTEXT7_API_KEY}` (sustitución soportada por OpenCode), y la clave se configuró como variable de entorno de usuario en la máquina local (no se publica). Verificado: `grep ctx7sk opencode.json` → 0 coincidencias.
 
-## Fuera de esta versión (M5, post-MVP)
+## Fuera de alcance por ahora (post-MVP)
 
-Historial de mediciones, firmware ESP32 y tokens de dispositivo, compartir sensores entre usuarios, notificaciones externas. No generar tareas de este bloque sin modificación aprobada de `docs/spec.md`.
+Historial de mediciones, firmware ESP32 y tokens de dispositivo, compartir sensores entre usuarios, notificaciones externas (el teléfono del perfil D27 es dato de contacto y base futura, sin funcionalidad de envío). El alcance de M5 arrancó el 19/10/2026 con la enmienda D27 (T-27); el resto de candidatos de `docs/spec.md` §7 sigue sin aprobación y no debe generar tareas sin modificar la especificación.

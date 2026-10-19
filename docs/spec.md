@@ -5,6 +5,8 @@
 v2 — Redactada tras la sesión de clarificación del 16/10/2026 (decisiones D1–D15 en `MEMORY.md`).
 **Aprobada por el humano el 16/10/2026** (hito M0). Modificada en la misma fecha para incorporar el modelo de alertas D14 (R-13) y resolver la pregunta correspondiente de §8.
 
+v3 — **Enmienda aprobada por el humano el 19/10/2026** (decisión D27): R-01 ampliado con confirmación de contraseña y con teléfono y localidad obligatorios (catálogo provincia×ciudad), para registrar el entorno de trabajo de los sensores como base de la futura capa analítica.
+
 Nota sobre fases: según la decisión D6, el proyecto avanza en dos fases (Fase 1: interfaz con datos simulados y auth provisional; Fase 2: backend, base de datos y auth real). Salvo indicación, los criterios de aceptación se verifican en la fase en la que el requisito queda implementado. Los criterios marcados como **[F2]** no pueden verificarse en la Fase 1, y su equivalente provisional en Fase 1 no se acepta como validación definitiva.
 
 ## 1. Problema
@@ -45,10 +47,13 @@ Cada cultivo define un par [mín, máx] por tipo de medición (decisión D3: val
 
 ### A. Cuentas y acceso
 
-- **R-01** Cuando un visitante envíe un registro con un email válido y una contraseña que cumpla los requisitos, el sistema debe crear la cuenta e impedir el registro con un email ya existente.
+- **R-01** Cuando un visitante envíe un registro con un email válido, una contraseña que cumpla los requisitos, su confirmación, un teléfono válido y una localidad del catálogo, el sistema debe crear la cuenta con su perfil e impedir el registro con un email ya existente. *(Ampliado en v3, D27.)*
   - AC1: con credenciales válidas, el registro crea la cuenta y permite iniciar sesión. **[F2]**
   - AC2: con un email ya registrado, el sistema rechaza el registro con mensaje de error. **[F2]**
   - AC3: con una contraseña que no cumpla los requisitos mínimos, el sistema rechaza el registro e indica el motivo. **[F2]**
+  - AC4: con una confirmación de contraseña que no coincide con la contraseña, el sistema rechaza el registro con mensaje en pantalla, sin llegar a llamar al servidor. **[F2]**
+  - AC5: con el teléfono vacío o en formato inválido, o sin localidad seleccionada, el sistema rechaza el registro indicando el campo. **[F2]**
+  - AC6: con un registro válido, el teléfono y la localidad quedan guardados en el perfil de la cuenta (verificable en la base de datos) y el usuario puede iniciar sesión. **[F2]**
 - **R-02** Cuando un usuario se autentique correctamente, el sistema debe permitirle acceder únicamente a sus propios cultivos, sensores, mediciones y alertas.
   - AC1: con dos cuentas de prueba, ninguna operación de la cuenta A lee ni modifica datos de la cuenta B (pruebas de autorización por fila). **[F2]**
   - AC2: los datos de cada usuario se devuelven filtrados por el identificador de la sesión. **[F2]**
@@ -127,6 +132,7 @@ Estos elementos no deben aparecer en tareas del MVP salvo aprobación explícita
 
 - Retención de `measurements`: ¿durante cuánto tiempo se conservan las mediciones y cuándo se agregan o archivan? (Posponible a Fase 2; no bloquea el modelo de datos porque `measured_at` queda indexado desde el inicio.) *Frecuencia del simulador ya decidida: 1 lectura cada 5 minutos por sensor (D15).*
 - ¿Qué cultivos incluye el catálogo inicial y con qué fuentes se justifican sus umbrales? (Se debe documentar que son referencias orientativas.)
+- ¿Qué localidades incluye la semilla del catálogo provincia×ciudad del registro (D27) y con qué fuente se justifican? (Semilla inicial: provincias argentinas + localidades de referencia; ampliable por migraciones. Riesgo asumido: si la localidad de un usuario no está en la semilla, no podrá registrarse.)
 - ¿Se mantienen "otros perfiles de usuario" además de huerta doméstica y pequeño cultivo, o se elimina de los usuarios objetivo?
 
 Resueltas en esta versión:
