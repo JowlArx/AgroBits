@@ -171,7 +171,7 @@ export default function App() {
         </a>
         <header className="cabecera">
           <h1>
-            <img className="marca" src="/logo.png" width="28" height="28" alt="" />
+            <img className="marca" src="/icono-hoja-senial.svg" width="28" height="28" alt="" />
             AgroBits
           </h1>
           <span className="etiqueta">Entra para ver tus cultivos y sus alertas</span>
@@ -253,7 +253,7 @@ export default function App() {
         <header className="cabecera-panel">
           <div className="fila-nav">
             <span className="marca-panel">
-              <img className="marca" src="/logo.png" width="24" height="24" alt="" />
+              <img className="marca" src="/icono-hoja-senial.svg" width="24" height="24" alt="" />
               AgroBits
             </span>
             {!esMovil && (
