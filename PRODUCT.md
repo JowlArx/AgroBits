@@ -72,7 +72,7 @@ El resultado para el usuario: no un panel de números, sino «tu cultivo está f
 - **Estructura de producto confirmada:** landing estática de presentación en `/` y SPA en `/app.html` (D28); la landing comparte los tokens de la app.
 - **Referencia de estructura (vinculante, D29):** el layout de panel sigue la estructura del kit comunitario de Figma «Snow Dashboard UI Kit» (nodo `98469:145265`, fileKey `jh9Rc1nsakFUSujdmiShCt`), conservando los tokens de marca.
 - **Voz:** español, segunda persona del tú, directa y sin jerga técnica. Se eliminó el copy con identificadores internos (D35).
-- **Logotipo:** `web/public/icono-hoja-senial.svg` (hoja con señal de wifi, con firma C2PA de Content Credentials) es el asset de marca en uso; `web/public/logo.png` queda sin referencias tras el cambio de D39.
+- **Logotipo:** `web/public/icono-hoja-senial.svg` (hoja con señal de wifi, con firma C2PA de Content Credentials) es el asset de marca en uso; el PNG anterior (`logo.png`) se eliminó del repositorio en D39.
 
 ## Evidence on Hand
 
