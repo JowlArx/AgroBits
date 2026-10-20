@@ -191,8 +191,9 @@ export default function Tablero() {
 
       <div className="fila-widgets">
         <article className="widget">
+          {/* D33: las pestañas van a la izquierda y el título a la derecha,
+              en la misma altura, alineado con el contenido del gráfico. */}
           <header className="cabecera-widget">
-            <h3>Evolución de lecturas</h3>
             <div className="pestanas-widget" role="group" aria-label="Tipo de medición a mostrar">
               {TIPOS_MEDICION.map((tipo) => (
                 <button
@@ -205,6 +206,7 @@ export default function Tablero() {
                 </button>
               ))}
             </div>
+            <h3>Evolución de lecturas</h3>
           </header>
           {puntos.length === 0 ? (
             <p className="estado-vacio">
@@ -214,8 +216,8 @@ export default function Tablero() {
           ) : (
             <div className="grafico-lineas">
               <ResponsiveContainer width="100%" height={260}>
-                {/* D31: ComposedChart con relleno degradado bajo cada línea y
-                    eje Y alineado con el título del widget (margen izquierdo 0). */}
+                {/* D31/D33: ComposedChart con relleno degradado bajo cada
+                    línea; margen izquierdo 0 porque el eje Y mide 44 px. */}
                 <ComposedChart data={puntos} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
                   <defs>
                     {series.map((serie, indice) => (

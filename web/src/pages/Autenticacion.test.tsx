@@ -125,6 +125,8 @@ describe('acceso real (T-22, Supabase Auth vía doble de contrato)', () => {
     enviarAcceso('persona@ejemplo.com', 'secreta1')
     await screen.findByText('Mis cultivos')
 
+    // D33: «Cerrar sesión» está dentro del menú de la cuenta.
+    fireEvent.click(screen.getByTestId('menu-usuario'))
     fireEvent.click(screen.getByTestId('cerrar-sesion'))
 
     expect(await screen.findByTestId('pantalla-acceso')).toBeTruthy()

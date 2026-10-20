@@ -51,6 +51,8 @@ export async function iniciarSesion(
 }
 
 export async function cerrarSesion(page: Page): Promise<void> {
+  // D33: el cierre vive en el menú de la cuenta (disparador «menu-usuario»).
+  await page.getByTestId('menu-usuario').click()
   await page.getByTestId('cerrar-sesion').click()
   await expect(page.getByTestId('pantalla-acceso')).toBeVisible()
 }
