@@ -121,98 +121,117 @@ export default function Alertas() {
   // cambiar de rango) las alertas que llegaban después — p. ej. la de la
   // primera lectura, que el tick recarga ~150 ms tras abrir la página.
   const todas = alertasOrdenadas()
-  const alertas = aplicarFiltroTiempo(todas, rango)
-  // Contador del encabezado: cuenta el historial completo, no solo el rango.
-  const activas = todas.filter((a) => a.estado === 'activa').length
-  const resueltas = todas.length - activas
+  const enRango = aplicarFiltroTiempo(todas, rango)
+  // D36: primero lo accionable (las alertas activas, las de ahora mismo) y
+  // después el historial (las resueltas dentro del rango elegido). No se
+  // repiten: cada alerta aparece en una de las dos secciones.
+  const activas = todas.filter((a) => a.estado === 'activa')
+  const historial = enRango.filter((a) => a.estado === 'resuelta')
+  const resueltas = todas.length - activas.length
 
   // --- UI ---
 
   return (
     <section>
       <header className="fila-entre">
-        <h2>Historial de alertas</h2>
+        <h2>Alertas</h2>
         <p className="contador-alertas" data-testid="contador-alertas">
-          <strong className={activas > 0 ? 'contador-activas' : undefined}>
-            {activas} {activas === 1 ? 'activa' : 'activas'}
+          <strong className={activas.length > 0 ? 'contador-activas' : undefined}>
+            {activas.length} {activas.length === 1 ? 'activa' : 'activas'}
           </strong>
           {' · '}
           {resueltas} {resueltas === 1 ? 'resuelta' : 'resueltas'}
         </p>
       </header>
 
-      {/* --- Controles de rango de tiempo ---
-          Un SOLO juego de botones (mismo `data-testid` en las dos
-          plataformas): en escritorio se leen «Últimos 5 min…»; en móvil el
-          grupo se convierte en un control segmentado donde se ve de un
-          vistazo qué rango está activo (D35). */}
-      <div className="controles-rango">
-        <div
-          className="segmentado-rangos"
-          role="group"
-          aria-label="Rango de tiempo"
-          data-testid="rango-ciclo"
-        >
-          {RANGOS_PRESELECCION.map((tipo) => (
-            <button
-              key={tipo}
-              data-testid={`rango-${tipo}`}
-              className={rango.tipo === tipo ? 'btn-primario' : 'btn-secundario'}
-              aria-pressed={rango.tipo === tipo}
-              onClick={() => elegirRango({ tipo })}
-            >
-              <span className="solo-escritorio">Últimos </span>
-              {tipo.replace('min', ' min')}
-            </button>
-          ))}
-        </div>
-        <button
-          data-testid="rango-personalizado"
-          className={rango.tipo === 'personalizado' ? 'btn-primario' : 'btn-secundario'}
-          aria-pressed={rango.tipo === 'personalizado'}
-          onClick={() => elegirRango({ tipo: 'personalizado' })}
-        >
-          Personalizar
-        </button>
-      </div>
+      {/* --- Sección 1: las alertas que hay ahora mismo --- */}
+      <section className="bloque-alertas">
+        <h3>Alertas activas</h3>
+        {activas.length === 0 ? (
+          <p data-testid="vacio-alertas" className="estado-vacio">
+            No hay alertas activas: ninguna lectura está fuera de rango.
+          </p>
+        ) : (
+          <ul className="lista-alertas" data-testid="lista-alertas">
+            {activas.map(filaAlerta)}
+          </ul>
+        )}
+      </section>
 
-      {rango.tipo === 'personalizado' && (
-        <div className="rango-fechas">
-          <label>
-            Desde
-            <input
-              type="date"
-              value={desde?.toISOString().split('T')[0] ?? ''}
-              onChange={(e) => setDesde(new Date(e.target.value))}
-            />
-          </label>
-          <label>
-            Hasta
-            <input
-              type="date"
-              value={hasta?.toISOString().split('T')[0] ?? ''}
-              onChange={(e) => setHasta(new Date(e.target.value))}
-            />
-          </label>
+      {/* --- Sección 2: el historial, filtrado por rango de tiempo --- */}
+      <section className="bloque-alertas">
+        <h3>Historial de alertas</h3>
+        {/* Un SOLO juego de botones (mismo `data-testid` en las dos
+            plataformas): en escritorio se leen «Últimos 5 min…»; en móvil el
+            grupo se convierte en un control segmentado donde se ve de un
+            vistazo qué rango está activo (D35). */}
+        <div className="controles-rango">
+          <div
+            className="segmentado-rangos"
+            role="group"
+            aria-label="Rango de tiempo"
+            data-testid="rango-ciclo"
+          >
+            {RANGOS_PRESELECCION.map((tipo) => (
+              <button
+                key={tipo}
+                data-testid={`rango-${tipo}`}
+                className={rango.tipo === tipo ? 'btn-primario' : 'btn-secundario'}
+                aria-pressed={rango.tipo === tipo}
+                onClick={() => elegirRango({ tipo })}
+              >
+                <span className="solo-escritorio">Últimos </span>
+                {tipo.replace('min', ' min')}
+              </button>
+            ))}
+          </div>
+          <button
+            data-testid="rango-personalizado"
+            className={rango.tipo === 'personalizado' ? 'btn-primario' : 'btn-secundario'}
+            aria-pressed={rango.tipo === 'personalizado'}
+            onClick={() => elegirRango({ tipo: 'personalizado' })}
+          >
+            Personalizar
+          </button>
         </div>
-      )}
 
-      {/* --- Mensaje cuando no hay alertas en el rango --- */}
-      {alertas.length === 0 ? (
-        <p data-testid="vacio-alertas" className="estado-vacio">
-          No hay alertas en el rango de tiempo seleccionado.
-        </p>
-      ) : (
-        <ul className="lista-alertas" data-testid="lista-alertas">
-          {alertas.map(filaAlerta)}
-        </ul>
-      )}
+        {rango.tipo === 'personalizado' && (
+          <div className="rango-fechas">
+            <label>
+              Desde
+              <input
+                type="date"
+                value={desde?.toISOString().split('T')[0] ?? ''}
+                onChange={(e) => setDesde(new Date(e.target.value))}
+              />
+            </label>
+            <label>
+              Hasta
+              <input
+                type="date"
+                value={hasta?.toISOString().split('T')[0] ?? ''}
+                onChange={(e) => setHasta(new Date(e.target.value))}
+              />
+            </label>
+          </div>
+        )}
+
+        {historial.length === 0 ? (
+          <p data-testid="vacio-historial" className="estado-vacio">
+            No hay alertas resueltas en el rango de tiempo seleccionado.
+          </p>
+        ) : (
+          <ul className="lista-alertas" data-testid="lista-historial">
+            {historial.map(filaAlerta)}
+          </ul>
+        )}
+      </section>
 
       {/* --- Botón Descargar log (escritorio: en móvil no aporta) --- */}
       <button
         data-testid="descargar-log"
         className="btn-primario solo-escritorio descargar-log"
-        onClick={() => descargarLogAlertas(alertas)}
+        onClick={() => descargarLogAlertas([...activas, ...historial])}
       >
         Descargar log
       </button>
