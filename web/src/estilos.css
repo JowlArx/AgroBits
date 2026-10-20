@@ -146,7 +146,7 @@ main > section + section {
   background: var(--marca);
   color: var(--sobre-marca);
   padding: var(--espacio-2) var(--espacio-3);
-  border-radius: 6px;
+  border-radius: var(--radio-sm);
   font-weight: 700;
   text-decoration: none;
 }
@@ -218,7 +218,7 @@ button {
   min-height: 2.75rem;
   padding: 0 var(--espacio-3);
   border: 1px solid var(--borde-input);
-  border-radius: 6px;
+  border-radius: var(--radio-sm);
   background: var(--superficie);
   color: var(--texto);
   cursor: pointer;
@@ -308,7 +308,7 @@ form select {
   color: var(--texto);
   background: var(--superficie);
   border: 1px solid var(--borde-input);
-  border-radius: 6px;
+  border-radius: var(--radio-sm);
   padding: 0.45rem var(--espacio-2);
   min-height: 2.75rem;
 }
@@ -1768,7 +1768,7 @@ button.boton-google:hover {
 
 .opcion {
   padding: 0.4rem var(--espacio-3);
-  border-radius: 6px;
+  border-radius: var(--radio-sm);
   cursor: pointer;
   font-size: 0.9rem;
   white-space: nowrap;
