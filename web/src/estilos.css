@@ -999,13 +999,17 @@ button.boton-google:hover {
   box-shadow: 0 12px 28px rgb(0 0 0 / 0.14);
 }
 
+/* D38 — La sección activa se expande (icono + nombre) y el resto muestra solo
+   su icono en un círculo de 44 px. */
 .boton-seccion-compacto {
-  display: grid;
-  place-items: center;
-  width: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-width: 2.75rem;
   height: 2.75rem;
-  padding: 0;
-  border-radius: 50%;
+  padding: 0 var(--espacio-3);
+  border-radius: 999px;
   background: var(--fondo);
 }
 
@@ -1014,9 +1018,24 @@ button.boton-google:hover {
   color: var(--sobre-marca);
 }
 
+.etiqueta-seccion {
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition: max-width var(--transicion), opacity var(--transicion), margin-left var(--transicion);
+}
+
+.boton-seccion-compacto[aria-current='page'] .etiqueta-seccion {
+  max-width: 8rem;
+  opacity: 1;
+  margin-left: var(--espacio-2);
+}
+
 .boton-perfil {
   margin-left: auto;
-  background: var(--fondo);
   background: color-mix(in srgb, var(--marca) 14%, var(--superficie));
   color: var(--marca);
 }
@@ -1426,8 +1445,11 @@ button.boton-google:hover {
   /* D35: en el widget, el título arriba a la izquierda y las pestañas en una
      sola fila con scroll horizontal (antes partían en dos y el título caía
      en una tercera fila). */
+  /* Sin nowrap, la columna se ajusta al hijo más ancho (las pestañas) y el
+     título desborda el widget y provoca scroll horizontal en .cuerpo. */
   .cabecera-widget {
     flex-direction: column;
+    flex-wrap: nowrap;
     align-items: stretch;
     gap: var(--espacio-2);
   }
@@ -1750,7 +1772,7 @@ button.boton-google:hover {
 
 .selector-lista {
   position: absolute;
-  right: 0;
+  left: 0;
   top: calc(100% + 4px);
   z-index: 20;
   min-width: 100%;

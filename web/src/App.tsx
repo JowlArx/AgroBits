@@ -188,8 +188,9 @@ export default function App() {
 
   /**
    * D34: los tres botones de sección. En escritorio muestran icono y texto;
-   * en la barra inferior de móvil, solo el icono (con `aria-label` para que
-   * no pierdan nombre accesible). Al navegar, el menú de la cuenta se cierra.
+   * en la barra inferior de móvil, la sección activa muestra icono y nombre y
+   * las demás solo el icono (con `aria-label` para que no pierdan nombre
+   * accesible; D38). Al navegar, el menú de la cuenta se cierra.
    */
   const botonesSeccion = (compacto: boolean) => (
     <>
@@ -205,7 +206,7 @@ export default function App() {
         }}
       >
         {iconoHoja}
-        {!compacto && 'Cultivos'}
+        {compacto ? <span className="etiqueta-seccion">Cultivos</span> : 'Cultivos'}
       </button>
       <button
         type="button"
@@ -219,7 +220,7 @@ export default function App() {
         }}
       >
         {iconoCampana}
-        {!compacto && 'Alertas'}
+        {compacto ? <span className="etiqueta-seccion">Alertas</span> : 'Alertas'}
       </button>
       <button
         type="button"
@@ -233,7 +234,7 @@ export default function App() {
         }}
       >
         {iconoSensor}
-        {!compacto && 'Sensores'}
+        {compacto ? <span className="etiqueta-seccion">Sensores</span> : 'Sensores'}
       </button>
     </>
   )
