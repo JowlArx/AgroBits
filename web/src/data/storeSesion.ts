@@ -12,10 +12,10 @@
 // al servidor. El perfil persistido se verifica en BD (AC6, suite SQL T-27).
 
 import type { Resultado, ErrorCampo } from './storeCultivos'
-import type { ProveedorAuth, Sesion } from './sesion/proveedorAuth'
+import type { ProveedorAuth, Sesion, UrlRedireccion } from './sesion/proveedorAuth'
 import { LONGITUD_MINIMA_CLAVE } from './sesion/reglas'
 
-export type { Sesion }
+export type { Sesion, UrlRedireccion }
 export { LONGITUD_MINIMA_CLAVE }
 
 const RE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -134,4 +134,13 @@ export async function registrarse(datos: DatosRegistro): Promise<Resultado<Sesio
 /** Cierre de sesión (R-03 AC1): al volver, el gate vuelve a exigir acceso. */
 export async function cerrarSesion(): Promise<void> {
   await exigirProveedor().cerrarSesion()
+}
+
+/**
+ * T-28 — Acceso con Google (OAuth). No hay datos que validar: la store
+ * devuelve la URL de redirección que da el proveedor y la pantalla navega.
+ * La sesión llega sola cuando el navegador vuelve (R-03).
+ */
+export async function iniciarSesionConGoogle(): Promise<Resultado<UrlRedireccion>> {
+  return exigirProveedor().iniciarSesionConGoogle()
 }

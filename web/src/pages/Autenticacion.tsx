@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { iniciarSesion, registrarse, LONGITUD_MINIMA_CLAVE } from '../data/storeSesion'
+import { iniciarSesion, iniciarSesionConGoogle, registrarse, LONGITUD_MINIMA_CLAVE } from '../data/storeSesion'
+import { redirigir } from '../data/sesion/redireccion'
 import { exigirProveedor } from '../data/datos/proveedorDatos'
 import type { Localidad } from '../data/datos/proveedorDatos'
 
@@ -11,8 +12,33 @@ import type { Localidad } from '../data/datos/proveedorDatos'
 // teléfono y localidad (AC5) con catálogo provincia→localidad de la BD. La
 // validación de AC4/AC5 vive en la store (antes de tocar el servidor); aquí
 // solo se recogen los datos y se muestra el resultado.
+// T-28: acceso con Google (OAuth). El botón pide la URL al proveedor y
+// navega (la redirección va aislada en `data/sesion/redireccion.ts`); la
+// sesión llega sola cuando el navegador vuelve.
 
 type Modo = 'sesion' | 'registro'
+
+/** Logotipo oficial de Google (G de cuatro colores) para el botón de acceso. */
+const iconoGoogle = (
+  <svg className="icono-google" width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+    <path
+      fill="#FFC107"
+      d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z"
+    />
+    <path
+      fill="#FF3D00"
+      d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"
+    />
+    <path
+      fill="#4CAF50"
+      d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-4.8C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.1-11.3-7.5l-6.5 5C9.6 39.6 16.2 44 24 44z"
+    />
+    <path
+      fill="#1976D2"
+      d="M43.6 20.5H42V20H24v8h11.3c-1.3 3.6-4.6 6-8.3 6-5.3 0-9.7-3.1-11.3-7.5l-6.5 5C6.4 37.9 14.3 44 24 44c11 0 20-8.9 20-20 0-1.2-.1-2.3-.4-3.5z"
+    />
+  </svg>
+)
 
 export default function Autenticacion() {
   // La landing (`index.html`, servida en `/`) enlaza a `/app.html?acceso=registro`:
@@ -32,6 +58,7 @@ export default function Autenticacion() {
   const [error, setError] = useState('')
   const [camposError, setCamposError] = useState<string[]>([])
   const [enviando, setEnviando] = useState(false)
+  const [enviandoGoogle, setEnviandoGoogle] = useState(false)
 
   // Catálogo de localidades (D27): se carga una vez; el registro es anónimo,
   // así que sirve también antes del login (RLS de `localidades` lo permite).
@@ -98,9 +125,46 @@ export default function Autenticacion() {
 
   const invalido = (campo: string): boolean => camposError.includes(campo)
 
+  /**
+   * T-28 — Acceso con Google: el proveedor devuelve la URL de OAuth y el
+   * navegador viaja a ella; la sesión llega al volver (R-03). Si el
+   * proveedor falla, el motivo se muestra en la misma pantalla.
+   */
+  async function entrarConGoogle(): Promise<void> {
+    setEnviandoGoogle(true)
+    const resultado = await iniciarSesionConGoogle()
+    setEnviandoGoogle(false)
+    if (!resultado.ok) {
+      setError(resultado.errores.map((e) => e.motivo).join('. '))
+      return
+    }
+    setError('')
+    redirigir(resultado.valor.url)
+  }
+
   return (
     <section data-testid="pantalla-acceso" className="pantalla-acceso">
       <h2>{modo === 'sesion' ? 'Iniciar sesión' : 'Crear cuenta'}</h2>
+
+      {/* T-28 — Acceso con Google (OAuth). */}
+      <button
+        type="button"
+        className="boton-google"
+        data-testid="boton-google"
+        onClick={() => void entrarConGoogle()}
+        disabled={enviandoGoogle}
+      >
+        {iconoGoogle}
+        {enviandoGoogle ? 'Redirigiendo…' : modo === 'sesion' ? 'Continuar con Google' : 'Registrarse con Google'}
+      </button>
+      {modo === 'registro' && (
+        <p className="nota-google">
+          Si te registras con Google, podrás completar tu teléfono y tu localidad en «Mi cuenta».
+        </p>
+      )}
+      <p className="separador-o" aria-hidden="true">
+        o
+      </p>
 
       <form onSubmit={enviar}>
         <label>
@@ -232,12 +296,15 @@ export default function Autenticacion() {
             {enviando ? 'Un momento…' : modo === 'sesion' ? 'Entrar' : 'Crear cuenta'}
           </button>
         </div>
-        {error && (
-          <p role="alert" data-testid="error-acceso">
-            {error}
-          </p>
-        )}
       </form>
+
+      {/* El error vive fuera del formulario: también lo produce el acceso con
+          Google (T-28), que no usa el formulario. */}
+      {error && (
+        <p role="alert" data-testid="error-acceso">
+          {error}
+        </p>
+      )}
 
       <button type="button" className="enlace-boton" data-testid="cambiar-modo" onClick={cambiarModo}>
         {modo === 'sesion' ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}

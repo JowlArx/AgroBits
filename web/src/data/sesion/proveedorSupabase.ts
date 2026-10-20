@@ -5,7 +5,7 @@
 
 import type { AuthError, Session, SupabaseClient } from '@supabase/supabase-js'
 import type { Resultado } from '../storeCultivos'
-import type { PerfilRegistro, ProveedorAuth, Sesion } from './proveedorAuth'
+import type { PerfilRegistro, ProveedorAuth, Sesion, UrlRedireccion } from './proveedorAuth'
 
 /** Traduce los errores habituales de GoTrue a mensajes comprensibles. */
 export function mensajeAuth(error: AuthError): string {
@@ -22,6 +22,12 @@ export function mensajeAuth(error: AuthError): string {
   if (/email not confirmed/i.test(mensaje)) {
     return 'Confirma tu email (revisa tu bandeja de entrada) antes de iniciar sesión.'
   }
+  // T-28: el proveedor externo puede no estar habilitado en el proyecto de
+  // Supabase (o puede estar mal configurado). El mensaje evita que el
+  // usuario vea el error crudo en inglés.
+  if (/provider is not enabled/i.test(mensaje)) {
+    return 'El acceso con Google no está habilitado en el proyecto. Avisa al administrador.'
+  }
   return mensaje
 }
 
@@ -29,8 +35,25 @@ export function mensajeAuth(error: AuthError): string {
 function nombreDeUsuario(
   usuario: { user_metadata?: Record<string, unknown> } | null | undefined,
 ): string | undefined {
-  const nombre = usuario?.user_metadata?.nombre_usuario
-  return typeof nombre === 'string' && nombre.trim() !== '' ? nombre.trim() : undefined
+  const metadata = usuario?.user_metadata
+  const explicito = metadata?.nombre_usuario
+  if (typeof explicito === 'string' && explicito.trim() !== '') return explicito.trim()
+  // T-28: las cuentas que entran con Google no pasan por el formulario, así
+  // que no tienen `nombre_usuario`; su nombre de Google sirve como nombre
+  // visible (mismo criterio que D32: si hay nombre, se muestra).
+  const deGoogle = metadata?.full_name ?? metadata?.name
+  if (typeof deGoogle === 'string' && deGoogle.trim() !== '') return deGoogle.trim()
+  return undefined
+}
+
+/**
+ * T-28 — URL a la que vuelve el navegador tras el viaje a Google: la propia
+ * SPA (D28: la app se sirve en `/app.html`). Se usa la ruta actual para no
+ * depender del despliegue: el flujo funciona igual en local y en producción.
+ * Esa URL exacta debe estar en la lista de *Redirect URLs* de Supabase.
+ */
+export function urlDeRetornoGoogle(): string {
+  return `${window.location.origin}${window.location.pathname}`
 }
 
 function aSesion(sesion: Session | null): Sesion | null {
@@ -125,5 +148,36 @@ export class ProveedorSupabase implements ProveedorAuth {
 
   async cerrarSesion(): Promise<void> {
     await this.cliente.auth.signOut()
+  }
+
+  /**
+   * T-28 — Acceso con Google (OAuth). `skipBrowserRedirect` deja la
+   * navegación en manos de la app (así la URL se puede probar y el error se
+   * puede mostrar en pantalla); la vuelta la resuelve Supabase Auth con
+   * `detectSessionInUrl` al cargar la SPA de nuevo.
+   */
+  async iniciarSesionConGoogle(): Promise<Resultado<UrlRedireccion>> {
+    const { data, error } = await this.cliente.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: urlDeRetornoGoogle(),
+        // `email` es imprescindible: sin él Google no devuelve el correo y
+        // Supabase no puede identificar a la cuenta. `profile` trae el
+        // nombre, que se usa como nombre visible (D32).
+        scopes: 'email profile',
+        skipBrowserRedirect: true,
+      },
+    })
+    if (error) {
+      return { ok: false, errores: [{ campo: 'google', motivo: mensajeAuth(error) }] }
+    }
+    const url = data?.url
+    if (!url) {
+      return {
+        ok: false,
+        errores: [{ campo: 'google', motivo: 'No se pudo iniciar el acceso con Google. Inténtalo de nuevo.' }],
+      }
+    }
+    return { ok: true, valor: { url } }
   }
 }

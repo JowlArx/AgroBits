@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   cerrarSesion,
   iniciarSesion,
+  iniciarSesionConGoogle,
   obtenerSesion,
   registrarse,
   suscribirSesion,
@@ -38,6 +39,9 @@ function espiaDeRegistro(): { proveedor: ProveedorAuth; llamadas: () => number; 
     sesionActual: () => null,
     suscribir: () => () => {},
     iniciarSesion: async () => {
+      throw new Error('no debe llamarse en estos tests')
+    },
+    iniciarSesionConGoogle: async () => {
       throw new Error('no debe llamarse en estos tests')
     },
     registrarse: async (_email, _clave, p) => {
@@ -151,6 +155,60 @@ describe('store de sesión (T-22, proveedor intercambiable)', () => {
     unsubscribe()
 
     expect(avisos).toBe(2)
+  })
+})
+
+// T-28 — Acceso con Google (OAuth).
+describe('acceso con Google (T-28)', () => {
+  it('delega en el proveedor y devuelve la URL de redirección', async () => {
+    let llamadas = 0
+    const proveedor: ProveedorAuth = {
+      sesionActual: () => null,
+      suscribir: () => () => {},
+      iniciarSesion: async () => {
+        throw new Error('no debe llamarse')
+      },
+      registrarse: async () => {
+        throw new Error('no debe llamarse')
+      },
+      iniciarSesionConGoogle: async () => {
+        llamadas++
+        return { ok: true, valor: { url: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=abc' } }
+      },
+      cerrarSesion: async () => {},
+    }
+    configurarProveedorAuth(proveedor)
+
+    const resultado = await iniciarSesionConGoogle()
+
+    expect(llamadas).toBe(1)
+    expect(resultado.ok).toBe(true)
+    if (resultado.ok) expect(resultado.valor.url).toContain('accounts.google.com')
+  })
+
+  it('propaga el error del proveedor sin abrir sesión', async () => {
+    const proveedor: ProveedorAuth = {
+      sesionActual: () => null,
+      suscribir: () => () => {},
+      iniciarSesion: async () => {
+        throw new Error('no debe llamarse')
+      },
+      registrarse: async () => {
+        throw new Error('no debe llamarse')
+      },
+      iniciarSesionConGoogle: async () => ({
+        ok: false,
+        errores: [{ campo: 'google', motivo: 'El acceso con Google no está habilitado en el proyecto.' }],
+      }),
+      cerrarSesion: async () => {},
+    }
+    configurarProveedorAuth(proveedor)
+
+    const resultado = await iniciarSesionConGoogle()
+
+    expect(resultado.ok).toBe(false)
+    if (!resultado.ok) expect(resultado.errores[0].motivo).toMatch(/no está habilitado/)
+    expect(obtenerSesion()).toBeNull()
   })
 })
 

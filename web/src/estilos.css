@@ -787,6 +787,53 @@ dd {
   width: 100%;
 }
 
+/* T-28 — Acceso con Google (OAuth): botón de marca ajena, separado del
+   formulario por una línea de «o». El color del logotipo es el oficial de
+   Google; el resto usa los tokens del proyecto (D20). */
+button.boton-google {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacio-2);
+  background: var(--superficie);
+  border: 1px solid var(--borde-input);
+  color: var(--texto);
+  font-weight: 600;
+}
+
+button.boton-google:hover {
+  border-color: var(--marca);
+  color: var(--marca);
+}
+
+.icono-google {
+  flex: 0 0 auto;
+}
+
+.nota-google {
+  margin: var(--espacio-2) 0 0;
+  font-size: 0.8rem;
+  color: var(--texto-tenue);
+  text-align: center;
+}
+
+.separador-o {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-3);
+  margin: var(--espacio-4) 0;
+  color: var(--texto-tenue);
+  font-size: 0.85rem;
+}
+
+.separador-o::before,
+.separador-o::after {
+  content: '';
+  flex: 1 1 auto;
+  border-top: 1px solid var(--borde);
+}
+
 /* Estructura de panel (D33): cabecera superior + área principal + panel --- */
 
 .estructura {

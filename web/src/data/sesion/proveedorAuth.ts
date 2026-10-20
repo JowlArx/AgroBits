@@ -20,6 +20,16 @@ export interface PerfilRegistro {
   nombreUsuario?: string
 }
 
+/**
+ * T-28 — URL de redirección a la que el navegador debe viajar para completar
+ * un acceso con un proveedor externo (Google). El proveedor NO devuelve
+ * sesión: la sesión llega después, cuando la app vuelve del viaje y
+ * Supabase Auth resuelve el código (o el token) en la URL.
+ */
+export interface UrlRedireccion {
+  url: string
+}
+
 export interface ProveedorAuth {
   /** Instantánea síncrona y estable para `useSyncExternalStore`. */
   sesionActual(): Sesion | null
@@ -27,5 +37,11 @@ export interface ProveedorAuth {
   suscribir(oyente: () => void): () => void
   iniciarSesion(email: string, clave: string): Promise<Resultado<Sesion>>
   registrarse(email: string, clave: string, perfil: PerfilRegistro): Promise<Resultado<Sesion>>
+  /**
+   * T-28 — Acceso con Google (OAuth). Devuelve la URL a la que hay que ir;
+   * el alta de la cuenta y el regreso a la app los resuelve Supabase Auth
+   * (el alta solo ocurre si la cuenta de Google no existía).
+   */
+  iniciarSesionConGoogle(): Promise<Resultado<UrlRedireccion>>
   cerrarSesion(): Promise<void>
 }

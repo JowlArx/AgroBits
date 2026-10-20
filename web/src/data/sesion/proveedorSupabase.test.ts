@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AuthError, SupabaseClient } from '@supabase/supabase-js'
-import { ProveedorSupabase, mensajeAuth } from './proveedorSupabase'
+import { ProveedorSupabase, mensajeAuth, urlDeRetornoGoogle } from './proveedorSupabase'
 
 // T-22 — Tests del proveedor real con el cliente supabase DOBLADO: cubren el
 // contrato de respuestas de GoTrue verificado en E2E (signup con sesión,
@@ -34,6 +34,32 @@ function clienteFalso(respuesta: Respuesta, alRegistrarse?: (argumentos: Record<
 
 function errorAuth(mensaje: string, codigo?: string): AuthError {
   return { message: mensaje, code: codigo, status: 400 } as AuthError
+}
+
+/**
+ * T-28 — Cliente doblado SOLO para el acceso con Google: el resto de métodos
+ * no deben llamarse en estos tests.
+ */
+function clienteOAuth(
+  respuesta: { data: { url: string } | null; error: AuthError | null },
+  alLlamar?: (argumentos: Record<string, unknown>) => void,
+): SupabaseClient {
+  return {
+    auth: {
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      signInWithOAuth: async (argumentos: Record<string, unknown>) => {
+        alLlamar?.(argumentos)
+        return respuesta
+      },
+      signUp: async () => {
+        throw new Error('no debe llamarse')
+      },
+      signInWithPassword: async () => {
+        throw new Error('no debe llamarse')
+      },
+      signOut: async () => ({ error: null }),
+    },
+  } as unknown as SupabaseClient
 }
 
 describe('ProveedorSupabase.registrarse', () => {
@@ -231,5 +257,113 @@ describe('mensajeAuth', () => {
     expect(mensajeAuth(errorAuth('Invalid login credentials'))).toMatch(/incorrectos/)
     expect(mensajeAuth(errorAuth('Email not confirmed'))).toMatch(/Confirma tu email/)
     expect(mensajeAuth(errorAuth('algo no previsto'))).toBe('algo no previsto')
+  })
+})
+
+// T-28 — Acceso con Google (OAuth).
+describe('ProveedorSupabase.iniciarSesionConGoogle', () => {
+  it('devuelve la URL de OAuth que da el servidor', async () => {
+    const p = new ProveedorSupabase(
+      clienteOAuth({ data: { url: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=abc' }, error: null }),
+    )
+
+    const resultado = await p.iniciarSesionConGoogle()
+
+    expect(resultado.ok).toBe(true)
+    if (resultado.ok) expect(resultado.valor.url).toContain('accounts.google.com')
+  })
+
+  it('pide el proveedor google, los scopes de email y la vuelta a la SPA', async () => {
+    let argumentos: Record<string, unknown> | undefined
+    const p = new ProveedorSupabase(
+      clienteOAuth({ data: { url: 'https://accounts.google.com/o/oauth2/v2/auth' }, error: null }, (a) => {
+        argumentos = a
+      }),
+    )
+
+    await p.iniciarSesionConGoogle()
+
+    expect(argumentos?.provider).toBe('google')
+    const opciones = argumentos?.options as {
+      redirectTo: string
+      scopes: string
+      skipBrowserRedirect: boolean
+    }
+    // Sin el scope de email, Google no devuelve el correo y Supabase no puede
+    // identificar a la cuenta.
+    expect(opciones.scopes).toContain('email')
+    // La navegación la hace la app (para poder mostrar el error), no la librería.
+    expect(opciones.skipBrowserRedirect).toBe(true)
+    expect(opciones.redirectTo).toBe(urlDeRetornoGoogle())
+  })
+
+  it('traduce el error del servidor (proveedor no habilitado)', async () => {
+    const p = new ProveedorSupabase(
+      clienteOAuth({ data: null, error: errorAuth('Provider is not enabled', 'provider_not_enabled') }),
+    )
+
+    const resultado = await p.iniciarSesionConGoogle()
+
+    expect(resultado.ok).toBe(false)
+    if (!resultado.ok) expect(resultado.errores[0].motivo).toMatch(/no está habilitado/)
+  })
+
+  it('sin URL devuelta informa un error legible', async () => {
+    const p = new ProveedorSupabase(clienteOAuth({ data: null, error: null }))
+
+    const resultado = await p.iniciarSesionConGoogle()
+
+    expect(resultado.ok).toBe(false)
+    if (!resultado.ok) expect(resultado.errores[0].motivo).toMatch(/No se pudo iniciar el acceso con Google/)
+  })
+})
+
+describe('urlDeRetornoGoogle', () => {
+  it('vuelve a la ruta actual de la SPA (origen + path)', () => {
+    expect(urlDeRetornoGoogle()).toBe(`${window.location.origin}${window.location.pathname}`)
+  })
+})
+
+describe('nombre visible de la sesión', () => {
+  it('D32: usa el nombre de usuario de la metadata si existe', async () => {
+    const p = new ProveedorSupabase(
+      clienteFalso({
+        data: {
+          user: {
+            email: 'persona@example.com',
+            identities: [{ provider: 'email' }],
+            user_metadata: { nombre_usuario: 'Pepe' },
+          },
+          session: { access_token: 'tok' },
+        },
+        error: null,
+      }),
+    )
+
+    const resultado = await p.iniciarSesion('persona@example.com', 'secreta1')
+
+    expect(resultado.ok).toBe(true)
+    if (resultado.ok) expect(resultado.valor.usuario.nombreUsuario).toBe('Pepe')
+  })
+
+  it('T-28: con Google, sin nombre propio, usa el nombre de Google', async () => {
+    const p = new ProveedorSupabase(
+      clienteFalso({
+        data: {
+          user: {
+            email: 'persona@example.com',
+            identities: [{ provider: 'google' }],
+            user_metadata: { full_name: 'Persona de Google' },
+          },
+          session: { access_token: 'tok' },
+        },
+        error: null,
+      }),
+    )
+
+    const resultado = await p.iniciarSesion('persona@example.com', 'secreta1')
+
+    expect(resultado.ok).toBe(true)
+    if (resultado.ok) expect(resultado.valor.usuario.nombreUsuario).toBe('Persona de Google')
   })
 })

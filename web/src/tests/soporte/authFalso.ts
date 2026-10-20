@@ -4,15 +4,20 @@
 // sesión exige una cuenta previa con esa clave (R-01 AC1). No toca red.
 
 import type { Resultado } from '../../data/storeCultivos'
-import type { PerfilRegistro, ProveedorAuth, Sesion } from '../../data/sesion/proveedorAuth'
+import type { PerfilRegistro, ProveedorAuth, Sesion, UrlRedireccion } from '../../data/sesion/proveedorAuth'
 
 /** Perfil por defecto de las cuentas sembradas en tests (D27). */
 const PERFIL_PRUEBA: PerfilRegistro = { telefono: '2615550000', localidadId: 1 }
+
+/** T-28 — URL de OAuth que devuelve el doble (no navega a ningún sitio). */
+const URL_GOOGLE_FALSA = 'https://accounts.google.com/o/oauth2/v2/auth?client_id=doble-de-prueba'
 
 export class AuthFalso implements ProveedorAuth {
   private readonly cuentas = new Map<string, { clave: string; perfil: PerfilRegistro }>()
   private sesion: Sesion | null = null
   private readonly oyentes = new Set<() => void>()
+  /** T-28 — Si se fija, el acceso con Google falla con ese motivo. */
+  errorGoogle: string | null = null
 
   /** Registra una cuenta directamente (para preparar escenarios de test). */
   sembrar(email: string, clave: string, perfil: PerfilRegistro = PERFIL_PRUEBA): void {
@@ -49,6 +54,17 @@ export class AuthFalso implements ProveedorAuth {
   async cerrarSesion(): Promise<void> {
     this.sesion = null
     this.notificar()
+  }
+
+  /**
+   * T-28 — El doble NO navega: devuelve la URL de OAuth para que la prueba
+   * compruebe que la pantalla redirige a donde debe.
+   */
+  async iniciarSesionConGoogle(): Promise<Resultado<UrlRedireccion>> {
+    if (this.errorGoogle) {
+      return { ok: false, errores: [{ campo: 'google', motivo: this.errorGoogle }] }
+    }
+    return { ok: true, valor: { url: URL_GOOGLE_FALSA } }
   }
 
   private abrir(email: string, perfil: PerfilRegistro): Resultado<Sesion> {

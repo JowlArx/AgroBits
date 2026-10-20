@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import App from '../App'
 import { reiniciarCultivos } from '../data/storeCultivos'
+import { configurarRedireccion, restablecerRedireccion } from '../data/sesion/redireccion'
 import { authFalsoActual } from '../tests/soporte/configurarTests'
 
 // T-22 — Acceso con autenticación REAL (D8): la pantalla usa la store que
@@ -15,6 +16,12 @@ beforeEach(() => {
   reiniciarCultivos()
   // Cuenta ya registrada para el flujo de inicio de sesión.
   authFalsoActual().sembrar('persona@ejemplo.com', 'secreta1')
+})
+
+// T-28 — La navegación del acceso con Google se sustituye para no salir del
+// entorno de pruebas (jsdom no navega).
+afterEach(() => {
+  restablecerRedireccion()
 })
 
 function enviarAcceso(email: string, clave: string): void {
@@ -142,6 +149,46 @@ describe('acceso real (T-22, Supabase Auth vía doble de contrato)', () => {
     fireEvent.click(screen.getByTestId('cambiar-modo'))
 
     expect(screen.queryByTestId('error-acceso')).toBeNull()
+  })
+})
+
+// T-28 — Acceso con Google (OAuth).
+describe('acceso con Google (T-28)', () => {
+  it('el botón de Google aparece en la pantalla de acceso', () => {
+    render(<App />)
+
+    const boton = screen.getByTestId('boton-google')
+    expect(boton.textContent).toMatch(/Continuar con Google/)
+  })
+
+  it('en modo registro el botón propone registrarse con Google', () => {
+    render(<App />)
+
+    fireEvent.click(screen.getByTestId('cambiar-modo'))
+
+    expect(screen.getByTestId('boton-google').textContent).toMatch(/Registrarse con Google/)
+  })
+
+  it('al pulsarlo, el navegador viaja a la URL que da el proveedor', async () => {
+    const destinos: string[] = []
+    configurarRedireccion((url) => destinos.push(url))
+    render(<App />)
+
+    fireEvent.click(screen.getByTestId('boton-google'))
+
+    await waitFor(() => expect(destinos.length).toBe(1))
+    expect(destinos[0]).toContain('accounts.google.com')
+  })
+
+  it('si el proveedor falla, el motivo se muestra en pantalla', async () => {
+    authFalsoActual().errorGoogle =
+      'El acceso con Google no está habilitado en el proyecto. Avisa al administrador.'
+    render(<App />)
+
+    fireEvent.click(screen.getByTestId('boton-google'))
+
+    const error = await screen.findByTestId('error-acceso')
+    expect(error.textContent).toMatch(/no está habilitado/)
   })
 })
 
