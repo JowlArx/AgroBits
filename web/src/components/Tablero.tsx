@@ -25,6 +25,7 @@ import { obtenerMediciones, suscribirMediciones, ultimasPorTipo } from '../data/
 import { ETIQUETAS_MEDICION, ETIQUETAS_MEDICION_CORTA, VAR_COLOR_SENSOR } from '../data/catalogo'
 import { TIPOS_MEDICION, type TipoMedicion } from '../domain/tipos'
 import { useEsMovil } from '../hooks/useEsMovil'
+import SelectorDesplegable from './SelectorDesplegable'
 
 /** Escalas solo para dimensionar las barras (los valores mostrados son reales). */
 const ESCALA_MAXIMA: Record<TipoMedicion, number> = {
@@ -147,10 +148,8 @@ function TarjetaKpi({ etiqueta, valor, nota, alerta, icono }: {
 }) {
   return (
     <li className={alerta ? 'tarjeta-kpi kpi-alerta' : 'tarjeta-kpi'}>
-      <span className="kpi-cabecera">
-        <span className="kpi-icono" aria-hidden="true">{icono}</span>
-        <span className="kpi-etiqueta">{etiqueta}</span>
-      </span>
+      <span className="kpi-icono" aria-hidden="true">{icono}</span>
+      <span className="kpi-etiqueta">{etiqueta}</span>
       <strong className="kpi-valor">{valor}</strong>
       <span className="kpi-nota">{nota}</span>
     </li>
@@ -298,19 +297,17 @@ export default function Tablero() {
         <article className="widget">
           <header className="cabecera-widget">
             <h3>Última lectura por tipo</h3>
-            <select
-              className="selector-widget"
-              data-testid="sensor-selector-widget"
-              value={sensorWidgetActivoId ?? ''}
-              onChange={(e) => setSensorManualId(e.target.value || null)}
-            >
-              <option value="">Todos los sensores</option>
-              {sensores.map((sensor) => (
-                <option key={sensor.id} value={sensor.id}>
-                  {sensor.nombre}
-                </option>
-              ))}
-            </select>
+            {/* D36: desplegable propio — la flecha gira al abrirse. */}
+            <SelectorDesplegable
+              etiqueta="Sensor del widget"
+              valor={sensorWidgetActivoId ?? ''}
+              testId="sensor-selector-widget"
+              opciones={[
+                { valor: '', texto: 'Todos los sensores' },
+                ...sensores.map((sensor) => ({ valor: sensor.id, texto: sensor.nombre })),
+              ]}
+              onChange={(valor) => setSensorManualId(valor || null)}
+            />
           </header>
           {!hayLecturas ? (
             <p className="estado-vacio">Aún no hay lecturas: aparecerán aquí al conectar un sensor.</p>

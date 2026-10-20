@@ -69,6 +69,17 @@ describe('pantalla de alertas (T-15/T-23, R-13 y R-14)', () => {
     expect((await screen.findByTestId('vacio-alertas')).textContent).toMatch(/No hay alertas/)
   })
 
+  it('D36: la vista separa «Alertas activas» (primero) e «Historial de alertas» (debajo)', async () => {
+    render(<App />)
+    abrirAlertas()
+
+    expect(screen.getByText('Alertas activas')).toBeTruthy()
+    expect(screen.getByText('Historial de alertas')).toBeTruthy()
+    // Sin alertas, cada sección muestra su propio estado vacío.
+    expect(await screen.findByTestId('vacio-alertas')).toBeTruthy()
+    expect(screen.getByTestId('vacio-historial')).toBeTruthy()
+  })
+
   it('R-13 AC1 + R-14 AC2: la lectura fuera de rango genera una alerta con cultivo, tipo, valor y hora', async () => {
     render(<App />)
     await crearCultivoCon('Huerto en peligro', umbralesSoloHumedadFuera)

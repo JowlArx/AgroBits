@@ -404,6 +404,9 @@ legend {
   display: grid;
   gap: var(--espacio-4);
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  /* D36: cada tarjeta conserva su alto; al desplegar «Ver umbrales» solo
+     crece la de esa tarjeta (si no, la rejilla las estira a todas). */
+  align-items: start;
 }
 
 .lista-cultivos li {
@@ -411,7 +414,6 @@ legend {
 }
 
 .tarjeta-cultivo {
-  height: 100%;
   background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: var(--radio);
@@ -663,6 +665,16 @@ dd {
 
 .contador-activas {
   color: var(--senal);
+}
+
+/* D36: las dos secciones de la vista (activas / historial). */
+.bloque-alertas {
+  margin-top: var(--espacio-5);
+}
+
+.bloque-alertas h3 {
+  margin: 0 0 var(--espacio-3);
+  font-size: var(--t-md);
 }
 
 /* Controles de rango: en escritorio, botones sueltos; en móvil, control
@@ -1118,21 +1130,22 @@ button.boton-google:hover {
   border: 1px solid var(--borde);
   border-radius: var(--radio);
   padding: var(--espacio-3);
-  display: flex;
-  flex-direction: column;
-  gap: var(--espacio-1);
+  /* D36: el icono cuelga a la izquierda y TODO el texto (título, valor y
+     nota) comparte la misma arista vertical: nada queda desalineado. */
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  column-gap: var(--espacio-2);
+  row-gap: var(--espacio-1);
+  align-content: start;
   min-width: 0;
 }
 
 /* D31: cabecera del KPI con icono (SVG en línea, currentColor). */
-.kpi-cabecera {
-  display: flex;
-  align-items: center;
-  gap: var(--espacio-2);
-  min-width: 0;
-}
-
 .kpi-icono {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
   flex: none;
   display: grid;
   place-items: center;
@@ -1144,6 +1157,9 @@ button.boton-google:hover {
 }
 
 .kpi-etiqueta {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
   font-size: 0.85rem;
   color: var(--texto-tenue);
   white-space: nowrap;
@@ -1152,6 +1168,8 @@ button.boton-google:hover {
 }
 
 .kpi-valor {
+  grid-column: 2;
+  grid-row: 2;
   font-family: var(--fuente-titulo);
   font-size: 1.5rem;
   line-height: 1.1;
@@ -1159,6 +1177,8 @@ button.boton-google:hover {
 }
 
 .kpi-nota {
+  grid-column: 2;
+  grid-row: 3;
   font-size: 0.8rem;
   color: var(--texto-tenue);
 }
@@ -1680,26 +1700,89 @@ button.boton-google:hover {
   background: var(--fondo);
 }
 
-/* D31: el selector del widget «Última lectura por tipo» con estilo propio
-   (antes era un <select> nativo sin tratar). */
-.selector-widget {
+/* D36 — Desplegable propio (listbox). La flecha gira al abrirse: el control
+   comunica su estado en lugar de delegarlo en el sistema. */
+.selector {
+  position: relative;
+}
+
+.selector-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  min-height: 2rem;
+  padding: 0 var(--espacio-3);
+  border: 1px solid var(--borde-input);
+  border-radius: var(--radio-sm);
+  background: var(--superficie);
+  color: var(--texto);
   font: inherit;
   font-size: 0.85rem;
   font-weight: 700;
-  min-height: 2rem;
-  padding: 0 var(--espacio-6) 0 var(--espacio-3);
-  border: 1px solid var(--borde-input);
-  border-radius: 6px;
-  color: var(--texto);
-  background-color: var(--superficie);
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%235b6660' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right var(--espacio-3) center;
   cursor: pointer;
+  max-width: 100%;
 }
 
-.selector-widget:hover {
+.selector-boton:hover {
   border-color: var(--marca);
+}
+
+.selector-boton.abierto {
+  border-color: var(--marca);
+  background: var(--fondo);
+}
+
+.selector-valor {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selector-flecha {
+  flex: none;
+  transition: transform var(--transicion);
+}
+
+/* Abierta, la flecha apunta hacia arriba. */
+.selector-boton.abierto .selector-flecha {
+  transform: rotate(180deg);
+}
+
+.selector-lista {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 20;
+  min-width: 100%;
+  max-width: 16rem;
+  max-height: 16rem;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: var(--espacio-1);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-sm);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+}
+
+.opcion {
+  padding: 0.4rem var(--espacio-3);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.opcion.resaltada {
+  background: var(--fondo);
+}
+
+.opcion.seleccionada {
+  color: var(--marca);
+  font-weight: 700;
 }
 
 /* D31: filas de la tarjeta de sensor con la hora arriba a la derecha. */
@@ -1794,14 +1877,32 @@ button.boton-google:hover {
 
   .tarjeta-kpi {
     aspect-ratio: 1;
-    justify-content: center;
-    align-items: center;
+    /* D36: en móvil el bloque se centra entero (icono encima del texto). */
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto;
+    place-content: center;
     text-align: center;
   }
 
-  .kpi-cabecera {
-    flex-direction: column;
-    gap: var(--espacio-1);
+  .kpi-icono {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: center;
+  }
+
+  .kpi-etiqueta {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .kpi-valor {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .kpi-nota {
+    grid-column: 1;
+    grid-row: 4;
   }
 }
 

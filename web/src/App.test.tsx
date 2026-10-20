@@ -180,3 +180,25 @@ describe('navegación según el ancho de la ventana (D34)', () => {
     expect(screen.getByTestId('sesion-usuario').textContent).toContain('pruebas')
   })
 })
+
+describe('desplegable de sensores del tablero (D36)', () => {
+  it('abre, cambia de estado y permite elegir una opción', async () => {
+    render(<App />)
+
+    const boton = screen.getByTestId('sensor-selector-widget')
+    expect(boton.getAttribute('aria-expanded')).toBe('false')
+    expect(boton.getAttribute('aria-haspopup')).toBe('listbox')
+
+    fireEvent.click(boton)
+
+    // Abierto: el control lo comunica y la lista de opciones existe.
+    expect(boton.getAttribute('aria-expanded')).toBe('true')
+    const opciones = screen.getAllByRole('option')
+    expect(opciones.length).toBeGreaterThan(0)
+
+    fireEvent.click(opciones[0])
+
+    expect(boton.getAttribute('aria-expanded')).toBe('false')
+    expect(screen.queryAllByRole('option')).toHaveLength(0)
+  })
+})
