@@ -1,0 +1,274 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-20T18:05:00-03:00",
+  "title": "Design System: AgroBits",
+  "extensions": {
+    "colorMeta": {
+      "botanico": {
+        "role": "primary",
+        "displayName": "Verde botánico",
+        "canonical": "#1e5b3d",
+        "tonalRamp": ["#081a10", "#0f2c1c", "#163c27", "#1e5b3d", "#2e7d57", "#4e9d78", "#7dbd9d", "#b3dcc5"]
+      },
+      "botanico-hover": {
+        "role": "primary",
+        "displayName": "Verde botánico vivo",
+        "canonical": "#2e7d57",
+        "tonalRamp": ["#0b2116", "#143523", "#1c4a31", "#2e7d57", "#46946d", "#6caf8d", "#96c9ad", "#c7e4d5"]
+      },
+      "papel": {
+        "role": "neutral",
+        "displayName": "Papel de cuaderno",
+        "canonical": "#f6f8f4",
+        "tonalRamp": ["#1c221e", "#333c35", "#5b6660", "#8d978f", "#b9c1b8", "#d7dcd6", "#e9ece7", "#f6f8f4"]
+      },
+      "superficie": {
+        "role": "neutral",
+        "displayName": "Superficie",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#1b211d", "#313a34", "#5a655e", "#8b958d", "#b7bfb8", "#d8ddd8", "#eef1ee", "#ffffff"]
+      },
+      "tinta": {
+        "role": "neutral",
+        "displayName": "Tinta de campo",
+        "canonical": "#12211a",
+        "tonalRamp": ["#060d09", "#0d1712", "#12211a", "#2b3b32", "#47594e", "#6b7c71", "#9aa89f", "#c9d2cc"]
+      },
+      "tinta-tenue": {
+        "role": "neutral",
+        "displayName": "Tinta suave",
+        "canonical": "#5b6660",
+        "tonalRamp": ["#0d1410", "#1b241f", "#2b3730", "#3f4b43", "#5b6660", "#7e8982", "#a7b0aa", "#d4d9d5"]
+      },
+      "alarma": {
+        "role": "secondary",
+        "displayName": "Ámbar de alarma",
+        "canonical": "#c2410c",
+        "tonalRamp": ["#3a0f02", "#5e1a05", "#8c2a07", "#c2410c", "#d85b16", "#e87c3d", "#f2a273", "#f9cbb0"]
+      },
+      "alarma-suave": {
+        "role": "secondary",
+        "displayName": "Ámbar suave",
+        "canonical": "#fdf0e7",
+        "tonalRamp": ["#3a1405", "#5e1f08", "#8c2f0b", "#c2410c", "#d9601f", "#e8804a", "#f2a583", "#fdf0e7"]
+      },
+      "borde": {
+        "role": "neutral",
+        "displayName": "Borde de hoja",
+        "canonical": "#d8dfd6",
+        "tonalRamp": ["#1d231f", "#333b35", "#4c564e", "#6a756c", "#8d978f", "#b0b9b2", "#d8dfd6", "#f0f3ef"]
+      },
+      "borde-input": {
+        "role": "neutral",
+        "displayName": "Borde de campo",
+        "canonical": "#78857d",
+        "tonalRamp": ["#232b26", "#39443d", "#4f5b53", "#78857d", "#96a29a", "#b3bdb7", "#cdd5d1", "#e6ebe8"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Titular",
+        "purpose": "Solo el titular de la landing. Su peso recae sobre el papel; no se usa en el panel."
+      },
+      "headline": {
+        "displayName": "Titular de sección",
+        "purpose": "Titulares de sección de la landing y primer nivel del panel."
+      },
+      "title": {
+        "displayName": "Título",
+        "purpose": "Títulos de widget, de vista y de tarjeta."
+      },
+      "body": {
+        "displayName": "Cuerpo",
+        "purpose": "Párrafos, datos y descripciones. Cifras siempre con cifras tabulares."
+      },
+      "label": {
+        "displayName": "Etiqueta",
+        "purpose": "Etiquetas de campo, notas al pie de tarjeta, unidades y textos de control."
+      }
+    },
+    "shadows": [
+      {
+        "name": "menu-flotante",
+        "value": "0 8px 24px rgb(0 0 0 / 0.12)",
+        "purpose": "Menú de la cuenta y lista del selector: elementos que se superponen al contenido."
+      },
+      {
+        "name": "barra-inferior",
+        "value": "0 12px 28px rgb(0 0 0 / 0.14)",
+        "purpose": "Barra inferior de navegación en móvil, que descansa sobre el scroll."
+      },
+      {
+        "name": "anillo-muestra",
+        "value": "0 0 0 2px var(--fondo), 0 0 0 4px var(--texto)",
+        "purpose": "Doble anillo de la muestra de color activa, para separarla de la superficie."
+      },
+      {
+        "name": "halo-estado",
+        "value": "0 0 0 3px color-mix(in srgb, var(--marca) 18%, transparent)",
+        "purpose": "Punto verde encendido de los chips de estado."
+      }
+    ],
+    "motion": [
+      {
+        "name": "transicion-estandar",
+        "value": "140ms cubic-bezier(0.2, 0, 0, 1)",
+        "purpose": "Transición única del sistema para hover, foco y cambios de estado."
+      },
+      {
+        "name": "aparicion-menu",
+        "value": "140ms cubic-bezier(0.2, 0, 0, 1)",
+        "purpose": "Apertura de menús: opacidad 0→1 y escala .98→1."
+      },
+      {
+        "name": "pulsacion",
+        "value": "140ms cubic-bezier(0.2, 0, 0, 1)",
+        "purpose": "Pulsación: el botón baja 1px; en la barra inferior, escala .94."
+      }
+    ],
+    "breakpoints": [
+      { "name": "apilado", "value": "992px", "purpose": "El panel lateral cae bajo el contenido y los widgets pasan a una columna." },
+      { "name": "movil", "value": "768px", "purpose": "Barra inferior de navegación, cabeceras apiladas, acciones en rejilla y botón de guardado pegado al fondo." },
+      { "name": "compacto", "value": "544px", "purpose": "KPIs cuadrados 2×2 y espaciados finos." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón primario",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal de una vista: guardar, crear, confirmar.",
+      "html": "<button class=\"ds-btn-primary\">Guardar cambios</button>",
+      "css": ".ds-btn-primary { font: inherit; font-size: 0.95rem; font-weight: 700; min-height: 2.75rem; padding: 0 0.75rem; border: 1px solid var(--marca); border-radius: var(--radio-sm); background: var(--marca); color: var(--sobre-marca); cursor: pointer; transition: background-color var(--transicion), border-color var(--transicion), color var(--transicion); } .ds-btn-primary:hover { background: var(--marca-hover); border-color: var(--marca-hover); } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }"
+    },
+    {
+      "name": "Botón secundario",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Acción de apoyo: cancelar, ver mediciones, editar.",
+      "html": "<button class=\"ds-btn-secondary\">Ver mediciones</button>",
+      "css": ".ds-btn-secondary { font: inherit; font-size: 0.95rem; font-weight: 700; min-height: 2.75rem; padding: 0 0.75rem; border: 1px solid var(--borde-input); border-radius: var(--radio-sm); background: var(--superficie); color: var(--texto); cursor: pointer; transition: background-color var(--transicion), border-color var(--transicion), color var(--transicion); } .ds-btn-secondary:hover { border-color: var(--marca); color: var(--marca); } .ds-btn-secondary:active { transform: translateY(1px); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }"
+    },
+    {
+      "name": "Botón de peligro",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Acción destructiva. Pide confirmación en línea antes de ejecutarse.",
+      "html": "<button class=\"ds-btn-danger\">Eliminar</button>",
+      "css": ".ds-btn-danger { font: inherit; font-size: 0.95rem; font-weight: 700; min-height: 2.75rem; padding: 0 0.75rem; border: 1px solid var(--senal); border-radius: var(--radio-sm); background: var(--superficie); color: var(--senal); cursor: pointer; transition: background-color var(--transicion), border-color var(--transicion), color var(--transicion); } .ds-btn-danger:hover { background: var(--senal-suave); color: var(--senal); } .ds-btn-danger:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }"
+    },
+    {
+      "name": "Campo de formulario",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Etiqueta encima, campo debajo; error con borde ámbar.",
+      "html": "<label class=\"ds-campo\">Teléfono<input class=\"ds-input\" type=\"tel\" placeholder=\"+54 9 261 555-1000\"></label>",
+      "css": ".ds-campo { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 1rem; font-size: 0.95rem; font-weight: 700; } .ds-input { font: inherit; font-weight: 400; color: var(--texto); background: var(--superficie); border: 1px solid var(--borde-input); border-radius: var(--radio-sm); padding: 0.45rem 0.5rem; min-height: 2.75rem; } .ds-input::placeholder { color: var(--texto-tenue); } .ds-input:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; } .ds-input[aria-invalid=\"true\"] { border-color: var(--senal); }"
+    },
+    {
+      "name": "Chip de estado",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Recuento de la cabecera; la variante de alerta invierte el color.",
+      "html": "<span class=\"ds-chip\"><span class=\"ds-punto\"></span>3 sensores</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; font-weight: 700; color: var(--texto-tenue); border: 1px solid var(--borde); border-radius: 999px; padding: 0.25rem 0.75rem; background: var(--superficie); } .ds-punto { width: 0.5rem; height: 0.5rem; border-radius: 999px; background: var(--borde-input); } .ds-punto--activo { background: var(--marca-hover); box-shadow: 0 0 0 3px color-mix(in srgb, var(--marca) 18%, transparent); } .ds-chip--alerta { color: var(--senal); border-color: var(--senal); background: var(--senal-suave); }"
+    },
+    {
+      "name": "Tarjeta",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Superficie plana sobre el papel; el texto comparte arista vertical.",
+      "html": "<article class=\"ds-tarjeta\"><h3>Albahaca</h3><p>4 tipos de medición · 1 sensor</p></article>",
+      "css": ".ds-tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio); padding: 1rem; } .ds-tarjeta h3 { margin: 0 0 0.25rem; font-family: var(--fuente-titulo); font-size: 1rem; font-weight: 600; color: var(--texto); } .ds-tarjeta p { margin: 0; color: var(--texto-tenue); font-size: 0.85rem; }"
+    },
+    {
+      "name": "Sección de navegación",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Botón de sección de la cabecera; la activa se marca con verde y subrayado.",
+      "html": "<button class=\"ds-nav\" aria-current=\"page\">Cultivos</button>",
+      "css": ".ds-nav { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 2.75rem; padding: 0 0.75rem; border: 1px solid transparent; border-radius: var(--radio-sm); background: transparent; color: var(--texto-tenue); font: inherit; font-weight: 400; cursor: pointer; transition: background-color var(--transicion), border-color var(--transicion), color var(--transicion); } .ds-nav:hover { border-color: var(--borde); } .ds-nav[aria-current=\"page\"] { color: var(--marca); font-weight: 700; box-shadow: inset 0 -2px 0 var(--marca); } .ds-nav:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }"
+    },
+    {
+      "name": "Barra inferior de navegación",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Navegación flotante de móvil: un círculo por sección y el perfil a la derecha.",
+      "html": "<nav class=\"ds-barra\"><button class=\"ds-barra-item\" aria-label=\"Cultivos\" aria-current=\"page\"></button><button class=\"ds-barra-item\" aria-label=\"Alertas\"></button><button class=\"ds-barra-item\" aria-label=\"Sensores\"></button><button class=\"ds-barra-item ds-barra-perfil\" aria-label=\"Mi cuenta\"></button></nav>",
+      "css": ".ds-barra { position: fixed; left: 0.75rem; right: 0.75rem; bottom: 0.75rem; z-index: 50; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: var(--superficie); border: 1px solid var(--borde); border-radius: 999px; box-shadow: 0 12px 28px rgb(0 0 0 / 0.14); } .ds-barra-item { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border: 1px solid transparent; border-radius: 999px; background: var(--fondo); color: var(--texto-tenue); cursor: pointer; transition: transform var(--transicion), background-color var(--transicion); } .ds-barra-item:active { transform: scale(0.94); } .ds-barra-item[aria-current=\"page\"] { background: var(--marca); color: var(--sobre-marca); } .ds-barra-perfil { margin-left: auto; background: color-mix(in srgb, var(--marca) 14%, var(--superficie)); color: var(--marca); }"
+    },
+    {
+      "name": "Desplegable propio",
+      "kind": "custom",
+      "refersTo": "nav-item",
+      "description": "Listbox con flecha que gira al abrirse; sustituye al select del sistema.",
+      "html": "<div class=\"ds-selector\"><button class=\"ds-selector-btn\" aria-haspopup=\"listbox\" aria-expanded=\"true\">Sensor del balcón<svg class=\"ds-selector-flecha\" viewBox=\"0 0 10 6\" width=\"10\" height=\"6\" aria-hidden=\"true\"><path d=\"M1 1l4 4 4-4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></button><ul class=\"ds-selector-lista\" role=\"listbox\"><li class=\"ds-opcion ds-opcion--sel\" role=\"option\" aria-selected=\"true\">Sensor del balcón</li></ul></div>",
+      "css": ".ds-selector { position: relative; } .ds-selector-btn { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 2rem; padding: 0 0.75rem; border: 1px solid var(--borde-input); border-radius: var(--radio-sm); background: var(--superficie); color: var(--texto); font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; } .ds-selector-btn[aria-expanded=\"true\"] { border-color: var(--marca); background: var(--fondo); } .ds-selector-flecha { flex: none; transition: transform var(--transicion); } .ds-selector-btn[aria-expanded=\"true\"] .ds-selector-flecha { transform: rotate(180deg); } .ds-selector-lista { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; min-width: 100%; max-height: 16rem; overflow-y: auto; list-style: none; margin: 0; padding: 0.25rem; background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio-sm); box-shadow: 0 8px 24px rgb(0 0 0 / 0.12); } .ds-opcion { padding: 0.4rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; white-space: nowrap; } .ds-opcion--sel { color: var(--marca); font-weight: 700; }"
+    },
+    {
+      "name": "Tarjeta de alerta",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Tres líneas: tipo con estado, valor en grande y contexto.",
+      "html": "<article class=\"ds-alerta\"><div class=\"ds-alerta-cabecera\"><strong>Temperatura (°C)</strong><span class=\"ds-chip ds-chip--alerta\">Activa</span></div><p class=\"ds-alerta-valor\">29,6 °C</p><p class=\"ds-alerta-contexto\">Albahaca · 20/10/26, 17:23</p></article>",
+      "css": ".ds-alerta { background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio); padding: 0.75rem 1rem; } .ds-alerta--activa { border-color: color-mix(in srgb, var(--senal) 45%, var(--borde)); } .ds-alerta-cabecera { display: flex; align-items: baseline; gap: 0.5rem; } .ds-alerta-cabecera strong { font-family: var(--fuente-titulo); font-size: 1.05rem; } .ds-alerta-cabecera .ds-chip { margin-left: auto; } .ds-alerta-valor { margin: 0.25rem 0 0; font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--texto); } .ds-alerta-contexto { margin: 0.25rem 0 0; font-size: 0.9rem; color: var(--texto-tenue); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El cuaderno de campo",
+    "overview": "AgroBits se lee como el cuaderno de un hortelano cuidadoso: papel, tinta, observaciones medidas y un único margen en ámbar para la alarma. Todo lo demás se mantiene en voz baja —verde botánico sobre papel blanco-verdoso— para que la única señal que exige atención sea, de verdad, la alerta. La identidad no viene del adorno sino de la disciplina: una escala tipográfica corta, un solo acento, bordes de un píxel y nada que grite sin motivo. El sistema sirve a dos superficies con el mismo lenguaje: la landing (persuasiva, de lectura larga) y el panel (operativo, de uso repetido y con una mano). En el panel manda la densidad legible: el usuario necesita ver el estado de sus cultivos de un vistazo y actuar solo cuando hay alerta.",
+    "keyCharacteristics": [
+      "Un solo acento que significa algo: el ámbar aparece exclusivamente en alertas activas.",
+      "Papel y tinta, no blanco y negro: el gris puro no existe en el sistema.",
+      "Tipografía con dos voces: serif calurosa para nombrar, sans hiperlegible para medir.",
+      "Plano por defecto: la sombra aparece únicamente cuando algo flota de verdad.",
+      "Un control propio cuando el del sistema no puede comunicar estado."
+    ],
+    "rules": [
+      {
+        "name": "La regla de la sola voz",
+        "body": "El ámbar es lo único que tiene permiso para levantar la voz: si un elemento no es una alerta activa, no se pinta de ámbar — ni un borde, ni un icono, ni un texto. Si aparece ámbar, hay algo que hacer.",
+        "section": "colors"
+      },
+      {
+        "name": "La regla del papel",
+        "body": "Ninguna superficie se define por una sombra: se define por su relación con el papel (fondo, superficie) y por un borde de un píxel. La sombra es una excepción, no una técnica.",
+        "section": "colors"
+      },
+      {
+        "name": "La regla del cuaderno",
+        "body": "El serif nombra, la sans mide. Si un bloque de datos (cifras, unidades, estados) aparece en serif, es un titular disfrazado: se está usando la voz equivocada.",
+        "section": "typography"
+      },
+      {
+        "name": "La regla de la cifra",
+        "body": "Toda cifra que cambió o que se compara va en font-variant-numeric: tabular-nums, para que las columnas de números se lean alineadas.",
+        "section": "typography"
+      },
+      {
+        "name": "La regla de la flotación",
+        "body": "Si un elemento no tapa contenido, no lleva sombra. Y si lleva sombra, la lleva con desplazamiento y desenfoque: una sombra sin desenfoque es disfraz, no profundidad.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do reservar el ámbar para las alertas activas, y usarlo entero (borde, distintivo, cifra) cuando aparece.",
+      "Do alinear el texto de una tarjeta en una sola arista vertical y dejar que cada tarjeta tenga su propio alto.",
+      "Do comprobar la legibilidad del dato en el móvil con el dedo: la cifra en grande, la unidad al lado, la hora separada.",
+      "Do confirmar en línea las acciones destructivas y pedir confirmación en un solo toque reversible.",
+      "Do usar tokens (--marca, --radio, --espacio-*, --t-*) en lugar de valores sueltos: web/src/tokens.css es la única fuente de verdad, compartida por la landing y la app.",
+      "Do mantener los data-testid estables al cambiar la presentación: son el contrato de la suite E2E.",
+      "Do escribir en español claro, en segunda persona, sin jerga técnica ni identificadores internos."
+    ],
+    "donts": [
+      "Don't usar una franja de color lateral (>1px) en tarjetas, avisos o alertas: en este sistema el acento va en el contenido, no en el borde.",
+      "Don't dibujar una sparkline decorativa como si fuera información: si el gráfico no enseña el umbral, es ruido.",
+      "Don't delegar en un control del sistema un estado que la interfaz debe comunicar (flecha, apertura, expansión).",
+      "Don't dejar que una rejilla estire a todas las tarjetas cuando solo una crece.",
+      "Don't usar emoji, tipografías de iconos o imágenes de relleno donde deba ir un SVG con currentColor.",
+      "Don't alinear el valor de una tarjeta al borde de la tarjeta si el título cuelga de un icono: el texto comparte arista.",
+      "Don't dar entrada a un dato que no existe: sin hardware, las lecturas son simuladas y se etiquetan como tales.",
+      "Don't inventar testimonios, métricas de uso ni fuentes agronómicas: el producto no las tiene."
+    ]
+  }
+}
