@@ -24,6 +24,7 @@ export default function Autenticacion() {
   const [email, setEmail] = useState('')
   const [clave, setClave] = useState('')
   const [confirmacion, setConfirmacion] = useState('')
+  const [nombreUsuario, setNombreUsuario] = useState('')
   const [telefono, setTelefono] = useState('')
   const [provincia, setProvincia] = useState('')
   const [localidadId, setLocalidadId] = useState('')
@@ -63,7 +64,14 @@ export default function Autenticacion() {
     const resultado =
       modo === 'sesion'
         ? await iniciarSesion(email, clave)
-        : await registrarse({ email, clave, confirmacion, telefono, localidadId: Number(localidadId) })
+        : await registrarse({
+            email,
+            clave,
+            confirmacion,
+            telefono,
+            localidadId: Number(localidadId),
+            nombreUsuario,
+          })
     setEnviando(false)
     if (!resultado.ok) {
       setError(resultado.errores.map((e) => e.motivo).join('. '))
@@ -122,6 +130,22 @@ export default function Autenticacion() {
                 value={confirmacion}
                 onChange={(e) => setConfirmacion(e.target.value)}
               />
+            </label>
+            <label>
+              Nombre de usuario (opcional)
+              {/* D32: se guarda como metadata de Auth (sin BD). Si se deja
+                  vacío, el panel muestra el texto del email antes de la «@». */}
+              <input
+                type="text"
+                name="nombreUsuario"
+                autoComplete="nickname"
+                data-testid="nombre-usuario"
+                value={nombreUsuario}
+                onChange={(e) => setNombreUsuario(e.target.value)}
+                placeholder="Ej.: Joel"
+                maxLength={30}
+              />
+              <small>Se mostrará en el panel en lugar de tu email. Déjalo vacío si prefieres el email.</small>
             </label>
             <label>
               Teléfono

@@ -216,6 +216,62 @@ describe('registro enriquecido (T-27, R-01 v3 / D27)', () => {
     expect(espia.ultimoPerfil()).toEqual({ telefono: '261 555 9876', localidadId: 4 })
   })
 
+  it('D32: el nombre de usuario opcional se recorta y se delega en el proveedor', async () => {
+    const espia = espiaDeRegistro()
+    configurarProveedorAuth(espia.proveedor)
+
+    const resultado = await registrarse({ ...registroValido, nombreUsuario: '  Joel  ' })
+
+    expect(resultado.ok).toBe(true)
+    expect(espia.ultimoPerfil()?.nombreUsuario).toBe('Joel')
+  })
+
+  it('D32: sin nombre de usuario el proveedor no recibe nombre', async () => {
+    const espia = espiaDeRegistro()
+    configurarProveedorAuth(espia.proveedor)
+
+    const resultado = await registrarse(registroValido)
+
+    expect(resultado.ok).toBe(true)
+    expect(espia.ultimoPerfil()?.nombreUsuario).toBeUndefined()
+  })
+
+  it('D32: un nombre de 1 carácter se rechaza sin tocar al proveedor', async () => {
+    const espia = espiaDeRegistro()
+    configurarProveedorAuth(espia.proveedor)
+
+    const resultado = await registrarse({ ...registroValido, nombreUsuario: 'J' })
+
+    expect(resultado.ok).toBe(false)
+    if (!resultado.ok) {
+      const error = resultado.errores.find((e) => e.campo === 'nombreUsuario')
+      expect(error?.motivo).toMatch(/entre 2 y 30 caracteres/)
+    }
+    expect(espia.llamadas()).toBe(0)
+  })
+
+  it('D32: un nombre de 31 caracteres se rechaza sin tocar al proveedor', async () => {
+    const espia = espiaDeRegistro()
+    configurarProveedorAuth(espia.proveedor)
+
+    const resultado = await registrarse({ ...registroValido, nombreUsuario: 'a'.repeat(31) })
+
+    expect(resultado.ok).toBe(false)
+    if (!resultado.ok) expect(resultado.errores.some((e) => e.campo === 'nombreUsuario')).toBe(true)
+    expect(espia.llamadas()).toBe(0)
+  })
+
+  it('D32: la sesión del doble abre con el nombre de usuario registrado', async () => {
+    await registrarse({ ...registroValido, nombreUsuario: 'Joel' })
+
+    expect(obtenerSesion()?.usuario.nombreUsuario).toBe('Joel')
+
+    await cerrarSesion()
+    await iniciarSesion(registroValido.email, registroValido.clave)
+
+    expect(obtenerSesion()?.usuario.nombreUsuario).toBe('Joel')
+  })
+
   it('telefonoValido admite dígitos con + ( ) . - y espacios (6–20 dígitos)', () => {
     expect(telefonoValido('2614442002')).toBe(true)
     expect(telefonoValido('+54 9 261 555-1234')).toBe(true)

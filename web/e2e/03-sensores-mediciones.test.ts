@@ -42,7 +42,7 @@ test('sensor dispara lectura automática con formato R-08, unidades R-09 y persi
   // R-08 AC1: la medición persiste y se vuelve a servir tras recargar.
   // Sin router: tras recargar la SPA vuelve a la lista; se reabre el detalle.
   await page.reload()
-  await expect(page.getByTestId('sesion-usuario')).toContainText(cuentaA.correo)
+  await expect(page.getByTestId('sesion-usuario')).toContainText(cuentaA.correo.split('@')[0]) // D32: nombre visible = parte local del email
   await abrirDetalle(page, nombre)
   await expect(page.getByTestId('resumen-medicion')).toContainText('4 de 4')
   await expect(page.getByTestId('valor-temperatura')).not.toContainText('sin datos')

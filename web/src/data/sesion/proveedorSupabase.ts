@@ -25,9 +25,19 @@ export function mensajeAuth(error: AuthError): string {
   return mensaje
 }
 
+/** Nombre de usuario opcional guardado en `user_metadata` (D32). */
+function nombreDeUsuario(
+  usuario: { user_metadata?: Record<string, unknown> } | null | undefined,
+): string | undefined {
+  const nombre = usuario?.user_metadata?.nombre_usuario
+  return typeof nombre === 'string' && nombre.trim() !== '' ? nombre.trim() : undefined
+}
+
 function aSesion(sesion: Session | null): Sesion | null {
   const email = sesion?.user?.email
-  return email ? { usuario: { email } } : null
+  if (!email) return null
+  const nombreUsuario = nombreDeUsuario(sesion.user)
+  return { usuario: { email, ...(nombreUsuario ? { nombreUsuario } : {}) } }
 }
 
 export class ProveedorSupabase implements ProveedorAuth {
@@ -61,16 +71,29 @@ export class ProveedorSupabase implements ProveedorAuth {
   async iniciarSesion(email: string, clave: string): Promise<Resultado<Sesion>> {
     const { data, error } = await this.cliente.auth.signInWithPassword({ email, password: clave })
     if (error) return { ok: false, errores: [{ campo: 'clave', motivo: mensajeAuth(error) }] }
-    return { ok: true, valor: { usuario: { email: data.user.email ?? email } } }
+    const nombreUsuario = nombreDeUsuario(data.user)
+    return {
+      ok: true,
+      valor: { usuario: { email: data.user.email ?? email, ...(nombreUsuario ? { nombreUsuario } : {}) } },
+    }
   }
 
   async registrarse(email: string, clave: string, perfil: PerfilRegistro): Promise<Resultado<Sesion>> {
     // T-27 (D27): el teléfono y la localidad viajan como metadata del signup;
     // el trigger de la BD (`crear_perfil_de_usuario`) los copia a `perfiles`.
+    // D32: el nombre de usuario opcional viaja en la MISMA metadata y vive
+    // solo en Auth (la BD no lo lee; la UI lo muestra o, si falta, el texto
+    // del email anterior a la «@»).
     const { data, error } = await this.cliente.auth.signUp({
       email,
       password: clave,
-      options: { data: { telefono: perfil.telefono, localidad_id: perfil.localidadId } },
+      options: {
+        data: {
+          telefono: perfil.telefono,
+          localidad_id: perfil.localidadId,
+          ...(perfil.nombreUsuario ? { nombre_usuario: perfil.nombreUsuario } : {}),
+        },
+      },
     })
     if (error) return { ok: false, errores: [{ campo: 'clave', motivo: mensajeAuth(error) }] }
     if (!data.session) {
@@ -93,7 +116,11 @@ export class ProveedorSupabase implements ProveedorAuth {
         ],
       }
     }
-    return { ok: true, valor: { usuario: { email: data.user?.email ?? email } } }
+    const nombreUsuario = nombreDeUsuario(data.user)
+    return {
+      ok: true,
+      valor: { usuario: { email: data.user?.email ?? email, ...(nombreUsuario ? { nombreUsuario } : {}) } },
+    }
   }
 
   async cerrarSesion(): Promise<void> {

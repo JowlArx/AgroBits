@@ -7,9 +7,10 @@
 
 import { useState, useSyncExternalStore } from 'react'
 import {
+  Area,
   CartesianGrid,
+  ComposedChart,
   Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -91,23 +92,26 @@ export default function Sensores() {
             return (
               <li key={sensor.id} className="tarjeta-sensor" data-testid="tarjeta-sensor">
                 <div className="datos-sensor">
-                  <strong className="nombre-sensor-panel">{sensor.nombre}</strong>
+                  <div className="fila-datos-sensor">
+                    <strong className="nombre-sensor-panel">{sensor.nombre}</strong>
+                    {/* D31: la hora de la última lectura, arriba a la derecha. */}
+                    <span className="ultima-lectura-sensor">
+                      {ultima ? (
+                        <>
+                          Últ. lectura:{' '}
+                          <time dateTime={ultima.medidaEn}>{horaLegible(ultima.medidaEn)}</time>
+                        </>
+                      ) : (
+                        'Sin lecturas todavía'
+                      )}
+                    </span>
+                  </div>
                   <span className="vinculos-sensor">
                     {sensor.cultivoIds.length === 0
                       ? 'Sin cultivos vinculados'
                       : sensor.cultivoIds
                           .map((id) => obtenerCultivo(id)?.nombre ?? 'Cultivo eliminado')
                           .join(' · ')}
-                  </span>
-                  <span className="ultima-lectura-sensor">
-                    {ultima ? (
-                      <>
-                        Última lectura:{' '}
-                        <time dateTime={ultima.medidaEn}>{horaLegible(ultima.medidaEn)}</time>
-                      </>
-                    ) : (
-                      'Sin lecturas todavía'
-                    )}
                   </span>
                 </div>
 
@@ -190,10 +194,17 @@ export default function Sensores() {
           ) : (
             <div className="grafico-lineas">
               <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={puntosSensor} margin={{ top: 8, right: 16, bottom: 8, left: -8 }}>
+                {/* D31: eje Y alineado con el título + relleno degradado. */}
+                <ComposedChart data={puntosSensor} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+                  <defs>
+                    <linearGradient id="relleno-sensor-0" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={VAR_COLOR_SENSOR[sensorActivo.colorLinea]} stopOpacity={0.22} />
+                      <stop offset="95%" stopColor={VAR_COLOR_SENSOR[sensorActivo.colorLinea]} stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid stroke="var(--borde)" strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="hora" stroke="var(--texto-tenue)" tickLine={false} axisLine={false} fontSize={12} />
-                  <YAxis stroke="var(--texto-tenue)" tickLine={false} axisLine={false} fontSize={12} width={48} />
+                  <YAxis stroke="var(--texto-tenue)" tickLine={false} axisLine={false} fontSize={12} width={44} />
                   <Tooltip
                     contentStyle={{
                       background: 'var(--superficie)',
@@ -204,6 +215,13 @@ export default function Sensores() {
                     }}
                     formatter={(valor) => [`${valor}`, ETIQUETAS_MEDICION[tipoActivo]]}
                   />
+                  <Area
+                    type="monotone"
+                    dataKey="valor"
+                    stroke="none"
+                    fill="url(#relleno-sensor-0)"
+                    isAnimationActive={false}
+                  />
                   <Line
                     type="monotone"
                     dataKey="valor"
@@ -212,7 +230,7 @@ export default function Sensores() {
                     dot={false}
                     isAnimationActive={false}
                   />
-                </LineChart>
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
           )}

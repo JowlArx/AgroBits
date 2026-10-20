@@ -31,10 +31,11 @@ export class AuthFalso implements ProveedorAuth {
   }
 
   async iniciarSesion(email: string, clave: string): Promise<Resultado<Sesion>> {
-    if (this.cuentas.get(email)?.clave !== clave) {
+    const cuenta = this.cuentas.get(email)
+    if (cuenta?.clave !== clave) {
       return { ok: false, errores: [{ campo: 'clave', motivo: 'Email o contraseña incorrectos.' }] }
     }
-    return this.abrir(email)
+    return this.abrir(email, cuenta.perfil)
   }
 
   async registrarse(email: string, clave: string, perfil: PerfilRegistro): Promise<Resultado<Sesion>> {
@@ -42,7 +43,7 @@ export class AuthFalso implements ProveedorAuth {
       return { ok: false, errores: [{ campo: 'email', motivo: 'Ya existe una cuenta con ese email.' }] }
     }
     this.cuentas.set(email, { clave, perfil })
-    return this.abrir(email)
+    return this.abrir(email, perfil)
   }
 
   async cerrarSesion(): Promise<void> {
@@ -50,8 +51,10 @@ export class AuthFalso implements ProveedorAuth {
     this.notificar()
   }
 
-  private abrir(email: string): Resultado<Sesion> {
-    this.sesion = { usuario: { email } }
+  private abrir(email: string, perfil: PerfilRegistro): Resultado<Sesion> {
+    // D32: el nombre de usuario opcional viaja igual que en el proveedor real.
+    const nombre = perfil.nombreUsuario?.trim()
+    this.sesion = { usuario: { email, ...(nombre ? { nombreUsuario: nombre } : {}) } }
     this.notificar()
     return { ok: true, valor: this.sesion }
   }

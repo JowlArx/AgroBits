@@ -33,6 +33,8 @@ export interface DatosRegistro {
   telefono: string
   /** id de la fila elegida en el catálogo `localidades` (0 = sin elegir). */
   localidadId: number
+  /** Nombre de usuario opcional (D32): 2–30 caracteres; vacío = sin nombre. */
+  nombreUsuario?: string
 }
 
 /** El teléfono es obligatorio: 6–20 dígitos, admite `+ ( ) . -` y espacios. */
@@ -104,6 +106,16 @@ function validarRegistro(datos: DatosRegistro): ErrorCampo[] {
   if (!Number.isInteger(datos.localidadId) || datos.localidadId <= 0) {
     errores.push({ campo: 'localidad', motivo: 'Selecciona una provincia y una localidad' })
   }
+  // D32: el nombre de usuario es OPCIONAL; solo se valida su longitud si se
+  // escribe (2–30 caracteres). La UI muestra el texto del email antes de la
+  // «@» cuando no existe.
+  const nombre = datos.nombreUsuario?.trim() ?? ''
+  if (nombre !== '' && (nombre.length < 2 || nombre.length > 30)) {
+    errores.push({
+      campo: 'nombreUsuario',
+      motivo: 'El nombre de usuario debe tener entre 2 y 30 caracteres',
+    })
+  }
   return errores
 }
 
@@ -111,9 +123,11 @@ function validarRegistro(datos: DatosRegistro): ErrorCampo[] {
 export async function registrarse(datos: DatosRegistro): Promise<Resultado<Sesion>> {
   const errores = validarRegistro(datos)
   if (errores.length > 0) return { ok: false, errores }
+  const nombreUsuario = datos.nombreUsuario?.trim()
   return exigirProveedor().registrarse(datos.email.trim(), datos.clave, {
     telefono: datos.telefono.trim(),
     localidadId: datos.localidadId,
+    ...(nombreUsuario ? { nombreUsuario } : {}),
   })
 }
 

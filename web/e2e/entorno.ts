@@ -46,7 +46,8 @@ export async function iniciarSesion(
   await page.getByTestId('email').fill(cuenta.correo)
   await page.getByTestId('clave').fill(cuenta.clave)
   await page.getByTestId('enviar-acceso').click()
-  await expect(page.getByTestId('sesion-usuario')).toContainText(cuenta.correo)
+  // D32: el panel muestra el nombre de usuario o, sin él, la parte local del email.
+  await expect(page.getByTestId('sesion-usuario')).toContainText(cuenta.correo.split('@')[0])
 }
 
 export async function cerrarSesion(page: Page): Promise<void> {

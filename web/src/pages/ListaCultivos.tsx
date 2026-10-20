@@ -9,6 +9,7 @@ import { quitarAsociacionesDeCultivo } from '../data/storeSensores'
 import { eliminarMediciones } from '../data/medicionesSimuladas'
 import { cargarAlertas } from '../data/storeAlertas'
 import { TIPOS_MEDICION, UNIDADES } from '../domain/tipos'
+import IconoCultivo from '../components/IconoCultivo'
 
 interface Props {
   onNuevo: () => void
@@ -59,8 +60,12 @@ export default function ListaCultivos({ onNuevo, onEditar, onVerMediciones }: Pr
             <li key={cultivo.id} className="tarjeta-cultivo">
               <div className="cabecera-tarjeta">
                 <div>
-                  <strong>{cultivo.nombre}</strong>{' '}
-                  <span className="etiqueta">{cultivo.tipoCultivo}</span>
+                  {/* D31: icono del tipo de cultivo junto al nombre. */}
+                  <span className="fila-nombre-cultivo">
+                    <IconoCultivo tipoCultivo={cultivo.tipoCultivo} />
+                    <strong>{cultivo.nombre}</strong>
+                    <span className="etiqueta">{cultivo.tipoCultivo}</span>
+                  </span>
                 </div>
                 <div className="acciones">
                   <button type="button" onClick={() => onVerMediciones(cultivo.id)}>

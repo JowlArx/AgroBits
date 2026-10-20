@@ -355,10 +355,17 @@ legend {
 
 .fila-umbral {
   display: grid;
-  grid-template-columns: 1fr 7.5rem 7.5rem;
+  /* minmax(0, …) evita que los inputs numéricos (ancho intrínseco) desborden
+     la tarjeta en móvil (D31). */
+  grid-template-columns: minmax(0, 1fr) 7.5rem 7.5rem;
   gap: var(--espacio-2);
   align-items: end;
   margin-bottom: var(--espacio-2);
+}
+
+.fila-umbral input {
+  width: 100%;
+  min-width: 0;
 }
 
 .etiqueta-umbral {
@@ -622,22 +629,28 @@ dd {
   padding: var(--espacio-3) var(--espacio-5);
 }
 
-/* El chip informativo se alinea a la derecha del topbar (como en el diseño). */
-.topbar .etiqueta {
-  margin-left: auto;
+/* D31 — Topbar: título + resumen a la izquierda; chips de estado y acción
+   rápida a la derecha (sustituye a las migas y a la etiqueta técnica). */
+.titulo-topbar {
+  min-width: 0;
 }
 
-.migas {
+.titulo-topbar h2 {
   margin: 0;
-  font-size: 0.9rem;
+}
+
+.subtitulo-topbar {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
   color: var(--texto-tenue);
+}
+
+.acciones-topbar {
+  margin-left: auto;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--espacio-2);
-}
-
-.migas strong {
-  color: var(--texto);
 }
 
 .cuerpo {
@@ -668,28 +681,50 @@ dd {
   padding: 0;
   display: grid;
   gap: var(--espacio-3);
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .tarjeta-kpi {
   background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: 10px;
-  padding: var(--espacio-3) var(--espacio-4);
+  padding: var(--espacio-3);
   display: flex;
   flex-direction: column;
   gap: var(--espacio-1);
   min-width: 0;
 }
 
+/* D31: cabecera del KPI con icono (SVG en línea, currentColor). */
+.kpi-cabecera {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  min-width: 0;
+}
+
+.kpi-icono {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--marca) 12%, var(--superficie));
+  color: var(--marca);
+}
+
 .kpi-etiqueta {
   font-size: 0.85rem;
   color: var(--texto-tenue);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .kpi-valor {
   font-family: var(--fuente-titulo);
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
@@ -717,7 +752,12 @@ dd {
 }
 
 .widget {
-  background: var(--superficie);
+  /* D31: degradado sutil de fondo para dar profundidad al panel. */
+  background: linear-gradient(
+    180deg,
+    var(--superficie) 0%,
+    color-mix(in srgb, var(--marca) 4%, var(--superficie)) 100%
+  );
   border: 1px solid var(--borde);
   border-radius: 10px;
   padding: var(--espacio-4);
@@ -866,11 +906,14 @@ dd {
   font-variant-numeric: tabular-nums;
 }
 
+/* D31: la hora se alinea sola a la derecha de la cabecera de la tarjeta
+   (esquina superior derecha). */
 .item-hora {
-  display: block;
-  margin-top: var(--espacio-1);
+  display: inline;
+  margin: 0 0 0 auto;
   font-size: 0.75rem;
   color: var(--texto-tenue);
+  white-space: nowrap;
 }
 
 /* Responsivo -------------------------------------------------------------- */
@@ -920,7 +963,7 @@ dd {
 
 @media (max-width: 34rem) {
   .fila-umbral {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .etiqueta-umbral {
@@ -1113,10 +1156,140 @@ dd {
   max-width: 30rem;
 }
 
+/* D31: el selector del widget «Última lectura por tipo» con estilo propio
+   (antes era un <select> nativo sin tratar). */
+.selector-widget {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  min-height: 2rem;
+  padding: 0 var(--espacio-6) 0 var(--espacio-3);
+  border: 1px solid var(--borde-input);
+  border-radius: 6px;
+  color: var(--texto);
+  background-color: var(--superficie);
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%235b6660' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--espacio-3) center;
+  cursor: pointer;
+}
+
+.selector-widget:hover {
+  border-color: var(--marca);
+}
+
+/* D31: filas de la tarjeta de sensor con la hora arriba a la derecha. */
+.fila-datos-sensor {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--espacio-3);
+  width: 100%;
+}
+
+/* D31: icono del tipo de cultivo (SVG en línea, verde botánico). */
+.icono-cultivo {
+  flex: none;
+  color: var(--marca);
+}
+
+.fila-nombre-cultivo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  min-width: 0;
+}
+
+/* D31: chips de estado del topbar (punto verde de sensores, ámbar de alertas
+   — el ámbar sigue reservado a alertas activas, D20). */
+.chip-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--texto-tenue);
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  padding: 0.25rem var(--espacio-3);
+  background: var(--superficie);
+}
+
+.punto-estado {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--borde-input);
+}
+
+.punto-estado.activo {
+  background: var(--marca-hover);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--marca) 18%, transparent);
+}
+
+.chip-estado.chip-alertas {
+  color: var(--senal);
+  border-color: var(--senal);
+  background: var(--senal-suave);
+}
+
+/* D31: conmutador de rango (Alertas) en móvil. */
+.conmutador-rango {
+  min-width: 9.5rem;
+  justify-content: center;
+}
+
+/* D31: visibilidad por punto de ruptura — el conmutador existe solo en
+   móvil y los 3 botones de rango solo en escritorio. */
+.solo-movil {
+  display: none;
+}
+
+@media (max-width: 48rem) {
+  .solo-movil {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--espacio-2);
+  }
+
+  .solo-escritorio {
+    display: none;
+  }
+
+  .acciones-topbar {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+/* D31: en móvil los KPI son cuadrados, 2 por fila (2×2). */
+@media (max-width: 34rem) {
+  .fila-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tarjeta-kpi {
+    aspect-ratio: 1;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .kpi-cabecera {
+    flex-direction: column;
+    gap: var(--espacio-1);
+  }
+}
+
+/* D31: separación entre el botón «Guardar cambios» y el mensaje inferior. */
+.perfil-cuenta form > button[type='submit'] {
+  margin-bottom: var(--espacio-5);
+}
+
 .aviso-exito {
   color: var(--marca);
   font-weight: 700;
-  margin: var(--espacio-3) 0 0;
+  margin: 0 0 var(--espacio-4);
 }
 
 /* En móvil la barra lateral vuelve a ser una franja horizontal (no sticky) */

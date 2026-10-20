@@ -15,6 +15,8 @@ interface Props {
   enSensores: boolean
   enCuenta: boolean
   email: string
+  /** Nombre de usuario opcional (D32); sin él se muestra el email antes de la «@». */
+  nombre?: string
   onCultivos: () => void
   onAlertas: () => void
   onSensores: () => void
@@ -62,7 +64,10 @@ const iconoCuenta = (
   </svg>
 )
 
-export default function BarraLateral({ enCultivos, enAlertas, enSensores, enCuenta, email, onCultivos, onAlertas, onSensores, onCuenta }: Props) {
+export default function BarraLateral({ enCultivos, enAlertas, enSensores, enCuenta, email, nombre, onCultivos, onAlertas, onSensores, onCuenta }: Props) {
+  // D32: se muestra el nombre de usuario si existe; si no, el texto del email
+  // antes de la «@» (el email completo queda en el tooltip del botón).
+  const nombreVisible = nombre?.trim() || email.split('@')[0]
   return (
     <aside className="barra-lateral">
       <h1>
@@ -97,8 +102,8 @@ export default function BarraLateral({ enCultivos, enAlertas, enSensores, enCuen
           onClick={onCuenta}
         >
           {iconoCuenta}
-          <span className="etiqueta" data-testid="sesion-usuario">
-            {email}
+          <span className="etiqueta" data-testid="sesion-usuario" title={email}>
+            {nombreVisible}
           </span>
         </button>
         <button type="button" data-testid="cerrar-sesion" onClick={() => void cerrarSesion()}>

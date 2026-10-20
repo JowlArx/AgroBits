@@ -61,14 +61,14 @@ export default function PanelLateral() {
                 <li key={alerta.id} className="item-panel item-alerta">
                   <div className="item-cabecera">
                     <strong>{ETIQUETAS_MEDICION[alerta.tipo]}</strong>
-                    <span className="etiqueta alerta-activa">Activa</span>
+                    {/* D31: la hora queda aislada en la esquina superior derecha. */}
+                    <time className="item-hora" dateTime={alerta.creadaEn}>
+                      {horaLegible(alerta.creadaEn)}
+                    </time>
                   </div>
                   <p className="item-detalles">
                     {cultivo ? cultivo.nombre : 'Cultivo eliminado'} · {alerta.valor}
                   </p>
-                  <time className="item-hora" dateTime={alerta.creadaEn}>
-                    {horaLegible(alerta.creadaEn)}
-                  </time>
                 </li>
               )
             })}
@@ -86,13 +86,14 @@ export default function PanelLateral() {
               <li key={clave} className="item-panel">
                 <div className="item-cabecera">
                   <strong>{ETIQUETAS_MEDICION[medicion.tipo]}</strong>
+                  {/* D31: la hora queda aislada en la esquina superior derecha. */}
+                  <time className="item-hora" dateTime={medicion.medidaEn}>
+                    {horaLegible(medicion.medidaEn)}
+                  </time>
                 </div>
                 <p className="item-detalles">
                   {medicion.valor} {medicion.unidad}
                 </p>
-                <time className="item-hora" dateTime={medicion.medidaEn}>
-                  {horaLegible(medicion.medidaEn)}
-                </time>
               </li>
             ))}
           </ul>

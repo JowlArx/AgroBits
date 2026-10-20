@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { alertasOrdenadas, obtenerAlertas, suscribirAlertas, type Alerta } from '../data/storeAlertas'
 import { obtenerCultivo } from '../data/storeCultivos'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
@@ -51,6 +51,28 @@ function enRango(alerta: Alerta, desde: Date, hasta: Date): boolean {
   return creado >= desde && creado <= hasta
 }
 
+/** Rangos de preselección (D31): en móvil se ciclan con un único botón. */
+const RANGOS_PRESELECCION = ['5min', '10min', '15min'] as const
+type TipoPreseleccion = (typeof RANGOS_PRESELECCION)[number]
+
+const ETIQUETAS_RANGO: Record<TipoPreseleccion, string> = {
+  '5min': 'Últimos 5 min',
+  '10min': 'Últimos 10 min',
+  '15min': 'Últimos 15 min',
+}
+
+/** Inicio y fin del día de hoy (para el rango personalizado). */
+function inicioDeHoy(): Date {
+  const ahora = new Date()
+  return new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate())
+}
+
+function finDeHoy(): Date {
+  const fin = inicioDeHoy()
+  fin.setHours(23, 59, 59, 999)
+  return fin
+}
+
 interface RangoTiempo {
   tipo: '5min' | '10min' | '15min' | 'personalizado'
   desde?: Date
@@ -81,31 +103,42 @@ function aplicarFiltroTiempo(
 
 export default function Alertas() {
   // Estado del rango de tiempo: '5min' | '10min' | '15min' (por defecto) o 'personalizado'.
+  // El cambio de rango se gestiona en `elegirRango` (sin efectos): los
+  // preseleccionados limpian las fechas y «personalizar» propone hoy entero.
   const [rango, setRango] = useState<RangoTiempo>({ tipo: '15min' })
   const [desde, setDesde] = useState<Date | undefined>(undefined)
   const [hasta, setHasta] = useState<Date | undefined>(undefined)
 
-  // Cuando cambia el tipo de rango, restablecer los Date personales.
-  useEffect(() => {
-    if (rango.tipo === '15min' || rango.tipo === '5min' || rango.tipo === '10min') {
+  function elegirRango(nuevo: RangoTiempo): void {
+    setRango(nuevo)
+    if (nuevo.tipo === 'personalizado') {
+      setDesde(inicioDeHoy())
+      setHasta(finDeHoy())
+    } else {
       setDesde(undefined)
       setHasta(undefined)
-    } else {
-      // Por defecto, muestra todo el día de hoy.
-      const ahora = new Date()
-      const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate())
-      const finHoy = new Date(inicioHoy)
-      finHoy.setHours(23, 59, 59, 999)
-      setDesde(inicioHoy)
-      setHasta(finHoy)
     }
-  }, [rango.tipo])
+  }
 
   // Suscripción al store de alertas.
   useSyncExternalStore(suscribirAlertas, obtenerAlertas)
 
-  // Aplica el filtro de tiempo y ordena.
-  const alertas = useMemo(() => aplicarFiltroTiempo(alertasOrdenadas(), rango), [rango])
+  // Aplica el filtro de tiempo y ordena. SIN memorización: `aplicarFiltroTiempo`
+  // depende de `Date.now()` y del contenido del store; un `useMemo([rango])`
+  // congelaba la lista calculada en el mount y ocultaba para siempre (hasta
+  // cambiar de rango) las alertas que llegaban después — p. ej. la de la
+  // primera lectura, que el tick recarga ~150 ms tras abrir la página.
+  const alertas = aplicarFiltroTiempo(alertasOrdenadas(), rango)
+
+  // D31: el botón conmutador de móvil cicla 5 → 10 → 15 min (y desde
+  // personalizado vuelve a 5 min). En escritorio siguen los 3 botones.
+  const tipoPreseleccion: TipoPreseleccion = RANGOS_PRESELECCION.includes(rango.tipo as TipoPreseleccion)
+    ? (rango.tipo as TipoPreseleccion)
+    : '5min'
+  function ciclarRango(): void {
+    const indice = RANGOS_PRESELECCION.indexOf(tipoPreseleccion)
+    elegirRango({ tipo: RANGOS_PRESELECCION[(indice + 1) % RANGOS_PRESELECCION.length] })
+  }
 
   // --- UI ---
 
@@ -116,30 +149,38 @@ export default function Alertas() {
       {/* --- Controles de rango de tiempo --- */}
       <div className="fila-entre" style={{ gap: '0.5rem', alignItems: 'center' }}>
         <button
+          data-testid="rango-ciclo"
+          className="solo-movil conmutador-rango"
+          aria-label={`Rango de tiempo: ${ETIQUETAS_RANGO[tipoPreseleccion]}. Pulsa para cambiar`}
+          onClick={ciclarRango}
+        >
+          {ETIQUETAS_RANGO[tipoPreseleccion]}
+        </button>
+        <button
           data-testid="rango-5min"
-          className={rango.tipo === '5min' ? 'btn-primario' : 'btn-secundario'}
-          onClick={() => setRango({ tipo: '5min' })}
+          className={`solo-escritorio ${rango.tipo === '5min' ? 'btn-primario' : 'btn-secundario'}`}
+          onClick={() => elegirRango({ tipo: '5min' })}
         >
           Últimos 5 min
         </button>
         <button
           data-testid="rango-10min"
-          className={rango.tipo === '10min' ? 'btn-primario' : 'btn-secundario'}
-          onClick={() => setRango({ tipo: '10min' })}
+          className={`solo-escritorio ${rango.tipo === '10min' ? 'btn-primario' : 'btn-secundario'}`}
+          onClick={() => elegirRango({ tipo: '10min' })}
         >
           Últimos 10 min
         </button>
         <button
           data-testid="rango-15min"
-          className={rango.tipo === '15min' ? 'btn-primario' : 'btn-secundario'}
-          onClick={() => setRango({ tipo: '15min' })}
+          className={`solo-escritorio ${rango.tipo === '15min' ? 'btn-primario' : 'btn-secundario'}`}
+          onClick={() => elegirRango({ tipo: '15min' })}
         >
           Últimos 15 min
         </button>
         <button
           data-testid="rango-personalizado"
           className={rango.tipo === 'personalizado' ? 'btn-primario' : 'btn-secundario'}
-          onClick={() => setRango({ tipo: 'personalizado' })}
+          onClick={() => elegirRango({ tipo: 'personalizado' })}
         >
           Personalizar
         </button>

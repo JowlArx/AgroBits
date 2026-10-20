@@ -27,7 +27,7 @@ test('R-03 AC1: la sesión persiste al recargar y cerrar exige acceso de nuevo',
   await iniciarSesion(page, cuentaA)
 
   await page.reload()
-  await expect(page.getByTestId('sesion-usuario')).toContainText(cuentaA.correo) // se mantiene
+  await expect(page.getByTestId('sesion-usuario')).toContainText(cuentaA.correo.split('@')[0]) // D32: nombre visible = parte local del email
 
   await cerrarSesion(page)
   await expect(page.getByTestId('nav-cultivos')).toHaveCount(0) // contenido protegido oculto

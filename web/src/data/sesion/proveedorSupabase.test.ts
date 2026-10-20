@@ -8,7 +8,10 @@ import { ProveedorSupabase, mensajeAuth } from './proveedorSupabase'
 // `identities: []` que da el mensaje de R-01 AC2).
 
 interface Respuesta {
-  data: { user: { email: string; identities: unknown[] } | null; session: unknown }
+  data: {
+    user: { email: string; identities: unknown[]; user_metadata?: Record<string, unknown> } | null
+    session: unknown
+  }
   error: AuthError | null
 }
 
@@ -78,6 +81,50 @@ describe('ProveedorSupabase.registrarse', () => {
     })
   })
 
+  it('D32: con nombre de usuario lo añade a la metadata del signup', async () => {
+    let argumentos: Record<string, unknown> | undefined
+    const p = new ProveedorSupabase(
+      clienteFalso(
+        {
+          data: {
+            user: { email: 'nueva@example.com', identities: [{ provider: 'email' }] },
+            session: { access_token: 'tok' },
+          },
+          error: null,
+        },
+        (a) => {
+          argumentos = a
+        },
+      ),
+    )
+
+    await p.registrarse('nueva@example.com', 'secreta1', { ...PERFIL_PRUEBA, nombreUsuario: 'Joel' })
+
+    const metadata = (argumentos?.options as { data: Record<string, unknown> }).data
+    expect(metadata.nombre_usuario).toBe('Joel')
+  })
+
+  it('D32: la sesión devuelta por el signup recoge el nombre de la metadata', async () => {
+    const p = new ProveedorSupabase(
+      clienteFalso({
+        data: {
+          user: {
+            email: 'nueva@example.com',
+            identities: [{ provider: 'email' }],
+            user_metadata: { nombre_usuario: ' Joel ' },
+          },
+          session: { access_token: 'tok' },
+        },
+        error: null,
+      }),
+    )
+
+    const resultado = await p.registrarse('nueva@example.com', 'secreta1', PERFIL_PRUEBA)
+
+    expect(resultado.ok).toBe(true)
+    if (resultado.ok) expect(resultado.valor.usuario.nombreUsuario).toBe('Joel')
+  })
+
   it('sin sesión e identidades presentes, informa la confirmación de email', async () => {
     const p = new ProveedorSupabase(
       clienteFalso({
@@ -140,6 +187,27 @@ describe('ProveedorSupabase.iniciarSesion', () => {
 
     expect(resultado.ok).toBe(true)
     if (resultado.ok) expect(resultado.valor.usuario.email).toBe('persona@example.com')
+  })
+
+  it('D32: el login recoge el nombre de usuario de la metadata', async () => {
+    const p = new ProveedorSupabase(
+      clienteFalso({
+        data: {
+          user: {
+            email: 'persona@example.com',
+            identities: [{ provider: 'email' }],
+            user_metadata: { nombre_usuario: 'Pepe' },
+          },
+          session: { access_token: 'tok' },
+        },
+        error: null,
+      }),
+    )
+
+    const resultado = await p.iniciarSesion('persona@example.com', 'secreta1')
+
+    expect(resultado.ok).toBe(true)
+    if (resultado.ok) expect(resultado.valor.usuario.nombreUsuario).toBe('Pepe')
   })
 
   it('traduce las credenciales incorrectas del servidor', async () => {

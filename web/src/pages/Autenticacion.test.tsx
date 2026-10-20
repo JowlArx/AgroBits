@@ -74,7 +74,8 @@ describe('acceso real (T-22, Supabase Auth vía doble de contrato)', () => {
     enviarAcceso('persona@ejemplo.com', 'secreta1')
 
     expect(await screen.findByText('Mis cultivos')).toBeTruthy()
-    expect(screen.getByTestId('sesion-usuario').textContent).toBe('persona@ejemplo.com')
+    // D32: sin nombre de usuario se muestra el email antes de la «@».
+    expect(screen.getByTestId('sesion-usuario').textContent).toBe('persona')
     expect(screen.getByTestId('nav-alertas')).toBeTruthy()
   })
 
@@ -84,7 +85,8 @@ describe('acceso real (T-22, Supabase Auth vía doble de contrato)', () => {
     await enviarRegistro({ email: 'nueva@ejemplo.com', clave: 'secreta1' })
 
     expect(await screen.findByText('Mis cultivos')).toBeTruthy()
-    expect(screen.getByTestId('sesion-usuario').textContent).toBe('nueva@ejemplo.com')
+    // D32: sin nombre de usuario se muestra el email antes de la «@».
+    expect(screen.getByTestId('sesion-usuario').textContent).toBe('nueva')
   })
 
   it('registro con email ya registrado muestra el error (R-01 AC2)', async () => {
