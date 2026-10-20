@@ -5,54 +5,8 @@
    verde botánico como marca y ámbar-señal reservado en exclusiva a las
    alertas: lo único con voz alta en toda la interfaz.
    Temas claro/oscuro con tokens; contraste verificado (WCAG AA).
+   Los tokens viven en `tokens.css` (compartidos con la landing, D35).
    ========================================================================== */
-
-:root {
-  color-scheme: light dark;
-
-  /* Familias tipográficas */
-  --fuente-titulo: 'Fraunces', Georgia, 'Times New Roman', serif;
-  --fuente-texto: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
-
-  /* Escala de espacio (base 8px) */
-  --espacio-1: 0.25rem;
-  --espacio-2: 0.5rem;
-  --espacio-3: 0.75rem;
-  --espacio-4: 1rem;
-  --espacio-5: 1.5rem;
-  --espacio-6: 2rem;
-
-  /* Tema claro */
-  --fondo: #f6f8f4;
-  --superficie: #ffffff;
-  --texto: #12211a;
-  --texto-tenue: #5b6660;
-  --marca: #1e5b3d;
-  --marca-hover: #2e7d57;
-  --sobre-marca: #ffffff;
-  --senal: #c2410c;
-  --senal-suave: #fdf0e7;
-  --borde: #d8dfd6;
-  --borde-input: #78857d;
-  --foco: #1e5b3d;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --fondo: #0e1712;
-    --superficie: #16211b;
-    --texto: #e7ede7;
-    --texto-tenue: #9daa9f;
-    --marca: #74c894;
-    --marca-hover: #93d8ad;
-    --sobre-marca: #0e1712;
-    --senal: #f97316;
-    --senal-suave: #2c1a0e;
-    --borde: #2a3830;
-    --borde-input: #4a5a50;
-    --foco: #74c894;
-  }
-}
 
 * {
   box-sizing: border-box;
@@ -63,7 +17,7 @@ body {
   background: var(--fondo);
   color: var(--texto);
   font-family: var(--fuente-texto);
-  font-size: 1rem;
+  font-size: var(--t-md);
   line-height: 1.55;
 }
 
@@ -75,21 +29,84 @@ h3 {
   line-height: 1.2;
   color: var(--texto);
   margin: 0 0 var(--espacio-3);
+  /* D35: los títulos equilibrados (sin rivers ni líneas huérfanas). */
+  text-wrap: balance;
 }
 
 h1 {
-  font-size: 1.5rem;
+  font-size: var(--t-xl);
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 
 h2 {
-  font-size: 1.35rem;
+  font-size: var(--t-lg);
 }
 
 h3 {
-  font-size: 1.05rem;
+  font-size: var(--t-md);
   margin-top: var(--espacio-5);
+}
+
+/* D35 — Micro-movimiento: un solo patrón (exponencial suave) y solo donde
+   responde a una acción. `prefers-reduced-motion` lo desactiva abajo. */
+button,
+a,
+summary {
+  transition:
+    background-color var(--transicion),
+    border-color var(--transicion),
+    color var(--transicion),
+    transform var(--transicion);
+}
+
+.boton-seccion-compacto:active {
+  transform: scale(0.94);
+}
+
+.menu-usuario {
+  animation: aparecer-menu var(--transicion) both;
+}
+
+@keyframes aparecer-menu {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* D35 — Superficies del navegador: la selección de texto y las barras de
+   scroll llevan los tokens del sistema (si no, delatan una página montada
+   por partes). */
+::selection {
+  background: color-mix(in srgb, var(--marca) 22%, transparent);
+  color: var(--texto);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--borde-input) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--borde-input);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .app {
@@ -312,7 +329,7 @@ form small {
 
 fieldset {
   border: 1px solid var(--borde);
-  border-radius: 10px;
+  border-radius: var(--radio);
   padding: var(--espacio-3) var(--espacio-4) var(--espacio-2);
   margin: 0 0 var(--espacio-4);
 }
@@ -397,7 +414,7 @@ legend {
   height: 100%;
   background: var(--superficie);
   border: 1px solid var(--borde);
-  border-radius: 10px;
+  border-radius: var(--radio);
   padding: var(--espacio-4);
 }
 
@@ -414,9 +431,115 @@ legend {
 /* Estados vacíos: invitación a actuar, no decoración */
 .estado-vacio {
   border: 1px dashed var(--borde-input);
-  border-radius: 10px;
+  border-radius: var(--radio);
   padding: var(--espacio-4);
   color: var(--texto-tenue);
+}
+
+/* D35: resumen de una línea en la tarjeta de cultivo + umbrales bajo demanda */
+.resumen-cultivo {
+  margin: var(--espacio-1) 0 0;
+  font-size: 0.85rem;
+  color: var(--texto-tenue);
+}
+
+.umbrales-cultivo {
+  margin-top: var(--espacio-3);
+}
+
+.umbrales-cultivo summary {
+  cursor: pointer;
+  color: var(--marca);
+  font-size: 0.9rem;
+  font-weight: 700;
+  min-height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.umbrales-cultivo summary:hover {
+  text-decoration: underline;
+}
+
+.umbrales-cultivo[open] summary {
+  margin-bottom: var(--espacio-2);
+}
+
+/* D35: confirmación en línea de acciones destructivas */
+.confirmacion-en-linea {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  flex-wrap: wrap;
+}
+
+.confirmacion-pregunta {
+  font-size: 0.85rem;
+  color: var(--texto-tenue);
+}
+
+/* D35: resumen en texto bajo el gráfico (la cifra no depende del puntero). */
+.resumen-grafico {
+  margin: var(--espacio-3) 0 0;
+  font-size: 0.9rem;
+  color: var(--texto-tenue);
+}
+
+.resumen-grafico strong {
+  color: var(--texto);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Leyenda del gráfico: se viste con los tokens del panel. */
+.recharts-legend-item-text {
+  color: var(--texto-tenue) !important;
+  font-size: 0.8rem;
+}
+
+/* Panel lateral (D35): cabecera con contador y enlace a la vista completa. */
+.panel-cabecera {
+  gap: var(--espacio-2);
+  margin-bottom: var(--espacio-3);
+}
+
+.panel-cabecera h2 {
+  margin: 0;
+}
+
+.contador-panel {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 var(--espacio-2);
+  border-radius: 999px;
+  background: var(--senal-suave);
+  color: var(--senal);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.panel-nota {
+  margin: var(--espacio-2) 0 0;
+  font-size: 0.8rem;
+  color: var(--texto-tenue);
+}
+
+.enlace-panel {
+  margin-top: var(--espacio-2);
+  padding: 0;
+  min-height: 2rem;
+  border: none;
+  background: none;
+  color: var(--marca);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.enlace-panel:hover {
+  color: var(--marca-hover);
 }
 
 /* Tablas ------------------------------------------------------------------ */
@@ -463,14 +586,29 @@ legend {
   overflow-wrap: anywhere;
 }
 
-/* Avisos informativos (referencia orientativa del catálogo, notas) -------- */
-
+/* Avisos informativos (referencia orientativa del catálogo, notas) --------
+   D35: sin franja de color lateral (es el tic más reconocible de una UI
+   generada); se distinguen con una superficie propia y un punto de marca. */
 .aviso {
+  position: relative;
   font-size: 0.9rem;
   color: var(--texto-tenue);
-  border-left: 3px solid var(--marca);
-  padding: var(--espacio-2) var(--espacio-3);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-sm);
+  padding: var(--espacio-3) var(--espacio-3) var(--espacio-3) var(--espacio-4);
   margin: 0 0 var(--espacio-4);
+}
+
+.aviso::before {
+  content: '';
+  position: absolute;
+  left: var(--espacio-3);
+  top: calc(var(--espacio-3) + 0.45em);
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--marca);
 }
 
 /* Detalle en dos columnas (dt/dd) de las alertas -------------------------- */
@@ -514,12 +652,116 @@ dd {
   border-color: var(--borde);
 }
 
+/* Vista de alertas (D35) --------------------------------------------------- */
+
+/* Contador del encabezado: el ámbar queda reservado a las alertas activas. */
+.contador-alertas {
+  margin: 0;
+  color: var(--texto-tenue);
+  font-size: 0.9rem;
+}
+
+.contador-activas {
+  color: var(--senal);
+}
+
+/* Controles de rango: en escritorio, botones sueltos; en móvil, control
+   segmentado (se ve el rango activo de un vistazo, sin recordar el estado). */
+.controles-rango {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--espacio-3);
+}
+
+.segmentado-rangos {
+  display: flex;
+  gap: var(--espacio-2);
+}
+
+.rango-fechas {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--espacio-3);
+}
+
+.rango-fechas label {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  margin-bottom: 0;
+}
+
+/* Tarjeta de alerta: dos líneas — tipo + valor, y cultivo + hora. */
+.lista-alertas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--espacio-3);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+}
+
+.tarjeta-alerta {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: var(--espacio-3) var(--espacio-4);
+}
+
+.tarjeta-alerta.alerta-activa {
+  border-color: color-mix(in srgb, var(--senal) 45%, var(--borde));
+}
+
+.fila-alerta {
+  display: flex;
+  align-items: baseline;
+  gap: var(--espacio-2);
+  flex-wrap: wrap;
+}
+
+.alerta-tipo {
+  font-family: var(--fuente-titulo);
+  font-size: 1.05rem;
+}
+
+.alerta-valor {
+  margin: var(--espacio-1) 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--texto);
+}
+
+.fila-alerta .etiqueta {
+  margin-left: auto;
+}
+
+.alerta-contexto {
+  margin: var(--espacio-1) 0 0;
+  color: var(--texto-tenue);
+  font-size: 0.9rem;
+}
+
+.alerta-cierre {
+  margin: var(--espacio-1) 0 0;
+  color: var(--texto-tenue);
+  font-size: 0.85rem;
+}
+
+.descargar-log {
+  margin-top: var(--espacio-4);
+}
+
 /* Errores (role="alert") -------------------------------------------------- */
 
 [role='alert'] {
   background: var(--senal-suave);
   border: 1px solid var(--senal);
-  border-radius: 8px;
+  border-radius: var(--radio-sm);
   padding: var(--espacio-2) var(--espacio-3);
   margin: 0 0 var(--espacio-4);
   color: var(--texto);
@@ -537,7 +779,7 @@ dd {
   margin: var(--espacio-6) auto 0;
   background: var(--superficie);
   border: 1px solid var(--borde);
-  border-radius: 10px;
+  border-radius: var(--radio);
   padding: var(--espacio-5);
 }
 
@@ -555,11 +797,9 @@ dd {
   overflow: hidden;
 }
 
-/* D33 — cabecera del panel: navegación y cuenta arriba (sustituye a la
+/* D33/D35 — cabecera del panel: navegación y cuenta arriba (sustituye a la
    barra lateral, que quedaba demasiado vacía). */
 .cabecera-panel {
-  display: flex;
-  flex-direction: column;
   border-bottom: 1px solid var(--borde);
   background: var(--superficie);
 }
@@ -570,7 +810,6 @@ dd {
   flex-wrap: wrap;
   gap: var(--espacio-3);
   padding: var(--espacio-2) var(--espacio-5);
-  border-bottom: 1px solid var(--borde);
 }
 
 .marca-panel {
@@ -665,7 +904,7 @@ dd {
   gap: 2px;
   background: var(--superficie);
   border: 1px solid var(--borde);
-  border-radius: 10px;
+  border-radius: var(--radio);
   padding: var(--espacio-1);
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
 }
@@ -723,18 +962,8 @@ dd {
   color: var(--marca);
 }
 
-/* Texto solo para lectores de pantalla (WCAG 2.4.6). */
-.visualmente-oculto {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
-}
+/* Texto solo para lectores de pantalla (WCAG 2.4.6): usa la utilidad
+   `.visually-hidden` de más arriba. */
 
 /* D34 — Sensores del cultivo con la acción de desasociar. */
 .lista-sensores-cultivo {
@@ -753,7 +982,7 @@ dd {
   gap: var(--espacio-3);
   padding: var(--espacio-2) var(--espacio-3);
   border: 1px solid var(--borde);
-  border-radius: 10px;
+  border-radius: var(--radio);
   background: var(--superficie);
 }
 
@@ -783,20 +1012,23 @@ dd {
    rápida a la derecha (sustituye a las migas y a la etiqueta técnica). */
 .titulo-topbar {
   min-width: 0;
+  /* D35: el título de la vista se va a la derecha de la fila (junto a los
+     chips), sin competir con los títulos de sección del contenido. */
+  margin-left: auto;
 }
 
 .titulo-topbar h2 {
   margin: 0;
+  font-size: 1.25rem;
 }
 
 .subtitulo-topbar {
-  margin: 0.15rem 0 0;
-  font-size: 0.85rem;
+  margin: 0.1rem 0 0;
+  font-size: 0.8rem;
   color: var(--texto-tenue);
 }
 
 .acciones-topbar {
-  margin-left: auto;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -837,7 +1069,7 @@ dd {
 .tarjeta-kpi {
   background: var(--superficie);
   border: 1px solid var(--borde);
-  border-radius: 10px;
+  border-radius: var(--radio);
   padding: var(--espacio-3);
   display: flex;
   flex-direction: column;
@@ -909,7 +1141,7 @@ dd {
     color-mix(in srgb, var(--marca) 4%, var(--superficie)) 100%
   );
   border: 1px solid var(--borde);
-  border-radius: 10px;
+  border-radius: var(--radio);
   padding: var(--espacio-4);
   min-width: 0;
   display: flex;
@@ -925,9 +1157,14 @@ dd {
   margin-bottom: var(--espacio-3);
 }
 
-/* D33: el título va a la derecha, a la altura de las pestañas. */
+/* D33/D35: el título del widget va a la derecha de las pestañas. */
 .cabecera-widget h3 {
   margin: 0 0 0 auto;
+  order: 2;
+}
+
+.cabecera-widget .pestanas-widget {
+  order: 1;
 }
 
 .pestanas-widget {
@@ -972,7 +1209,8 @@ dd {
 
 .barras-tipo li {
   display: grid;
-  grid-template-columns: 13rem minmax(0, 1fr) 6.5rem;
+  /* D35: la etiqueta cede espacio y el valor no se corta. */
+  grid-template-columns: minmax(0, auto) minmax(2rem, 1fr) auto;
   align-items: center;
   gap: var(--espacio-3);
   font-size: 0.9rem;
@@ -980,6 +1218,9 @@ dd {
 
 .barra-etiqueta {
   color: var(--texto-tenue);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .barra-ruta {
@@ -1034,7 +1275,7 @@ dd {
 .item-panel {
   background: var(--superficie);
   border: 1px solid var(--borde);
-  border-radius: 8px;
+  border-radius: var(--radio-sm);
   padding: var(--espacio-2) var(--espacio-3);
   font-size: 0.9rem;
   min-width: 0;
@@ -1081,10 +1322,27 @@ dd {
 
 @media (max-width: 48rem) {
   .fila-nav,
-  .topbar,
   .cuerpo {
     padding-left: var(--espacio-4);
     padding-right: var(--espacio-4);
+  }
+
+  /* D35: en móvil el título va junto a la marca y los chips a la derecha. */
+  .fila-nav .titulo-topbar {
+    margin-left: var(--espacio-3);
+  }
+
+  .fila-nav .acciones-topbar {
+    margin-left: auto;
+  }
+
+  .titulo-topbar h2 {
+    font-size: 1.15rem;
+  }
+
+  /* El resumen se va: los KPI ya dicen cuántos cultivos y sensores hay. */
+  .subtitulo-topbar {
+    display: none;
   }
 
   /* D34: la barra inferior flota sobre el contenido: se le deja sitio. */
@@ -1096,6 +1354,106 @@ dd {
   .menu-usuario {
     top: auto;
     bottom: calc(100% + 0.5rem);
+  }
+
+  /* D35: en el widget, el título arriba a la izquierda y las pestañas en una
+     sola fila con scroll horizontal (antes partían en dos y el título caía
+     en una tercera fila). */
+  .cabecera-widget {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--espacio-2);
+  }
+
+  .cabecera-widget h3 {
+    margin: 0 0 var(--espacio-1);
+    order: 0;
+  }
+
+  .cabecera-widget .pestanas-widget {
+    order: 1;
+  }
+
+  .pestanas-widget {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .pestanas-widget button {
+    white-space: nowrap;
+  }
+
+  /* D35: la cabecera móvil cabe en una sola fila (marca + título + chip). */
+  .marca-panel {
+    font-size: 1rem;
+  }
+
+  .fila-nav .titulo-topbar h2 {
+    font-size: 1.1rem;
+  }
+
+  .chip-estado {
+    font-size: 0.75rem;
+    padding: 0.2rem var(--espacio-2);
+  }
+
+  /* D35: el control de rango pasa a segmentado y ocupa el ancho. */
+  .controles-rango {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .segmentado-rangos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--espacio-1);
+  }
+
+  .segmentado-rangos button {
+    width: 100%;
+    padding: 0 var(--espacio-2);
+  }
+
+  .rango-fechas {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--espacio-2);
+  }
+
+  .rango-fechas input {
+    width: 100%;
+  }
+
+  /* D35: en una tarjeta, la acción principal ocupa el ancho y las
+     secundarias comparten la fila de abajo (antes se partían en dos filas). */
+  .acciones-tarjeta {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--espacio-2);
+  }
+
+  .acciones-tarjeta > *:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .acciones-tarjeta .confirmacion-en-linea {
+    grid-column: 1 / -1;
+  }
+
+  /* D35: «Guardar» queda pegado al fondo, por encima de la barra inferior,
+     para no tener que llegar al final del formulario con el dedo. */
+  .acciones-formulario {
+    position: sticky;
+    bottom: 5.25rem;
+    z-index: 3;
+    background: var(--fondo);
+    padding: var(--espacio-3) 0;
+    margin-top: var(--espacio-2);
+  }
+
+  .acciones-formulario .btn-primario {
+    flex: 1;
   }
 }
 
@@ -1177,7 +1535,7 @@ dd {
 .tarjeta-sensor {
   background: var(--superficie);
   border: 1px solid var(--borde);
-  border-radius: 10px;
+  border-radius: var(--radio);
   padding: var(--espacio-4);
   display: flex;
   align-items: center;
@@ -1211,9 +1569,9 @@ dd {
 }
 
 .muestra-color {
-  width: 1.5rem;
-  height: 1.5rem;
-  min-height: 1.5rem;
+  width: 2rem;
+  height: 2rem;
+  min-height: 2rem;
   padding: 0;
   border-radius: 999px;
   border: 2px solid var(--borde);
@@ -1225,11 +1583,18 @@ dd {
   box-shadow: 0 0 0 2px var(--fondo), 0 0 0 4px var(--texto);
 }
 
+/* D35: el color activo se nombra junto a las muestras. */
+.nombre-color-sensor {
+  align-self: center;
+  font-size: 0.85rem;
+  color: var(--texto-tenue);
+}
+
 .detalle-sensor {
   margin-top: var(--espacio-5);
   background: var(--superficie);
   border: 1px solid var(--borde);
-  border-radius: 10px;
+  border-radius: var(--radio);
   padding: var(--espacio-4);
 }
 
@@ -1246,6 +1611,26 @@ dd {
 /* Vista de cuenta */
 .perfil-cuenta {
   max-width: 30rem;
+}
+
+/* D35: campo que se muestra, no se edita. */
+.campo-solo-lectura {
+  margin-bottom: var(--espacio-3);
+}
+
+.etiqueta-campo {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--texto-tenue);
+  margin-bottom: 0.15rem;
+}
+
+.campo-solo-lectura p {
+  margin: 0;
+  padding: 0.55rem var(--espacio-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-sm);
+  background: var(--fondo);
 }
 
 /* D31: el selector del widget «Última lectura por tipo» con estilo propio

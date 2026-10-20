@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   AVISO_CATALOGO,
   CATALOGO_CULTIVOS,
@@ -51,6 +51,15 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
   const [guardando, setGuardando] = useState(false)
 
   const esPersonalizado = !CATALOGO_CULTIVOS.some((e) => e.tipoCultivo === tipoCultivo)
+  // D35: los campos con error se marcan y reciben el foco al enviar.
+  const conError = (campo: string): boolean => errores.some((e) => e.campo === campo)
+
+  useEffect(() => {
+    if (errores.length === 0) return
+    const primero = errores[0].campo
+    const id = primero.startsWith('umbrales.') ? `min-${primero.slice('umbrales.'.length)}` : primero
+    document.getElementById(`campo-${id}`)?.focus()
+  }, [errores])
 
   function cambiarTipo(valor: string): void {
     if (valor === TIPO_PERSONALIZADO) {
@@ -102,12 +111,14 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
         </div>
       )}
 
-      <form onSubmit={guardar}>
+      <form onSubmit={guardar} noValidate>
         <label>
           Nombre del cultivo
           <input
             type="text"
+            id="campo-nombre"
             name="nombre"
+            aria-invalid={conError('nombre') || undefined}
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
             placeholder="Ej.: Tomates del balcón"
@@ -116,7 +127,13 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
 
         <label>
           Tipo de cultivo
-          <select name="tipoCultivo" value={esPersonalizado ? TIPO_PERSONALIZADO : tipoCultivo} onChange={(e) => cambiarTipo(e.target.value)}>
+          <select
+            id="campo-tipoCultivo"
+            name="tipoCultivo"
+            aria-invalid={conError('tipoCultivo') || undefined}
+            value={esPersonalizado ? TIPO_PERSONALIZADO : tipoCultivo}
+            onChange={(e) => cambiarTipo(e.target.value)}
+          >
             {CATALOGO_CULTIVOS.map((e) => (
               <option key={e.tipoCultivo} value={e.tipoCultivo}>
                 {e.tipoCultivo}
@@ -147,8 +164,11 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
                 Mínimo
                 <input
                   type="number"
+                  id={`campo-min-${tipo}`}
                   name={`min-${tipo}`}
                   data-testid={`min-${tipo}`}
+                  aria-label={`Mínimo de ${ETIQUETAS_MEDICION[tipo].toLowerCase()}`}
+                  aria-invalid={conError(`umbrales.${tipo}`) || undefined}
                   value={cadenas[tipo].min}
                   onChange={(e) => cambiarUmbral(tipo, 'min', e.target.value)}
                 />
@@ -157,8 +177,11 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
                 Máximo
                 <input
                   type="number"
+                  id={`campo-max-${tipo}`}
                   name={`max-${tipo}`}
                   data-testid={`max-${tipo}`}
+                  aria-label={`Máximo de ${ETIQUETAS_MEDICION[tipo].toLowerCase()}`}
+                  aria-invalid={conError(`umbrales.${tipo}`) || undefined}
                   value={cadenas[tipo].max}
                   onChange={(e) => cambiarUmbral(tipo, 'max', e.target.value)}
                 />
@@ -167,7 +190,7 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
           ))}
         </fieldset>
 
-        <div className="acciones">
+        <div className="acciones acciones-formulario">
           <button type="submit" className="btn-primario" disabled={guardando}>
             {guardando ? 'Guardando…' : 'Guardar'}
           </button>

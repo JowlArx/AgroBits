@@ -174,7 +174,7 @@ export default function App() {
             <img className="marca" src="/logo.png" width="28" height="28" alt="" />
             AgroBits
           </h1>
-          <span className="etiqueta">Acceso y datos con Supabase (T-24)</span>
+          <span className="etiqueta">Entra para ver tus cultivos y sus alertas</span>
         </header>
         <main id="contenido">
           <Autenticacion />
@@ -245,10 +245,10 @@ export default function App() {
         Saltar al contenido
       </a>
       <div className="zona-derecha">
-        {/* D33/D34 — cabecera del panel: en escritorio la navegación y la
-            cuenta viven arriba; en móvil la navegación baja a una barra
-            inferior de iconos y aquí queda solo la marca. Debajo sigue el
-            topbar contextual (D31). */}
+        {/* D33/D35 — cabecera del panel en UNA sola fila: marca, navegación
+            (escritorio), título de la vista, chips de estado y cuenta. En
+            móvil la navegación baja a una barra inferior de iconos (D34) y
+            aquí quedan la marca y el título. */}
         <header className="cabecera-panel">
           <div className="fila-nav">
             <span className="marca-panel">
@@ -256,62 +256,60 @@ export default function App() {
               AgroBits
             </span>
             {!esMovil && (
-              <>
-                <nav aria-label="Principal" className="nav-superior">
-                  {botonesSeccion(false)}
-                </nav>
-                <div
-                  className="sesion-superior"
-                  onKeyDown={(evento) => {
-                    if (evento.key === 'Escape') setMenuAbierto(false)
-                  }}
-                >
-                  <button
-                    type="button"
-                    className="btn-usuario"
-                    data-testid="menu-usuario"
-                    aria-haspopup="menu"
-                    aria-expanded={menuAbierto}
-                    onClick={() => setMenuAbierto((abierto) => !abierto)}
-                  >
-                    {iconoCuenta}
-                    <span className="etiqueta" data-testid="sesion-usuario" title={sesion.usuario.email}>
-                      {nombreVisible}
-                    </span>
-                  </button>
-                  {menuAbierto && (
-                    <MenuCuenta
-                      onCerrar={() => setMenuAbierto(false)}
-                      onCuenta={() => {
-                        setMenuAbierto(false)
-                        setVista({ tipo: 'cuenta' })
-                      }}
-                      onSalir={() => {
-                        setMenuAbierto(false)
-                        void cerrarSesion()
-                      }}
-                    />
-                  )}
-                </div>
-              </>
+              <nav aria-label="Principal" className="nav-superior">
+                {botonesSeccion(false)}
+              </nav>
             )}
-          </div>
-          <div className="topbar">
             <div className="titulo-topbar">
               <h2>{tituloVista(vista)}</h2>
               <p className="subtitulo-topbar">{resumenTopbar(vista, cultivos.length, sensores.length, alertasActivas)}</p>
             </div>
             <div className="acciones-topbar">
-              <span className="chip-estado" data-testid="chip-sensores">
+              <span className="chip-estado solo-escritorio" data-testid="chip-sensores">
                 <span className={sensores.length > 0 ? 'punto-estado activo' : 'punto-estado'} aria-hidden="true" />
                 {sensores.length} {sensores.length === 1 ? 'sensor' : 'sensores'}
               </span>
               {alertasActivas > 0 && (
                 <span className="chip-estado chip-alertas" data-testid="chip-alertas">
-                  {alertasActivas} {alertasActivas === 1 ? 'alerta activa' : 'alertas activas'}
+                  {alertasActivas} {alertasActivas === 1 ? 'alerta' : 'alertas'}
                 </span>
               )}
             </div>
+            {!esMovil && (
+              <div
+                className="sesion-superior"
+                onKeyDown={(evento) => {
+                  if (evento.key === 'Escape') setMenuAbierto(false)
+                }}
+              >
+                <button
+                  type="button"
+                  className="btn-usuario"
+                  data-testid="menu-usuario"
+                  aria-haspopup="menu"
+                  aria-expanded={menuAbierto}
+                  onClick={() => setMenuAbierto((abierto) => !abierto)}
+                >
+                  {iconoCuenta}
+                  <span className="etiqueta" data-testid="sesion-usuario" title={sesion.usuario.email}>
+                    {nombreVisible}
+                  </span>
+                </button>
+                {menuAbierto && (
+                  <MenuCuenta
+                    onCerrar={() => setMenuAbierto(false)}
+                    onCuenta={() => {
+                      setMenuAbierto(false)
+                      setVista({ tipo: 'cuenta' })
+                    }}
+                    onSalir={() => {
+                      setMenuAbierto(false)
+                      void cerrarSesion()
+                    }}
+                  />
+                )}
+              </div>
+            )}
           </div>
         </header>
 
@@ -329,7 +327,7 @@ export default function App() {
             >
               {/* D34: el icono de perfil va «sin nombre y sin nada»; el nombre
                   se conserva solo para lectores de pantalla y para las pruebas. */}
-              <span className="visualmente-oculto" data-testid="sesion-usuario">
+              <span className="visually-hidden" data-testid="sesion-usuario">
                 {nombreVisible}
               </span>
               <button
@@ -389,7 +387,7 @@ export default function App() {
             {vista.tipo === 'sensores' && <Sensores />}
             {vista.tipo === 'cuenta' && <Cuenta email={sesion.usuario.email} />}
           </main>
-          {vista.tipo === 'lista' && <PanelLateral />}
+          {vista.tipo === 'lista' && <PanelLateral onVerAlertas={() => setVista({ tipo: 'alertas' })} />}
         </div>
       </div>
     </div>

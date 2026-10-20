@@ -16,6 +16,7 @@ web/playwright-report/
 
 # Skills de agentes instaladas en el proyecto (manifiesto con hashes en skills-lock.json)
 .agents/
+.opencode/
 
 # Registros
 *.log

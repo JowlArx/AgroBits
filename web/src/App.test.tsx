@@ -106,7 +106,10 @@ describe('flujo de cultivos en la interfaz (T-13/T-23)', () => {
     render(<App />)
     await crearCultivoRapido('Se va a borrar')
 
+    // D35: «Eliminar» pide confirmación en línea antes de borrar.
     fireEvent.click(screen.getByText('Eliminar'))
+    expect(screen.getByText('Se va a borrar')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Sí' }))
 
     expect(await screen.findByTestId('vacio')).toBeTruthy()
   })

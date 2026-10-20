@@ -6,39 +6,37 @@ import { UNIDADES } from '../domain/tipos'
 
 function horaLegible(iso: string): string {
   const fecha = new Date(iso)
-  return Number.isNaN(fecha.getTime()) ? iso : fecha.toLocaleString('es-ES')
+  return Number.isNaN(fecha.getTime())
+    ? iso
+    : fecha.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })
 }
 
 function filaAlerta(alerta: Alerta) {
   const cultivo = obtenerCultivo(alerta.cultivoId)
   return (
-    <li key={alerta.id} data-testid={`alerta-${alerta.id}`} className={`tarjeta-cultivo alerta-${alerta.estado}`}>
-      <div className="fila-entre">
-        <strong>{ETIQUETAS_MEDICION[alerta.tipo]}</strong>
+    <li key={alerta.id} data-testid={`alerta-${alerta.id}`} className={`tarjeta-alerta alerta-${alerta.estado}`}>
+      <div className="fila-alerta">
+        <strong className="alerta-tipo">{ETIQUETAS_MEDICION[alerta.tipo]}</strong>
         <span className={alerta.estado === 'activa' ? 'etiqueta alerta-activa' : 'etiqueta'}>
           {alerta.estado === 'activa' ? 'Activa' : 'Resuelta'}
         </span>
       </div>
-      <dl data-testid={`detalle-${alerta.id}`}>
-        <dt>Cultivo</dt>
-        <dd data-testid="alerta-cultivo">{cultivo ? cultivo.nombre : 'Cultivo eliminado'}</dd>
-        <dt>Valor leído</dt>
-        <dd data-testid="alerta-valor">
-          {alerta.valor} {UNIDADES[alerta.tipo]}
-        </dd>
-        <dt>Hora</dt>
-        <dd data-testid="alerta-hora">
+      <p className="alerta-valor" data-testid="alerta-valor">
+        {alerta.valor} {UNIDADES[alerta.tipo]}
+      </p>
+      <p className="alerta-contexto" data-testid={`detalle-${alerta.id}`}>
+        <span data-testid="alerta-cultivo">{cultivo ? cultivo.nombre : 'Cultivo eliminado'}</span>
+        {' · '}
+        <span data-testid="alerta-hora">
           <time dateTime={alerta.creadaEn}>{horaLegible(alerta.creadaEn)}</time>
-        </dd>
-        {alerta.resueltaEn && (
-          <>
-            <dt>Resuelta</dt>
-            <dd data-testid="alerta-resuelta">
-              <time dateTime={alerta.resueltaEn}>{horaLegible(alerta.resueltaEn)}</time>
-            </dd>
-          </>
-        )}
-      </dl>
+        </span>
+      </p>
+      {alerta.resueltaEn && (
+        <p className="alerta-cierre" data-testid="alerta-resuelta">
+          Se resolvió el{' '}
+          <time dateTime={alerta.resueltaEn}>{horaLegible(alerta.resueltaEn)}</time>
+        </p>
+      )}
     </li>
   )
 }
@@ -51,15 +49,9 @@ function enRango(alerta: Alerta, desde: Date, hasta: Date): boolean {
   return creado >= desde && creado <= hasta
 }
 
-/** Rangos de preselección (D31): en móvil se ciclan con un único botón. */
+/** Rangos de preselección (D31): 5, 10 y 15 min. */
 const RANGOS_PRESELECCION = ['5min', '10min', '15min'] as const
 type TipoPreseleccion = (typeof RANGOS_PRESELECCION)[number]
-
-const ETIQUETAS_RANGO: Record<TipoPreseleccion, string> = {
-  '5min': 'Últimos 5 min',
-  '10min': 'Últimos 10 min',
-  '15min': 'Últimos 15 min',
-}
 
 /** Inicio y fin del día de hoy (para el rango personalizado). */
 function inicioDeHoy(): Date {
@@ -74,7 +66,7 @@ function finDeHoy(): Date {
 }
 
 interface RangoTiempo {
-  tipo: '5min' | '10min' | '15min' | 'personalizado'
+  tipo: TipoPreseleccion | 'personalizado'
   desde?: Date
   hasta?: Date
 }
@@ -128,82 +120,82 @@ export default function Alertas() {
   // congelaba la lista calculada en el mount y ocultaba para siempre (hasta
   // cambiar de rango) las alertas que llegaban después — p. ej. la de la
   // primera lectura, que el tick recarga ~150 ms tras abrir la página.
-  const alertas = aplicarFiltroTiempo(alertasOrdenadas(), rango)
-
-  // D31: el botón conmutador de móvil cicla 5 → 10 → 15 min (y desde
-  // personalizado vuelve a 5 min). En escritorio siguen los 3 botones.
-  const tipoPreseleccion: TipoPreseleccion = RANGOS_PRESELECCION.includes(rango.tipo as TipoPreseleccion)
-    ? (rango.tipo as TipoPreseleccion)
-    : '5min'
-  function ciclarRango(): void {
-    const indice = RANGOS_PRESELECCION.indexOf(tipoPreseleccion)
-    elegirRango({ tipo: RANGOS_PRESELECCION[(indice + 1) % RANGOS_PRESELECCION.length] })
-  }
+  const todas = alertasOrdenadas()
+  const alertas = aplicarFiltroTiempo(todas, rango)
+  // Contador del encabezado: cuenta el historial completo, no solo el rango.
+  const activas = todas.filter((a) => a.estado === 'activa').length
+  const resueltas = todas.length - activas
 
   // --- UI ---
 
   return (
     <section>
-      <h2>Alertas Activas</h2>
+      <header className="fila-entre">
+        <h2>Historial de alertas</h2>
+        <p className="contador-alertas" data-testid="contador-alertas">
+          <strong className={activas > 0 ? 'contador-activas' : undefined}>
+            {activas} {activas === 1 ? 'activa' : 'activas'}
+          </strong>
+          {' · '}
+          {resueltas} {resueltas === 1 ? 'resuelta' : 'resueltas'}
+        </p>
+      </header>
 
-      {/* --- Controles de rango de tiempo --- */}
-      <div className="fila-entre" style={{ gap: '0.5rem', alignItems: 'center' }}>
-        <button
+      {/* --- Controles de rango de tiempo ---
+          Un SOLO juego de botones (mismo `data-testid` en las dos
+          plataformas): en escritorio se leen «Últimos 5 min…»; en móvil el
+          grupo se convierte en un control segmentado donde se ve de un
+          vistazo qué rango está activo (D35). */}
+      <div className="controles-rango">
+        <div
+          className="segmentado-rangos"
+          role="group"
+          aria-label="Rango de tiempo"
           data-testid="rango-ciclo"
-          className="solo-movil conmutador-rango"
-          aria-label={`Rango de tiempo: ${ETIQUETAS_RANGO[tipoPreseleccion]}. Pulsa para cambiar`}
-          onClick={ciclarRango}
         >
-          {ETIQUETAS_RANGO[tipoPreseleccion]}
-        </button>
-        <button
-          data-testid="rango-5min"
-          className={`solo-escritorio ${rango.tipo === '5min' ? 'btn-primario' : 'btn-secundario'}`}
-          onClick={() => elegirRango({ tipo: '5min' })}
-        >
-          Últimos 5 min
-        </button>
-        <button
-          data-testid="rango-10min"
-          className={`solo-escritorio ${rango.tipo === '10min' ? 'btn-primario' : 'btn-secundario'}`}
-          onClick={() => elegirRango({ tipo: '10min' })}
-        >
-          Últimos 10 min
-        </button>
-        <button
-          data-testid="rango-15min"
-          className={`solo-escritorio ${rango.tipo === '15min' ? 'btn-primario' : 'btn-secundario'}`}
-          onClick={() => elegirRango({ tipo: '15min' })}
-        >
-          Últimos 15 min
-        </button>
+          {RANGOS_PRESELECCION.map((tipo) => (
+            <button
+              key={tipo}
+              data-testid={`rango-${tipo}`}
+              className={rango.tipo === tipo ? 'btn-primario' : 'btn-secundario'}
+              aria-pressed={rango.tipo === tipo}
+              onClick={() => elegirRango({ tipo })}
+            >
+              <span className="solo-escritorio">Últimos </span>
+              {tipo.replace('min', ' min')}
+            </button>
+          ))}
+        </div>
         <button
           data-testid="rango-personalizado"
           className={rango.tipo === 'personalizado' ? 'btn-primario' : 'btn-secundario'}
+          aria-pressed={rango.tipo === 'personalizado'}
           onClick={() => elegirRango({ tipo: 'personalizado' })}
         >
           Personalizar
         </button>
+      </div>
 
-        {rango.tipo === 'personalizado' && (
-          <>
-            <span>Desde</span>
+      {rango.tipo === 'personalizado' && (
+        <div className="rango-fechas">
+          <label>
+            Desde
             <input
               type="date"
               value={desde?.toISOString().split('T')[0] ?? ''}
               onChange={(e) => setDesde(new Date(e.target.value))}
-              style={{ width: '120px' }}
             />
-            <span>Hasta</span>
+          </label>
+          <label>
+            Hasta
             <input
               type="date"
               value={hasta?.toISOString().split('T')[0] ?? ''}
               onChange={(e) => setHasta(new Date(e.target.value))}
-              style={{ width: '120px' }}
             />
-          </>
-        )}
-      </div>
+          </label>
+        </div>
+      )}
 
       {/* --- Mensaje cuando no hay alertas en el rango --- */}
       {alertas.length === 0 ? (
@@ -211,17 +203,16 @@ export default function Alertas() {
           No hay alertas en el rango de tiempo seleccionado.
         </p>
       ) : (
-        <ul className="lista-cultivos" data-testid="lista-alertas">
+        <ul className="lista-alertas" data-testid="lista-alertas">
           {alertas.map(filaAlerta)}
         </ul>
       )}
 
-      {/* --- Botón Descargar log --- */}
+      {/* --- Botón Descargar log (escritorio: en móvil no aporta) --- */}
       <button
         data-testid="descargar-log"
-        className="btn-primario"
+        className="btn-primario solo-escritorio descargar-log"
         onClick={() => descargarLogAlertas(alertas)}
-        style={{ marginTop: '1rem' }}
       >
         Descargar log
       </button>
@@ -251,7 +242,9 @@ function descargarLogAlertas(alertas: Alerta[]): void {
   const url = URL.createObjectURL(blob)
   const tmpLink = document.createElement('a')
   tmpLink.href = url
-  tmpLink.download = `alertas-${new Date().toISOString().split('T')[0]}.csv`
+  const ahora = new Date()
+  const sello = `${ahora.toISOString().split('T')[0]}_${ahora.toTimeString().slice(0, 5).replace(':', '')}`
+  tmpLink.download = `alertas-${sello}.csv`
   tmpLink.click()
   URL.revokeObjectURL(url)
 }

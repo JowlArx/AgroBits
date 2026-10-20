@@ -65,6 +65,17 @@ export const ETIQUETAS_MEDICION: Record<string, string> = {
   luminosidad: 'Luminosidad (lux)',
 }
 
+/**
+ * D35: etiquetas cortas para pestañas y barras, donde la unidad ya aparece
+ * en el valor (evita que el título ocupe dos líneas y desborde la tarjeta).
+ */
+export const ETIQUETAS_MEDICION_CORTA: Record<string, string> = {
+  humedad_suelo: 'Humedad de suelo',
+  temperatura: 'Temperatura',
+  humedad_ambiental: 'Humedad ambiente',
+  luminosidad: 'Luminosidad',
+}
+
 /** D30: etiquetas y variables CSS del color de línea de cada sensor. */
 export const ETIQUETAS_COLOR_SENSOR: Record<ColorSensor, string> = {
   verde: 'Verde',

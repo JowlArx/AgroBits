@@ -26,7 +26,8 @@ import { obtenerCultivo, suscribirCultivos } from '../data/storeCultivos'
 import { eliminarMediciones, generarLectura, obtenerMediciones, suscribirMediciones } from '../data/medicionesSimuladas'
 import { cargarAlertas } from '../data/storeAlertas'
 import { COLORES_SENSOR, TIPOS_MEDICION, type ColorSensor, type TipoMedicion } from '../domain/tipos'
-import { ETIQUETAS_COLOR_SENSOR, ETIQUETAS_MEDICION, VAR_COLOR_SENSOR } from '../data/catalogo'
+import { ETIQUETAS_COLOR_SENSOR, ETIQUETAS_MEDICION, ETIQUETAS_MEDICION_CORTA, VAR_COLOR_SENSOR } from '../data/catalogo'
+import ConfirmacionEnLinea from '../components/ConfirmacionEnLinea'
 
 function horaLegible(iso: string): string {
   const fecha = new Date(iso)
@@ -153,9 +154,11 @@ export default function Sensores() {
                       onClick={() => void cambiarColor(sensor.id, color)}
                     />
                   ))}
+                  {/* D35: el color activo se nombra, no solo se insinúa. */}
+                  <span className="nombre-color-sensor">{ETIQUETAS_COLOR_SENSOR[sensor.colorLinea]}</span>
                 </div>
 
-                <div className="acciones">
+                <div className="acciones acciones-tarjeta">
                   <button
                     type="button"
                     onClick={() => setSensorActivoId(sensor.id)}
@@ -163,15 +166,13 @@ export default function Sensores() {
                   >
                     Ver mediciones
                   </button>
-                  <button
-                    type="button"
+                  <ConfirmacionEnLinea
+                    etiqueta="Eliminar"
+                    pregunta={`¿Eliminar «${sensor.nombre}»?`}
                     className="btn-peligro"
-                    data-testid="eliminar-sensor"
-                    aria-label={`Eliminar ${sensor.nombre}`}
-                    onClick={() => void eliminar(sensor.id)}
-                  >
-                    Eliminar
-                  </button>
+                    testId="eliminar-sensor"
+                    onConfirmar={() => void eliminar(sensor.id)}
+                  />
                 </div>
               </li>
             )
@@ -211,7 +212,7 @@ export default function Sensores() {
                 aria-pressed={tipo === tipoActivo}
                 onClick={() => setTipoActivo(tipo)}
               >
-                {ETIQUETAS_MEDICION[tipo]}
+                {ETIQUETAS_MEDICION_CORTA[tipo]}
               </button>
             ))}
           </div>
@@ -316,7 +317,7 @@ export default function Sensores() {
 
           <p className="aviso">
             El color de la línea se guarda en el sensor y se aplica también al tablero principal.
-            Lecturas simuladas cada 5 minutos mientras hay sesión abierta (T-24, D15).
+            Las lecturas simuladas se generan cada 5 minutos mientras la sesión está abierta.
           </p>
         </article>
       )}

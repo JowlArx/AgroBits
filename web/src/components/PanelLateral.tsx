@@ -35,7 +35,7 @@ function ultimasLecturas(): FilaLectura[] {
   return filas.sort((a, b) => b.medicion.medidaEn.localeCompare(a.medicion.medidaEn)).slice(0, 6)
 }
 
-export default function PanelLateral() {
+export default function PanelLateral({ onVerAlertas }: { onVerAlertas?: () => void }) {
   useSyncExternalStore(suscribirCultivos, obtenerCultivos)
   useSyncExternalStore(suscribirSensores, obtenerSensores)
   useSyncExternalStore(suscribirAlertas, obtenerAlertas)
@@ -50,29 +50,42 @@ export default function PanelLateral() {
   return (
     <aside className="panel-lateral" aria-label="Alertas y actividad reciente">
       <section>
-        <h2>Alertas</h2>
+        <header className="fila-entre panel-cabecera">
+          <h2>Alertas activas</h2>
+          {activas.length > 0 && <span className="contador-panel">{activas.length}</span>}
+        </header>
         {activas.length === 0 ? (
           <p className="panel-vacio">Sin alertas activas: ninguna medición está fuera de rango.</p>
         ) : (
-          <ul className="lista-panel">
-            {activas.slice(0, 5).map((alerta) => {
-              const cultivo = obtenerCultivo(alerta.cultivoId)
-              return (
-                <li key={alerta.id} className="item-panel item-alerta">
-                  <div className="item-cabecera">
-                    <strong>{ETIQUETAS_MEDICION[alerta.tipo]}</strong>
-                    {/* D31: la hora queda aislada en la esquina superior derecha. */}
-                    <time className="item-hora" dateTime={alerta.creadaEn}>
-                      {horaLegible(alerta.creadaEn)}
-                    </time>
-                  </div>
-                  <p className="item-detalles">
-                    {cultivo ? cultivo.nombre : 'Cultivo eliminado'} · {alerta.valor}
-                  </p>
-                </li>
-              )
-            })}
-          </ul>
+          <>
+            <ul className="lista-panel">
+              {activas.slice(0, 3).map((alerta) => {
+                const cultivo = obtenerCultivo(alerta.cultivoId)
+                return (
+                  <li key={alerta.id} className="item-panel item-alerta">
+                    <div className="item-cabecera">
+                      <strong>{ETIQUETAS_MEDICION[alerta.tipo]}</strong>
+                      {/* D31: la hora queda aislada en la esquina superior derecha. */}
+                      <time className="item-hora" dateTime={alerta.creadaEn}>
+                        {horaLegible(alerta.creadaEn)}
+                      </time>
+                    </div>
+                    <p className="item-detalles">
+                      {cultivo ? cultivo.nombre : 'Cultivo eliminado'} · {alerta.valor}
+                    </p>
+                  </li>
+                )
+              })}
+            </ul>
+            {activas.length > 3 && (
+              <p className="panel-nota">Y {activas.length - 3} alerta{activas.length - 3 === 1 ? '' : 's'} más.</p>
+            )}
+            {onVerAlertas && (
+              <button type="button" className="enlace-panel" onClick={onVerAlertas}>
+                Ver todas las alertas
+              </button>
+            )}
+          </>
         )}
       </section>
 

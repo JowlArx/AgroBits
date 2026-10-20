@@ -22,8 +22,9 @@ import { obtenerCultivos, suscribirCultivos } from '../data/storeCultivos'
 import { obtenerSensores, suscribirSensores, type Sensor } from '../data/storeSensores'
 import { obtenerAlertas, suscribirAlertas } from '../data/storeAlertas'
 import { obtenerMediciones, suscribirMediciones, ultimasPorTipo } from '../data/medicionesSimuladas'
-import { ETIQUETAS_MEDICION, VAR_COLOR_SENSOR } from '../data/catalogo'
+import { ETIQUETAS_MEDICION, ETIQUETAS_MEDICION_CORTA, VAR_COLOR_SENSOR } from '../data/catalogo'
 import { TIPOS_MEDICION, type TipoMedicion } from '../domain/tipos'
+import { useEsMovil } from '../hooks/useEsMovil'
 
 /** Escalas solo para dimensionar las barras (los valores mostrados son reales). */
 const ESCALA_MAXIMA: Record<TipoMedicion, number> = {
@@ -38,6 +39,16 @@ function horaCorta(iso: string): string {
   return Number.isNaN(fecha.getTime())
     ? iso
     : fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+}
+
+/** D35: cuánto tiempo pasó desde la última lectura (resumen en texto). */
+function haceCuanto(iso: string): string {
+  const minutos = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60_000))
+  if (minutos < 1) return 'hace un momento'
+  if (minutos === 1) return 'hace 1 minuto'
+  if (minutos < 60) return `hace ${minutos} minutos`
+  const horas = Math.round(minutos / 60)
+  return `hace ${horas} ${horas === 1 ? 'hora' : 'horas'}`
 }
 
 /** Sensor con la lectura más reciente (D31): es el filtro por defecto del
@@ -173,6 +184,11 @@ export default function Tablero() {
 
   const ultimas = ultimasPorTipo(sensorWidgetActivoId ? [sensorWidgetActivoId] : sensores.map((s) => s.id))
   const hayLecturas = TIPOS_MEDICION.some((tipo) => ultimas[tipo] !== undefined)
+  // D35: el gráfico se acompaña de su lectura en texto (en móvil el tooltip
+  // es difícil de acertar con el dedo).
+  const ultimaDelTipo = ultimasPorTipo(sensores.map((s) => s.id))[tipoActivo]
+  // D35: en móvil el lienzo se achica para dejar respirar al resto.
+  const esMovil = useEsMovil()
 
   return (
     <section className="tablero" aria-label="Resumen del panel">
@@ -191,9 +207,12 @@ export default function Tablero() {
 
       <div className="fila-widgets">
         <article className="widget">
-          {/* D33: las pestañas van a la izquierda y el título a la derecha,
-              en la misma altura, alineado con el contenido del gráfico. */}
+          {/* D33/D35: el título va a la derecha de las pestañas en escritorio
+              (a la altura del contenido del gráfico) y encima de ellas en
+              móvil, donde no cabe en una sola fila. El orden visual lo fija
+              el CSS con `order`. */}
           <header className="cabecera-widget">
+            <h3>Evolución de lecturas</h3>
             <div className="pestanas-widget" role="group" aria-label="Tipo de medición a mostrar">
               {TIPOS_MEDICION.map((tipo) => (
                 <button
@@ -202,11 +221,10 @@ export default function Tablero() {
                   aria-pressed={tipo === tipoActivo}
                   onClick={() => setTipoActivo(tipo)}
                 >
-                  {ETIQUETAS_MEDICION[tipo]}
+                  {ETIQUETAS_MEDICION_CORTA[tipo]}
                 </button>
               ))}
             </div>
-            <h3>Evolución de lecturas</h3>
           </header>
           {puntos.length === 0 ? (
             <p className="estado-vacio">
@@ -215,7 +233,7 @@ export default function Tablero() {
             </p>
           ) : (
             <div className="grafico-lineas">
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={esMovil ? 200 : 300}>
                 {/* D31/D33: ComposedChart con relleno degradado bajo cada
                     línea; margen izquierdo 0 porque el eje Y mide 44 px. */}
                 <ComposedChart data={puntos} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
@@ -266,6 +284,15 @@ export default function Tablero() {
               </ResponsiveContainer>
             </div>
           )}
+          {ultimaDelTipo && (
+            <p className="resumen-grafico" data-testid="resumen-grafico">
+              Última lectura de {ETIQUETAS_MEDICION[tipoActivo].toLowerCase()}:{' '}
+              <strong>
+                {ultimaDelTipo.valor} {ultimaDelTipo.unidad}
+              </strong>{' '}
+              · {haceCuanto(ultimaDelTipo.medidaEn)}
+            </p>
+          )}
         </article>
 
         <article className="widget">
@@ -296,7 +323,7 @@ export default function Tablero() {
                   : 0
                 return (
                   <li key={tipo}>
-                    <span className="barra-etiqueta">{ETIQUETAS_MEDICION[tipo]}</span>
+                    <span className="barra-etiqueta">{ETIQUETAS_MEDICION_CORTA[tipo]}</span>
                     <span className="barra-ruta" aria-hidden="true">
                       {medicion && <span className="barra-relleno" style={{ width: `${porcentaje}%` }} />}
                     </span>

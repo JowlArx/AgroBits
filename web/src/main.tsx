@@ -7,6 +7,7 @@ import { configurarProveedorAuth } from './data/storeSesion'
 import { ProveedorDatosSupabase } from './data/datos/proveedorDatosSupabase'
 import { configurarProveedorDatos } from './data/datos/proveedorDatos'
 import { ProgramadorTemporizado, configurarProgramadorLecturas } from './data/programadorLecturas'
+import './tokens.css'
 import './estilos.css'
 
 // T-22/T-23/T-24: la app real usa auth y datos de Supabase (D8, capa

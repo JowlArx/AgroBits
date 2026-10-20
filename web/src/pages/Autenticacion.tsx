@@ -30,6 +30,7 @@ export default function Autenticacion() {
   const [localidadId, setLocalidadId] = useState('')
   const [localidades, setLocalidades] = useState<Localidad[]>([])
   const [error, setError] = useState('')
+  const [camposError, setCamposError] = useState<string[]>([])
   const [enviando, setEnviando] = useState(false)
 
   // Catálogo de localidades (D27): se carga una vez; el registro es anónimo,
@@ -58,6 +59,12 @@ export default function Autenticacion() {
     [localidades, provincia],
   )
 
+  // D35: tras un envío fallido, el foco va al primer campo con problema.
+  useEffect(() => {
+    if (camposError.length === 0) return
+    document.getElementById(`campo-${camposError[0]}`)?.focus()
+  }, [camposError])
+
   async function enviar(evento: React.FormEvent): Promise<void> {
     evento.preventDefault()
     setEnviando(true)
@@ -75,15 +82,21 @@ export default function Autenticacion() {
     setEnviando(false)
     if (!resultado.ok) {
       setError(resultado.errores.map((e) => e.motivo).join('. '))
+      // D35: se marca el campo culpable y se le lleva el foco.
+      setCamposError(resultado.errores.map((e) => e.campo))
       return
     }
     setError('')
+    setCamposError([])
   }
 
   function cambiarModo(): void {
     setModo((m) => (m === 'sesion' ? 'registro' : 'sesion'))
     setError('')
+    setCamposError([])
   }
+
+  const invalido = (campo: string): boolean => camposError.includes(campo)
 
   return (
     <section data-testid="pantalla-acceso" className="pantalla-acceso">
@@ -96,8 +109,11 @@ export default function Autenticacion() {
               español y pruebaable); la nativa del navegador la bloquearía. */}
           <input
             type="text"
+            id="campo-email"
             name="email"
+            inputMode="email"
             autoComplete="email"
+            aria-invalid={invalido('email') || undefined}
             data-testid="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -108,9 +124,11 @@ export default function Autenticacion() {
           Contraseña
           <input
             type="password"
+            id="campo-clave"
             name="clave"
             autoComplete={modo === 'sesion' ? 'current-password' : 'new-password'}
             aria-describedby="reglas-clave"
+            aria-invalid={invalido('clave') || undefined}
             data-testid="clave"
             value={clave}
             onChange={(e) => setClave(e.target.value)}
@@ -124,8 +142,10 @@ export default function Autenticacion() {
               Repite la contraseña
               <input
                 type="password"
+                id="campo-confirmacion"
                 name="confirmacion"
                 autoComplete="new-password"
+                aria-invalid={invalido('confirmacion') || undefined}
                 data-testid="confirmar-clave"
                 value={confirmacion}
                 onChange={(e) => setConfirmacion(e.target.value)}
@@ -137,8 +157,10 @@ export default function Autenticacion() {
                   vacío, el panel muestra el texto del email antes de la «@». */}
               <input
                 type="text"
+                id="campo-nombreUsuario"
                 name="nombreUsuario"
                 autoComplete="nickname"
+                aria-invalid={invalido('nombreUsuario') || undefined}
                 data-testid="nombre-usuario"
                 value={nombreUsuario}
                 onChange={(e) => setNombreUsuario(e.target.value)}
@@ -154,8 +176,11 @@ export default function Autenticacion() {
                   espacios) antes de tocar el servidor. */}
               <input
                 type="tel"
+                id="campo-telefono"
                 name="telefono"
+                inputMode="tel"
                 autoComplete="tel"
+                aria-invalid={invalido('telefono') || undefined}
                 data-testid="telefono"
                 value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
@@ -184,8 +209,10 @@ export default function Autenticacion() {
             <label>
               Localidad
               <select
+                id="campo-localidad"
                 name="localidad"
                 data-testid="localidad"
+                aria-invalid={invalido('localidad') || undefined}
                 value={localidadId}
                 disabled={provincia === ''}
                 onChange={(e) => setLocalidadId(e.target.value)}
@@ -200,9 +227,11 @@ export default function Autenticacion() {
             </label>
           </>
         )}
-        <button type="submit" className="btn-primario" data-testid="enviar-acceso" disabled={enviando}>
-          {enviando ? 'Un momento…' : modo === 'sesion' ? 'Entrar' : 'Crear cuenta'}
-        </button>
+        <div className="acciones acciones-formulario">
+          <button type="submit" className="btn-primario" data-testid="enviar-acceso" disabled={enviando}>
+            {enviando ? 'Un momento…' : modo === 'sesion' ? 'Entrar' : 'Crear cuenta'}
+          </button>
+        </div>
         {error && (
           <p role="alert" data-testid="error-acceso">
             {error}

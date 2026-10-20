@@ -6,6 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { guardarPerfil, obtenerPerfil } from '../data/storePerfil'
+import { cerrarSesion } from '../data/storeSesion'
 import { exigirProveedor } from '../data/datos/proveedorDatos'
 import type { Localidad } from '../data/datos/proveedorDatos'
 
@@ -77,12 +78,13 @@ export default function Cuenta({ email }: Props) {
     <section className="perfil-cuenta" data-testid="vista-cuenta">
       <h2>Mi cuenta</h2>
 
-      <form onSubmit={enviar}>
-        <label>
-          Email
-          {/* Solo lectura: el email lo gestiona Supabase Auth, no el perfil. */}
-          <input type="email" value={email} readOnly data-testid="email-cuenta" />
-        </label>
+      <form onSubmit={enviar} noValidate>
+        {/* D35: el email lo gestiona el acceso, no el perfil: se muestra como
+            texto (un input de solo lectura aparenta ser editable). */}
+        <div className="campo-solo-lectura">
+          <span className="etiqueta-campo">Email</span>
+          <p data-testid="email-cuenta">{email}</p>
+        </div>
         <label>
           Teléfono
           <input
@@ -130,9 +132,11 @@ export default function Cuenta({ email }: Props) {
           </select>
         </label>
 
-        <button type="submit" className="btn-primario" data-testid="guardar-perfil" disabled={guardando}>
-          {guardando ? 'Guardando…' : 'Guardar cambios'}
-        </button>
+        <div className="acciones acciones-formulario">
+          <button type="submit" className="btn-primario" data-testid="guardar-perfil" disabled={guardando}>
+            {guardando ? 'Guardando…' : 'Guardar cambios'}
+          </button>
+        </div>
 
         {mensaje && (
           <p className="aviso-exito" data-testid="perfil-guardado" role="status">
@@ -150,6 +154,19 @@ export default function Cuenta({ email }: Props) {
         Tu teléfono y tu localidad describen el entorno de trabajo de tus sensores. Se usan como
         dimensión de la futura capa analítica y solo los ves tú (dato personal, Ley 25.326).
       </p>
+
+      {/* D35: cerrar sesión también vive aquí (donde se espera), además del
+          menú del icono de perfil. */}
+      <div className="acciones acciones-formulario">
+        <button
+          type="button"
+          className="btn-peligro"
+          data-testid="cerrar-sesion-cuenta"
+          onClick={() => void cerrarSesion()}
+        >
+          Cerrar sesión
+        </button>
+      </div>
     </section>
   )
 }

@@ -13,6 +13,10 @@
     <link rel="icon" type="image/png" href="/logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- D35: los tokens del sistema visual se comparten con la app
+         (web/src/tokens.css): una sola fuente de verdad para color, tipo,
+         radios y movimiento. -->
+    <link rel="stylesheet" href="/src/tokens.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fraunces:opsz,wght@9..144,600..700&display=swap"
       rel="stylesheet"
@@ -20,39 +24,10 @@
     <title>AgroBits | Monitoreo agrícola con sensores y alertas</title>
     <style>
       /* Landing estática de presentación (SEO de la raíz). Comparte los tokens
-         del sistema de estilos de la app (D20): papel blanco-verdoso, tinta
-         verde-negra, verde botánico como marca y ámbar-señal reservado a las
-         alertas. Sin dependencias de la SPA: se sirve igual con y sin JS. */
-      :root {
-        color-scheme: light dark;
-        --fuente-titulo: 'Fraunces', Georgia, 'Times New Roman', serif;
-        --fuente-texto: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
-        --fondo: #f6f8f4;
-        --superficie: #ffffff;
-        --texto: #12211a;
-        --texto-tenue: #5b6660;
-        --marca: #1e5b3d;
-        --marca-hover: #2e7d57;
-        --sobre-marca: #ffffff;
-        --senal: #c2410c;
-        --senal-suave: #fdf0e7;
-        --borde: #d8dfd6;
-      }
-
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --fondo: #0e1712;
-          --superficie: #16211b;
-          --texto: #e7ede7;
-          --texto-tenue: #9daa9f;
-          --marca: #74c894;
-          --marca-hover: #93d8ad;
-          --sobre-marca: #0e1712;
-          --senal: #f97316;
-          --senal-suave: #2c1a0e;
-          --borde: #2a3830;
-        }
-      }
+         del sistema de estilos de la app (D20/D35, en /src/tokens.css): papel
+         blanco-verdoso, tinta verde-negra, verde botánico como marca y
+         ámbar-señal reservado a las alertas. Sin dependencias de la SPA: se
+         sirve igual con y sin JS. */
 
       * {
         box-sizing: border-box;
@@ -152,7 +127,7 @@
         padding: 0 0.75rem;
         color: var(--texto);
         text-decoration: none;
-        border-radius: 6px;
+        border-radius: var(--radio-sm);
       }
 
       .cabecera nav a:hover {
@@ -168,7 +143,7 @@
         min-height: 2.75rem;
         padding: 0 1.25rem;
         border: 1px solid var(--marca);
-        border-radius: 6px;
+        border-radius: var(--radio-sm);
         font: inherit;
         font-weight: 700;
         text-decoration: none;
@@ -229,7 +204,7 @@
       .panel {
         background: var(--superficie);
         border: 1px solid var(--borde);
-        border-radius: 8px;
+        border-radius: var(--radio);
         padding: 1.25rem;
       }
 
@@ -273,15 +248,43 @@
       .ejemplo-alerta {
         margin: 1rem 0 0;
         padding: 0.6rem 0.75rem;
-        border-left: 3px solid var(--senal);
         background: var(--senal-suave);
         color: var(--texto);
         font-size: 0.9rem;
-        border-radius: 0 6px 6px 0;
+        border-radius: var(--radio);
+        display: flex;
+        gap: 0.5rem;
+        align-items: baseline;
+      }
+
+      /* El aviso se marca con un punto, no con una franja de color. */
+      .ejemplo-alerta::before {
+        content: '';
+        flex: none;
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 999px;
+        background: var(--senal);
+        transform: translateY(-1px);
       }
 
       .ejemplo-alerta strong {
         color: var(--senal);
+      }
+
+      /* D35: el gráfico del panel es un umbral real (la línea cruza el
+         límite), no una decoración. */
+      .grafico-umbral {
+        display: block;
+        width: 100%;
+        height: auto;
+        margin-top: 1rem;
+      }
+
+      .pie-panel {
+        margin: 0.5rem 0 0;
+        font-size: 0.8rem;
+        color: var(--texto-tenue);
       }
 
       /* Secciones --------------------------------------------------------- */
@@ -329,7 +332,7 @@
       .tarjeta {
         background: var(--superficie);
         border: 1px solid var(--borde);
-        border-radius: 8px;
+        border-radius: var(--radio);
         padding: 1rem;
       }
 
@@ -342,7 +345,7 @@
       .fila-tarjeta {
         display: flex;
         justify-content: space-between;
-        align-items: baseline;
+        align-items: flex-start;
         gap: 0.75rem;
         margin-bottom: 0.25rem;
       }
@@ -377,6 +380,14 @@
         white-space: nowrap;
       }
 
+      /* D35: la referencia real del catálogo (los mismos datos que usa la app). */
+      .referencia {
+        margin: 0.35rem 0 0;
+        font-size: 0.85rem;
+        color: var(--marca);
+        font-weight: 700;
+      }
+
       .tarjeta p {
         margin: 0.5rem 0 0;
         color: var(--texto-tenue);
@@ -406,29 +417,110 @@
         margin-top: 1.5rem;
         background: var(--superficie);
         border: 1px solid var(--borde);
-        border-left: 3px solid var(--marca);
-        border-radius: 8px;
+        border-radius: var(--radio);
         padding: 1.25rem 1.5rem;
       }
 
       .banda-umbrales h3 {
         margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
       }
 
       .banda-umbrales p {
         margin: 0.5rem 0 0;
         color: var(--texto-tenue);
         font-size: 0.95rem;
+        max-width: 68ch;
       }
 
-      /* D31: mini-gráfica decorativa del panel de ejemplo. */
-      .sparkline {
+      /* D35: el ciclo de la alerta es el elemento memorable de la landing:
+         tres pasos, y el ámbar aparece SOLO en el del medio. */
+      .ciclo-alerta {
+        display: grid;
+        gap: 1.25rem;
+        margin-top: 1.5rem;
+      }
+
+      @media (min-width: 48rem) {
+        .ciclo-alerta {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      .paso-ciclo {
+        background: var(--superficie);
+        border: 1px solid var(--borde);
+        border-radius: var(--radio);
+        padding: 1rem 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .paso-ciclo h3 {
+        font-size: 1.1rem;
+        margin: 0;
+      }
+
+      .paso-ciclo p {
+        margin: 0;
+        color: var(--texto-tenue);
+        font-size: 0.95rem;
+      }
+
+      .paso-ciclo.paso-alerta {
+        border-color: var(--senal);
+        background: var(--senal-suave);
+      }
+
+      .paso-ciclo.paso-alerta h3,
+      .paso-ciclo.paso-alerta p {
+        color: var(--texto);
+      }
+
+      .insignia-alerta {
+        align-self: flex-start;
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+        background: var(--senal);
+        /* D35: el texto usa el color "sobre" del tema (oscuro en modo oscuro)
+           para mantener el contraste AA sobre el ámbar. */
+        color: var(--sobre-marca);
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+
+      .trazo-ciclo {
         display: block;
         width: 100%;
-        height: 2.5rem;
-        margin-top: 1rem;
-        color: var(--marca);
-        opacity: 0.8;
+        height: auto;
+      }
+
+      /* Cierre con la llamada a la acción. */
+      .cierre {
+        border-top: 1px solid var(--borde);
+        background: var(--superficie);
+      }
+
+      .cierre .envoltorio {
+        padding-top: 2.5rem;
+        padding-bottom: 2.5rem;
+      }
+
+      .cierre h2 {
+        font-size: 1.6rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .cierre p {
+        max-width: 44rem;
+        color: var(--texto-tenue);
+      }
+
+      .cierre .acciones {
+        margin-top: 1.25rem;
       }
 
       /* Pie --------------------------------------------------------------- */
@@ -479,12 +571,12 @@
       <div class="envoltorio">
         <div class="portada">
           <div>
-            <h1>AgroBits: monitoreo agrícola con sensores, umbrales y alertas</h1>
+            <h1>El cultivo te avisa cuando algo no anda bien</h1>
             <p class="entrada">
-              Da de alta tus cultivos, define para cada uno los límites que necesita y consulta
-              las lecturas de humedad, temperatura y luz cuando te convenga. Si una medición se
-              sale de rango, AgroBits te avisa y la alerta se resuelve sola al volver a la
-              normalidad.
+              Conecta un sensor a cada cultivo y AgroBits vigila la humedad del suelo, la
+              temperatura, la humedad del ambiente y la luz. Tú pones los límites de cada
+              cultivo; en cuanto una lectura se sale de rango aparece la alerta, y se cierra
+              sola cuando la lectura vuelve.
             </p>
             <p class="acciones">
               <a class="boton boton-primario" href="/app.html?acceso=registro">Crear cuenta</a>
@@ -513,13 +605,33 @@
               </div>
             </dl>
             <p class="ejemplo-alerta">
-              <strong>Alerta activa</strong> — Temperatura 34 °C, por encima del máximo del
-              cultivo (28 °C).
+              <span>
+                <strong>Alerta activa</strong> — Temperatura 34 °C, por encima del máximo del
+                cultivo (28 °C).
+              </span>
             </p>
-            {/* D31: mini-gráfica decorativa de la evolución de la lectura. */}
-            <svg class="sparkline" viewBox="0 0 240 40" preserveAspectRatio="none" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="0,32 20,28 40,30 60,22 80,26 100,15 120,19 140,11 160,17 180,9 200,13 220,7 240,11" />
+            <!-- D35: el gráfico es el umbral real: la curva cruza el límite y
+                 vuelve a entrar. No es decoración, es lo que hace el producto. -->
+            <svg
+              class="grafico-umbral"
+              viewBox="0 0 240 84"
+              role="img"
+              aria-label="La temperatura sube por encima del máximo de 28 °C y después vuelve a entrar en rango."
+            >
+              <line x1="0" y1="36" x2="240" y2="36" stroke="var(--borde-input)" stroke-width="1" stroke-dasharray="4 4" />
+              <text x="238" y="30" text-anchor="end" font-size="9" fill="var(--texto-tenue)">máx. 28 °C</text>
+              <polyline
+                points="0,57 30,53.5 60,39.5 90,25.5 120,15 150,18.5 180,32.5 210,43 240,46.5"
+                fill="none"
+                stroke="var(--marca)"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle cx="75" cy="36" r="4" fill="var(--senal)" />
+              <text x="69" y="30" text-anchor="end" font-size="9" font-weight="700" fill="var(--senal)">alerta</text>
             </svg>
+            <p class="pie-panel">Sensor del balcón · cultivo «Tomate»</p>
           </aside>
         </div>
       </div>
@@ -544,6 +656,7 @@
                 </h3>
                 <span class="unidad">% vol</span>
               </div>
+              <p class="referencia">En tomate: 40–75 % vol</p>
               <p>Cuánta agua disponible tiene la raíz: la señal principal para saber cuándo regar.</p>
             </article>
             <article class="tarjeta">
@@ -557,6 +670,7 @@
                 </h3>
                 <span class="unidad">°C</span>
               </div>
+              <p class="referencia">En tomate: 15–28 °C</p>
               <p>Las extremas de frío o calor estresan al cultivo antes de que se vea a simple vista.</p>
             </article>
             <article class="tarjeta">
@@ -570,6 +684,7 @@
                 </h3>
                 <span class="unidad">% HR</span>
               </div>
+              <p class="referencia">En tomate: 50–80 % HR</p>
               <p>Condiciona la evapotranspiración y la aparición de hongos en hojas y frutos.</p>
             </article>
             <article class="tarjeta">
@@ -583,6 +698,7 @@
                 </h3>
                 <span class="unidad">lux</span>
               </div>
+              <p class="referencia">En tomate: 10 000–50 000 lux</p>
               <p>Determina cuánta radiación recibe el cultivo a lo largo del día.</p>
             </article>
           </div>
@@ -592,8 +708,8 @@
       <section id="como-funciona" aria-labelledby="titulo-como">
         <div class="envoltorio">
           <h2 id="titulo-como">Cómo funciona</h2>
-          {/* D31: 4 tarjetas de paso con badge numerado + banda inferior de
-              umbrales (antes, una card estirada desperdiciaba el espacio). */}
+          <!-- D31: 4 tarjetas de paso con badge numerado + banda inferior de
+               umbrales (antes, una card estirada desperdiciaba el espacio). -->
           <div class="columnas">
             <article class="tarjeta paso">
               <span class="num-paso" aria-hidden="true">1</span>
@@ -651,6 +767,73 @@
             registrarla. Si se sale del rango, se levanta una alerta; si la siguiente medición
             vuelve a estar dentro, la alerta se cierra automáticamente. Tú solo ves las que están
             activas y el historial de las resueltas.
+          </p>
+
+          <!-- D35: el ciclo de la alerta, paso a paso. El ámbar aparece solo en
+               el paso del medio: es la única alerta de la página. -->
+          <div class="ciclo-alerta">
+            <div class="paso-ciclo">
+              <svg
+                class="trazo-ciclo"
+                viewBox="0 0 120 44"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <line x1="0" y1="20" x2="120" y2="20" stroke="var(--borde-input)" stroke-width="1" stroke-dasharray="4 4" />
+                <polyline
+                  points="0,36 30,32 60,26 90,10 120,6"
+                  fill="none"
+                  stroke="var(--marca)"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <h3>La lectura se sale de rango</h3>
+              <p>El sensor marca 34 °C y el máximo de tu cultivo es 28 °C.</p>
+            </div>
+
+            <div class="paso-ciclo paso-alerta">
+              <span class="insignia-alerta">Alerta activa</span>
+              <h3>AgroBits te avisa</h3>
+              <p>La alerta aparece con el valor leído y la hora. Es lo único que grita en la interfaz.</p>
+            </div>
+
+            <div class="paso-ciclo">
+              <svg
+                class="trazo-ciclo"
+                viewBox="0 0 120 44"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <line x1="0" y1="20" x2="120" y2="20" stroke="var(--borde-input)" stroke-width="1" stroke-dasharray="4 4" />
+                <polyline
+                  points="0,6 30,10 60,16 90,24 120,30"
+                  fill="none"
+                  stroke="var(--marca)"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <h3>Se cierra sola</h3>
+              <p>En cuanto la siguiente lectura vuelve al rango, la alerta queda resuelta.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cierre">
+        <div class="envoltorio">
+          <h2>Empieza con un cultivo</h2>
+          <p>
+            El catálogo trae umbrales de referencia para tomate, lechuga, albahaca y pimiento.
+            Ajústalos a las condiciones de tu balcón o huerto: cultivar con datos es, sobre
+            todo, ajustar los límites.
+          </p>
+          <p class="acciones">
+            <a class="boton boton-primario" href="/app.html?acceso=registro">Crear cuenta</a>
+            <a class="boton boton-secundario" href="/app.html">Iniciar sesión</a>
           </p>
         </div>
       </section>

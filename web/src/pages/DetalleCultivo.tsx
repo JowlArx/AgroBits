@@ -14,6 +14,7 @@ import {
   suscribirSensores,
 } from '../data/storeSensores'
 import { cargarAlertas } from '../data/storeAlertas'
+import ConfirmacionEnLinea from '../components/ConfirmacionEnLinea'
 import { exigirProgramador } from '../data/programadorLecturas'
 import { obtenerCultivo, suscribirCultivos, obtenerCultivos } from '../data/storeCultivos'
 import { TIPOS_MEDICION } from '../domain/tipos'
@@ -46,6 +47,9 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
 
   const [nombreSensor, setNombreSensor] = useState('')
   const [errorSensor, setErrorSensor] = useState('')
+  // D35: asociar un sensor que ya es de la cuenta (el contrapresto de
+  // «desasociar»: sin esto, desasociar era irreversible desde la interfaz).
+  const [sensorParaAsociar, setSensorParaAsociar] = useState('')
 
   const cultivo = obtenerCultivo(cultivoId)
   if (!cultivo) {
@@ -60,6 +64,8 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
   }
 
   const sensores = obtenerSensoresDeCultivo(cultivoId)
+  // D35: sensores de la cuenta que aún no están en este cultivo.
+  const sensoresDisponibles = obtenerSensores().filter((s) => !s.cultivoIds.includes(cultivoId))
   const ultimas = ultimasPorTipo(sensores.map((s) => s.id))
   const conDatos = TIPOS_MEDICION.filter((tipo) => ultimas[tipo] !== undefined).length
 
@@ -92,6 +98,20 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
     setErrorSensor(resultado.ok ? '' : resultado.errores.map((e) => e.motivo).join('. '))
   }
 
+  /** D35:asocia a este cultivo un sensor que ya pertenece a la cuenta. */
+  async function asociarExistente(evento: React.FormEvent): Promise<void> {
+    evento.preventDefault()
+    if (!sensorParaAsociar) return
+    const resultado = await asociarSensor(sensorParaAsociar, cultivoId, (id) => obtenerCultivo(id) !== undefined)
+    if (!resultado.ok) {
+      setErrorSensor(resultado.errores.map((e) => e.motivo).join('. '))
+      return
+    }
+    setErrorSensor('')
+    setSensorParaAsociar('')
+    exigirProgramador().programar([sensorParaAsociar])
+  }
+
   return (
     <section>
       <header className="fila-entre">
@@ -112,18 +132,40 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
           {sensores.map((sensor) => (
             <li key={sensor.id} className="fila-sensor-cultivo">
               <span className="nombre-sensor-cultivo">{sensor.nombre}</span>
-              <button
-                type="button"
+              <ConfirmacionEnLinea
+                etiqueta="Desasociar"
+                pregunta={`¿Desasociar «${sensor.nombre}» de este cultivo?`}
                 className="btn-peligro"
-                data-testid="desasociar-sensor"
-                aria-label={`Desasociar ${sensor.nombre} del cultivo`}
-                onClick={() => void desasociar(sensor.id)}
-              >
-                Desasociar
-              </button>
+                testId="desasociar-sensor"
+                onConfirmar={() => void desasociar(sensor.id)}
+              />
             </li>
           ))}
         </ul>
+      )}
+
+      {/* D35: sensors de la cuenta que todavía no están en este cultivo. */}
+      {sensoresDisponibles.length > 0 && (
+        <form onSubmit={asociarExistente} className="fila-sensor">
+          <label>
+            Sensor de tu cuenta
+            <select
+              data-testid="sensor-para-asociar"
+              value={sensorParaAsociar}
+              onChange={(e) => setSensorParaAsociar(e.target.value)}
+            >
+              <option value="">— Elige un sensor —</option>
+              {sensoresDisponibles.map((sensor) => (
+                <option key={sensor.id} value={sensor.id}>
+                  {sensor.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button type="submit" className="btn-primario" data-testid="asociar-sensor" disabled={!sensorParaAsociar}>
+            Asociar
+          </button>
+        </form>
       )}
 
       <form onSubmit={crearYAsociar} className="fila-sensor">
@@ -210,8 +252,8 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
       </table>
 
       <p className="aviso">
-        Lecturas simuladas guardadas en Supabase (T-23) y generadas automáticamente cada 5
-        minutos por sensor mientras hay sesión abierta (T-24, decisión D15).
+        Las lecturas simuladas se guardan en el servidor y se generan automáticamente cada 5
+        minutos por sensor mientras la sesión está abierta.
       </p>
     </section>
   )

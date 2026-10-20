@@ -105,6 +105,8 @@ export async function esperarLectura(page: Page, tipo = 'temperatura'): Promise<
 export async function eliminarCultivo(page: Page, nombre: string): Promise<void> {
   await page.getByTestId('nav-cultivos').click()
   await cultivoEn(page, nombre).getByRole('button', { name: 'Eliminar' }).click()
+  // D35: las acciones destructivas piden confirmación en línea.
+  await page.getByRole('button', { name: 'Sí', exact: true }).click()
   // La cascada de la BD (enlaces, mediciones y alertas) puede tardar.
   await expect(cultivoEn(page, nombre)).toHaveCount(0, { timeout: 90_000 })
 }

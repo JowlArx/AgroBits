@@ -52,6 +52,8 @@ test('D34: se puede desasociar un sensor del cultivo', async ({ page }) => {
 
   // Desasociar: el sensor sale de la lista de sensores del cultivo…
   await page.getByRole('button', { name: /Desasociar/ }).click()
+  // D35: confirmación en línea antes de desasociar.
+  await page.getByRole('button', { name: 'Sí', exact: true }).click()
   await expect(page.getByTestId('sin-sensores')).toBeVisible()
 
   // …pero sigue en la cuenta (vista Sensores) hasta que se elimine explícitamente.
@@ -61,6 +63,7 @@ test('D34: se puede desasociar un sensor del cultivo', async ({ page }) => {
 
   // Eliminar el sensor lo borra de la cuenta (el spec se limpia solo).
   await tarjeta.getByRole('button', { name: /^Eliminar/ }).click()
+  await page.getByRole('button', { name: 'Sí', exact: true }).click()
   await expect(tarjeta).toHaveCount(0)
 
   await eliminarCultivo(page, nombre)

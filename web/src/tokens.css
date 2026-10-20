@@ -1,0 +1,74 @@
+/* ==========================================================================
+   AgroBits — tokens del sistema visual (D35)
+   Fuente única de verdad para la landing (web/index.html) y para la app
+   (web/src/estilos.css). Antes cada página tenía su propio bloque `:root`
+   y los temas se podían desincronizar.
+
+   Dirección: estación de monitoreo agrícola para cultivadores pequeños
+   (balcón / huerto). Papel blanco-verdoso, tinta verde-negra, verde botánico
+   como marca y ámbar-señal reservado en exclusiva a las alertas: lo único
+   con voz alta en toda la interfaz.
+   ========================================================================== */
+
+:root {
+  color-scheme: light dark;
+
+  /* Familias tipográficas */
+  --fuente-titulo: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --fuente-texto: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Escala de espacio (base 8px) */
+  --espacio-1: 0.25rem;
+  --espacio-2: 0.5rem;
+  --espacio-3: 0.75rem;
+  --espacio-4: 1rem;
+  --espacio-5: 1.5rem;
+  --espacio-6: 2rem;
+
+  /* Escala tipográfica (D35): los tamaños salen de aquí, no sueltos */
+  --t-xs: 0.8rem;
+  --t-sm: 0.875rem;
+  --t-md: 1rem;
+  --t-lg: 1.25rem;
+  --t-xl: 1.6rem;
+  --t-2xl: 2.1rem;
+  --t-display: clamp(1.9rem, 4.5vw, 2.75rem);
+
+  /* Radios: dos niveles (superficies y píldoras) */
+  --radio: 10px;
+  --radio-sm: 8px;
+
+  /* Movimiento (D35): un solo patrón, exponencial suave */
+  --transicion: 140ms cubic-bezier(0.2, 0, 0, 1);
+
+  /* Tema claro */
+  --fondo: #f6f8f4;
+  --superficie: #ffffff;
+  --texto: #12211a;
+  --texto-tenue: #5b6660;
+  --marca: #1e5b3d;
+  --marca-hover: #2e7d57;
+  --sobre-marca: #ffffff;
+  --senal: #c2410c;
+  --senal-suave: #fdf0e7;
+  --borde: #d8dfd6;
+  --borde-input: #78857d;
+  --foco: #1e5b3d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #0e1712;
+    --superficie: #16211b;
+    --texto: #e7ede7;
+    --texto-tenue: #9daa9f;
+    --marca: #74c894;
+    --marca-hover: #93d8ad;
+    --sobre-marca: #0e1712;
+    --senal: #f97316;
+    --senal-suave: #2c1a0e;
+    --borde: #2a3830;
+    --borde-input: #4a5a50;
+    --foco: #74c894;
+  }
+}

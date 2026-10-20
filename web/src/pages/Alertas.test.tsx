@@ -128,6 +128,8 @@ describe('pantalla de alertas (T-15/T-23, R-13 y R-14)', () => {
 
     fireEvent.click(screen.getByTestId('nav-cultivos'))
     fireEvent.click(screen.getByText('Eliminar'))
+    // D35: confirmación en línea antes de borrar.
+    fireEvent.click(screen.getByRole('button', { name: 'Sí' }))
     await screen.findByTestId('vacio')
     abrirAlertas()
 

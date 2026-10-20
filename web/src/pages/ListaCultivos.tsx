@@ -5,11 +5,12 @@ import {
   obtenerEstadoCarga,
   suscribirCultivos,
 } from '../data/storeCultivos'
-import { quitarAsociacionesDeCultivo } from '../data/storeSensores'
+import { obtenerSensores, quitarAsociacionesDeCultivo, suscribirSensores } from '../data/storeSensores'
 import { eliminarMediciones } from '../data/medicionesSimuladas'
 import { cargarAlertas } from '../data/storeAlertas'
 import { TIPOS_MEDICION, UNIDADES } from '../domain/tipos'
 import IconoCultivo from '../components/IconoCultivo'
+import ConfirmacionEnLinea from '../components/ConfirmacionEnLinea'
 
 interface Props {
   onNuevo: () => void
@@ -20,6 +21,9 @@ interface Props {
 export default function ListaCultivos({ onNuevo, onEditar, onVerMediciones }: Props) {
   const cultivos = useSyncExternalStore(suscribirCultivos, obtenerCultivos)
   const estadoCarga = useSyncExternalStore(suscribirCultivos, obtenerEstadoCarga)
+  // D35: la tarjeta resume en una línea lo que el cultivo tiene (umbrales y
+  // sensores) para que la lista se pueda escanear de un vistazo.
+  const sensores = useSyncExternalStore(suscribirSensores, obtenerSensores)
 
   async function eliminar(cultivoId: string): Promise<void> {
     // T-23: la cadena va contra la BD (cascada en el servidor para los
@@ -66,47 +70,56 @@ export default function ListaCultivos({ onNuevo, onEditar, onVerMediciones }: Pr
                     <strong>{cultivo.nombre}</strong>
                     <span className="etiqueta">{cultivo.tipoCultivo}</span>
                   </span>
+                  {/* D35: resumen de una línea (umbrales + sensores). */}
+                  <p className="resumen-cultivo">
+                    {TIPOS_MEDICION.length} tipos de medición
+                    {' · '}
+                    {sensores.filter((s) => s.cultivoIds.includes(cultivo.id)).length}{' '}
+                    {sensores.filter((s) => s.cultivoIds.includes(cultivo.id)).length === 1
+                      ? 'sensor'
+                      : 'sensores'}
+                  </p>
                 </div>
-                <div className="acciones">
+                <div className="acciones acciones-tarjeta">
                   <button type="button" onClick={() => onVerMediciones(cultivo.id)}>
                     Ver mediciones
                   </button>
                   <button type="button" onClick={() => onEditar(cultivo.id)}>
                     Editar
                   </button>
-                  <button
-                    type="button"
+                  {/* D35: confirmación en línea antes de borrar. */}
+                  <ConfirmacionEnLinea
+                    etiqueta="Eliminar"
+                    pregunta={`¿Eliminar «${cultivo.nombre}»?`}
                     className="btn-peligro"
-                    data-testid={`eliminar-${cultivo.id}`}
-                    onClick={() => {
-                      // T-18: al borrar el cultivo se retiran sus asociaciones;
-                      // los sensores que quedan sin cultivos se eliminan junto
-                      // con sus mediciones. T-17: sus alertas no quedan huérfanas.
-                      void eliminar(cultivo.id)
-                    }}
-                  >
-                    Eliminar
-                  </button>
+                    testId={`eliminar-${cultivo.id}`}
+                    onConfirmar={() => void eliminar(cultivo.id)}
+                  />
                 </div>
               </div>
-              <table className="tabla-umbrales">
-                <thead>
-                  <tr>
-                    <th>Medición</th>
-                    <th>Mínimo</th>
-                    <th>Máximo</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {TIPOS_MEDICION.map((tipo) => (
-                    <tr key={tipo}>
-                      <td>{UNIDADES[tipo] ? tipo.replace(/_/g, ' ') : tipo}</td>
-                      <td>{cultivo.umbrales[tipo].min}</td>
-                      <td>{cultivo.umbrales[tipo].max}</td>
+              {/* D35: la tarjeta se aligera — el resumen de umbrales se abre
+                  bajo demanda en vez de ocupar cuatro filas por cultivo. */}
+              <details className="umbrales-cultivo">
+                <summary>Ver umbrales</summary>
+                <table className="tabla-umbrales">
+                  <thead>
+                    <tr>
+                      <th>Medición</th>
+                      <th>Mínimo</th>
+                      <th>Máximo</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {TIPOS_MEDICION.map((tipo) => (
+                      <tr key={tipo}>
+                        <td>{UNIDADES[tipo] ? tipo.replace(/_/g, ' ') : tipo}</td>
+                        <td>{cultivo.umbrales[tipo].min}</td>
+                        <td>{cultivo.umbrales[tipo].max}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </details>
             </li>
           ))}
         </ul>

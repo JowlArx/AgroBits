@@ -208,7 +208,9 @@ describe('registro y asociación de sensores (T-18/T-23, R-06)', () => {
     await waitFor(() => expect(screen.queryByTestId('simular-lectura')).toBeTruthy())
     await generarLectura()
     fireEvent.click(screen.getByRole('button', { name: 'Volver' }))
+    // D35: «Eliminar» pide confirmación en línea antes de borrar.
     fireEvent.click(screen.getByText('Eliminar'))
+    fireEvent.click(screen.getByRole('button', { name: 'Sí' }))
 
     expect(await screen.findByTestId('vacio')).toBeTruthy()
     expect(obtenerSensores()).toHaveLength(0)
@@ -221,9 +223,32 @@ describe('registro y asociación de sensores (T-18/T-23, R-06)', () => {
     await waitFor(() => expect(screen.queryByTestId('lista-sensores')).toBeTruthy())
 
     fireEvent.click(screen.getByRole('button', { name: /Desasociar/ }))
+    // D35: confirmación en línea antes de desasociar.
+    fireEvent.click(screen.getByRole('button', { name: 'Sí' }))
 
     expect(await screen.findByTestId('sin-sensores')).toBeTruthy()
     expect(obtenerSensores()).toHaveLength(1)
     expect(obtenerSensores()[0].cultivoIds).toHaveLength(0)
+  })
+
+  it('D35: un sensor desasociado se puede volver a asociar al cultivo', async () => {
+    render(<App />)
+    await crearCultivoConDetalle('Huerto reasociable')
+    crearSensor('Sensor que vuelve')
+    await waitFor(() => expect(screen.queryByTestId('lista-sensores')).toBeTruthy())
+    const sensorId = obtenerSensores()[0].id
+
+    fireEvent.click(screen.getByRole('button', { name: /Desasociar/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Sí' }))
+    await screen.findByTestId('sin-sensores')
+
+    // El sensor sigue en la cuenta: se puede volver a enlazar desde aquí.
+    fireEvent.change(screen.getByTestId('sensor-para-asociar'), { target: { value: sensorId } })
+    fireEvent.click(screen.getByTestId('asociar-sensor'))
+
+    await waitFor(() =>
+      expect(screen.getByTestId('lista-sensores').textContent).toContain('Sensor que vuelve'),
+    )
+    expect(obtenerSensores()[0].cultivoIds).toHaveLength(1)
   })
 })
