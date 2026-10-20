@@ -94,6 +94,50 @@ export async function asociarSensor(
 }
 
 /**
+ * D34: desasocia un sensor de un cultivo (borra el enlace N–N). El sensor
+ * sigue en la cuenta con sus lecturas: solo deja de estar en este cultivo.
+ * Un sensor que se queda sin cultivos puede eliminarse desde la vista
+ * Sensores.
+ */
+export async function desasociarSensor(
+  sensorId: string,
+  cultivoId: string,
+): Promise<Resultado<Sensor>> {
+  const sensor = sensores.find((s) => s.id === sensorId)
+  if (!sensor) return { ok: false, errores: [{ campo: 'sensor', motivo: 'Sensor no encontrado' }] }
+  if (!sensor.cultivoIds.includes(cultivoId)) {
+    return { ok: false, errores: [{ campo: 'sensor', motivo: 'El sensor no está asociado a este cultivo' }] }
+  }
+
+  const resultado = await exigirProveedor().desasociarSensor(sensorId, cultivoId)
+  if (resultado.ok) {
+    sensores = sensores.map((s) => (s.id === sensorId ? resultado.valor : s))
+    notificar()
+  }
+  return resultado
+}
+
+/**
+ * D34: elimina el sensor de la cuenta. En la BD caen en cascada sus enlaces
+ * (`sensor_crop`) y sus mediciones (`measurements`).
+ */
+export async function eliminarSensor(sensorId: string): Promise<Resultado<Sensor>> {
+  const sensor = sensores.find((s) => s.id === sensorId)
+  if (!sensor) return { ok: false, errores: [{ campo: 'sensor', motivo: 'Sensor no encontrado' }] }
+
+  try {
+    await exigirProveedor().eliminarSensor(sensorId)
+  } catch (error) {
+    const motivo = error instanceof Error ? error.message : 'error desconocido'
+    return { ok: false, errores: [{ campo: 'general', motivo }] }
+  }
+
+  sensores = sensores.filter((s) => s.id !== sensorId)
+  notificar()
+  return { ok: true, valor: sensor }
+}
+
+/**
  * Quita los enlaces con el cultivo; los sensores que quedan sin cultivos se
  * eliminan (y sus mediciones, en cascada en la BD) y sus ids se devuelven
  * para que el llamante limpie su caché.

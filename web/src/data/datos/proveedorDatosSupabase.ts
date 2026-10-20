@@ -298,6 +298,46 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
     return { ok: true, valor: aSensor(data as unknown as FilaSensor) }
   }
 
+  /**
+   * D34: desasocia un sensor de un cultivo. Borra SOLO el enlace N–N: el
+   * sensor sigue en la cuenta del usuario (con sus lecturas) y deja de
+   * estar en este cultivo.
+   */
+  async desasociarSensor(sensorId: string, cultivoId: string): Promise<Resultado<Sensor>> {
+    const { error } = await this.cliente
+      .from('sensor_crop')
+      .delete()
+      .eq('sensor_id', sensorId)
+      .eq('crop_id', cultivoId)
+    if (error) {
+      console.error('desasociarSensor:', error)
+      return SERVIDOR(error.message, 'desasociar el sensor')
+    }
+
+    const { data, error: relectura } = await this.cliente
+      .from('sensors')
+      .select(SELECT_SENSOR)
+      .eq('id', sensorId)
+      .single()
+    if (relectura || !data) {
+      console.error('desasociarSensor (relectura):', relectura)
+      return SERVIDOR(relectura?.message ?? 'sin datos', 'desasociar el sensor')
+    }
+    return { ok: true, valor: aSensor(data as unknown as FilaSensor) }
+  }
+
+  /**
+   * D34: elimina el sensor de la cuenta. Las FK `on delete cascade` borran
+   * también sus enlaces (`sensor_crop`) y sus mediciones (`measurements`).
+   */
+  async eliminarSensor(sensorId: string): Promise<void> {
+    const { error } = await this.cliente.from('sensors').delete().eq('id', sensorId)
+    if (error) {
+      console.error('eliminarSensor:', error)
+      throw new Error(`No se pudo eliminar el sensor (${error.message})`)
+    }
+  }
+
   async quitarAsociacionesDeCultivo(cultivoId: string): Promise<string[]> {
     const previos = await this.cliente.from('sensor_crop').select('sensor_id').eq('crop_id', cultivoId)
     if (previos.error) throw new Error(`No se pudieron quitar las asociaciones (${previos.error.message})`)

@@ -14,6 +14,7 @@ import { obtenerCultivo, obtenerCultivos, suscribirCultivos } from './data/store
 import { obtenerSensores, suscribirSensores } from './data/storeSensores'
 import { alertasOrdenadas, obtenerAlertas, suscribirAlertas } from './data/storeAlertas'
 import { obtenerMediciones, suscribirMediciones } from './data/medicionesSimuladas'
+import { useEsMovil } from './hooks/useEsMovil'
 
 type Vista =
   | { tipo: 'lista' }
@@ -107,10 +108,38 @@ const iconoCuenta = (
   </svg>
 )
 
+/** D33/D34 — Menú desplegable de la cuenta: Mi cuenta / Cerrar sesión. */
+function MenuCuenta({
+  onCerrar,
+  onCuenta,
+  onSalir,
+}: {
+  onCerrar: () => void
+  onCuenta: () => void
+  onSalir: () => void
+}) {
+  return (
+    <>
+      {/* Clic fuera del menú: cierra sin afectar al contenido. */}
+      <div className="fondo-menu" onClick={onCerrar} aria-hidden="true" />
+      <div className="menu-usuario" role="menu">
+        <button type="button" role="menuitem" data-testid="nav-cuenta" onClick={onCuenta}>
+          Mi cuenta
+        </button>
+        <button type="button" role="menuitem" data-testid="cerrar-sesion" onClick={onSalir}>
+          Cerrar sesión
+        </button>
+      </div>
+    </>
+  )
+}
+
 export default function App() {
   const [vista, setVista] = useState<Vista>({ tipo: 'lista' })
   // D33: menú desplegable de la cuenta (Mi cuenta / Cerrar sesión).
   const [menuAbierto, setMenuAbierto] = useState(false)
+  // D34: en móvil la navegación se dibuja en una barra inferior de iconos.
+  const esMovil = useEsMovil()
   // T-16/T-22: gate de acceso (D8) — sin sesión no se ve el contenido.
   const sesion = useSyncExternalStore(suscribirSesion, obtenerSesion)
 
@@ -157,6 +186,58 @@ export default function App() {
   // D32/D33: nombre visible del disparador del menú (nombre o parte local del email).
   const nombreVisible = sesion.usuario.nombreUsuario?.trim() || sesion.usuario.email.split('@')[0]
 
+  /**
+   * D34: los tres botones de sección. En escritorio muestran icono y texto;
+   * en la barra inferior de móvil, solo el icono (con `aria-label` para que
+   * no pierdan nombre accesible). Al navegar, el menú de la cuenta se cierra.
+   */
+  const botonesSeccion = (compacto: boolean) => (
+    <>
+      <button
+        type="button"
+        className={compacto ? 'boton-seccion boton-seccion-compacto' : 'boton-seccion'}
+        data-testid="nav-cultivos"
+        aria-label="Cultivos"
+        aria-current={vista.tipo === 'lista' ? 'page' : undefined}
+        onClick={() => {
+          setMenuAbierto(false)
+          setVista({ tipo: 'lista' })
+        }}
+      >
+        {iconoHoja}
+        {!compacto && 'Cultivos'}
+      </button>
+      <button
+        type="button"
+        className={compacto ? 'boton-seccion boton-seccion-compacto' : 'boton-seccion'}
+        data-testid="nav-alertas"
+        aria-label="Alertas"
+        aria-current={vista.tipo === 'alertas' ? 'page' : undefined}
+        onClick={() => {
+          setMenuAbierto(false)
+          setVista({ tipo: 'alertas' })
+        }}
+      >
+        {iconoCampana}
+        {!compacto && 'Alertas'}
+      </button>
+      <button
+        type="button"
+        className={compacto ? 'boton-seccion boton-seccion-compacto' : 'boton-seccion'}
+        data-testid="nav-sensores"
+        aria-label="Sensores"
+        aria-current={vista.tipo === 'sensores' ? 'page' : undefined}
+        onClick={() => {
+          setMenuAbierto(false)
+          setVista({ tipo: 'sensores' })
+        }}
+      >
+        {iconoSensor}
+        {!compacto && 'Sensores'}
+      </button>
+    </>
+  )
+
   return (
     <div className="estructura">
       {/* WCAG 2.4.1: el teclado puede saltarse la cabecera del panel. */}
@@ -164,95 +245,56 @@ export default function App() {
         Saltar al contenido
       </a>
       <div className="zona-derecha">
-        {/* D33 — cabecera del panel: la navegación (Cultivos/Alertas/Sensores)
-            y la cuenta viven arriba; la barra lateral se retira porque quedaba
-            demasiado vacía. Debajo sigue el topbar contextual (D31). */}
+        {/* D33/D34 — cabecera del panel: en escritorio la navegación y la
+            cuenta viven arriba; en móvil la navegación baja a una barra
+            inferior de iconos y aquí queda solo la marca. Debajo sigue el
+            topbar contextual (D31). */}
         <header className="cabecera-panel">
           <div className="fila-nav">
             <span className="marca-panel">
               <img className="marca" src="/logo.png" width="24" height="24" alt="" />
               AgroBits
             </span>
-            <nav aria-label="Principal" className="nav-superior">
-              <button
-                type="button"
-                data-testid="nav-cultivos"
-                aria-current={vista.tipo === 'lista' ? 'page' : undefined}
-                onClick={() => setVista({ tipo: 'lista' })}
-              >
-                {iconoHoja}
-                Cultivos
-              </button>
-              <button
-                type="button"
-                data-testid="nav-alertas"
-                aria-current={vista.tipo === 'alertas' ? 'page' : undefined}
-                onClick={() => setVista({ tipo: 'alertas' })}
-              >
-                {iconoCampana}
-                Alertas
-              </button>
-              <button
-                type="button"
-                data-testid="nav-sensores"
-                aria-current={vista.tipo === 'sensores' ? 'page' : undefined}
-                onClick={() => setVista({ tipo: 'sensores' })}
-              >
-                {iconoSensor}
-                Sensores
-              </button>
-            </nav>
-            <div className="sesion-superior">
-              <button
-                type="button"
-                className="btn-usuario"
-                data-testid="menu-usuario"
-                aria-haspopup="menu"
-                aria-expanded={menuAbierto}
-                onClick={() => setMenuAbierto((abierto) => !abierto)}
-              >
-                {iconoCuenta}
-                <span className="etiqueta" data-testid="sesion-usuario" title={sesion.usuario.email}>
-                  {nombreVisible}
-                </span>
-              </button>
-              {menuAbierto && (
-                <>
-                  {/* Clic fuera del menú: cierra sin afectar al contenido. */}
-                  <div className="fondo-menu" onClick={() => setMenuAbierto(false)} aria-hidden="true" />
-                  <div
-                    className="menu-usuario"
-                    role="menu"
-                    onKeyDown={(evento) => {
-                      if (evento.key === 'Escape') setMenuAbierto(false)
-                    }}
+            {!esMovil && (
+              <>
+                <nav aria-label="Principal" className="nav-superior">
+                  {botonesSeccion(false)}
+                </nav>
+                <div
+                  className="sesion-superior"
+                  onKeyDown={(evento) => {
+                    if (evento.key === 'Escape') setMenuAbierto(false)
+                  }}
+                >
+                  <button
+                    type="button"
+                    className="btn-usuario"
+                    data-testid="menu-usuario"
+                    aria-haspopup="menu"
+                    aria-expanded={menuAbierto}
+                    onClick={() => setMenuAbierto((abierto) => !abierto)}
                   >
-                    <button
-                      type="button"
-                      role="menuitem"
-                      data-testid="nav-cuenta"
-                      onClick={() => {
+                    {iconoCuenta}
+                    <span className="etiqueta" data-testid="sesion-usuario" title={sesion.usuario.email}>
+                      {nombreVisible}
+                    </span>
+                  </button>
+                  {menuAbierto && (
+                    <MenuCuenta
+                      onCerrar={() => setMenuAbierto(false)}
+                      onCuenta={() => {
                         setMenuAbierto(false)
                         setVista({ tipo: 'cuenta' })
                       }}
-                    >
-                      Mi cuenta
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      data-testid="cerrar-sesion"
-                      onClick={() => {
+                      onSalir={() => {
                         setMenuAbierto(false)
                         void cerrarSesion()
                       }}
-                    >
-                      Cerrar sesión
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+                    />
+                  )}
+                </div>
+              </>
+            )}
           </div>
           <div className="topbar">
             <div className="titulo-topbar">
@@ -272,6 +314,52 @@ export default function App() {
             </div>
           </div>
         </header>
+
+        {/* D34 — Barra inferior de navegación (solo en móvil): iconos de las
+            secciones y, a la derecha del todo, el icono de perfil (sin
+            nombre) que abre el menú de la cuenta. */}
+        {esMovil && (
+          <nav aria-label="Principal" className="barra-inferior">
+            {botonesSeccion(true)}
+            <div
+              className="sesion-superior"
+              onKeyDown={(evento) => {
+                if (evento.key === 'Escape') setMenuAbierto(false)
+              }}
+            >
+              {/* D34: el icono de perfil va «sin nombre y sin nada»; el nombre
+                  se conserva solo para lectores de pantalla y para las pruebas. */}
+              <span className="visualmente-oculto" data-testid="sesion-usuario">
+                {nombreVisible}
+              </span>
+              <button
+                type="button"
+                className="boton-seccion boton-seccion-compacto boton-perfil"
+                data-testid="menu-usuario"
+                aria-label="Mi cuenta"
+                aria-haspopup="menu"
+                aria-expanded={menuAbierto}
+                onClick={() => setMenuAbierto((abierto) => !abierto)}
+              >
+                {iconoCuenta}
+              </button>
+              {menuAbierto && (
+                <MenuCuenta
+                  onCerrar={() => setMenuAbierto(false)}
+                  onCuenta={() => {
+                    setMenuAbierto(false)
+                    setVista({ tipo: 'cuenta' })
+                  }}
+                  onSalir={() => {
+                    setMenuAbierto(false)
+                    void cerrarSesion()
+                  }}
+                />
+              )}
+            </div>
+          </nav>
+        )}
+
         <div className={vista.tipo === 'lista' ? 'cuerpo con-panel' : 'cuerpo'}>
           <main id="contenido">
             {vista.tipo === 'lista' && (

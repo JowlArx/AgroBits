@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   asociarSensor,
   crearSensor,
+  desasociarSensor,
+  eliminarSensor,
   obtenerSensores,
   obtenerSensoresDeCultivo,
   quitarAsociacionesDeCultivo,
@@ -133,5 +135,49 @@ describe('store de sensores (T-18/R-06, T-23)', () => {
     expect(borrados).toEqual([])
     expect(obtenerSensores()).toHaveLength(1)
     expect(obtenerSensores()[0].cultivoIds).toEqual([dos])
+  })
+
+  it('D34: desasociar saca el sensor del cultivo pero lo conserva en la cuenta', async () => {
+    const cultivoId = await crearCultivoEjemplo('Huerto')
+    const sensor = await crearSensor('Sensor F')
+    if (!sensor.ok) throw new Error('esperaba crear')
+    await asociarSensor(sensor.valor.id, cultivoId, existeCultivo)
+
+    const resultado = await desasociarSensor(sensor.valor.id, cultivoId)
+
+    expect(resultado.ok).toBe(true)
+    expect(obtenerSensoresDeCultivo(cultivoId)).toHaveLength(0)
+    expect(obtenerSensores()).toHaveLength(1)
+    expect(obtenerSensores()[0].cultivoIds).toEqual([])
+  })
+
+  it('D34: desasociar un sensor que no está en el cultivo se rechaza', async () => {
+    const cultivoId = await crearCultivoEjemplo('Huerto')
+    const sensor = await crearSensor('Sensor G')
+    if (!sensor.ok) throw new Error('esperaba crear')
+
+    const resultado = await desasociarSensor(sensor.valor.id, cultivoId)
+
+    expect(resultado.ok).toBe(false)
+    expect(obtenerSensores()).toHaveLength(1)
+  })
+
+  it('D34: eliminarSensor quita el sensor de la cuenta', async () => {
+    const cultivoId = await crearCultivoEjemplo('Huerto')
+    const sensor = await crearSensor('Sensor H')
+    if (!sensor.ok) throw new Error('esperaba crear')
+    await asociarSensor(sensor.valor.id, cultivoId, existeCultivo)
+
+    const resultado = await eliminarSensor(sensor.valor.id)
+
+    expect(resultado.ok).toBe(true)
+    expect(obtenerSensores()).toHaveLength(0)
+    expect(obtenerSensoresDeCultivo(cultivoId)).toHaveLength(0)
+  })
+
+  it('D34: eliminar un sensor inexistente se rechaza', async () => {
+    const resultado = await eliminarSensor('no-existe')
+
+    expect(resultado.ok).toBe(false)
   })
 })

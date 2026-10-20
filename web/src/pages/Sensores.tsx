@@ -18,11 +18,12 @@ import {
 } from 'recharts'
 import {
   actualizarColorSensor,
+  eliminarSensor,
   obtenerSensores,
   suscribirSensores,
 } from '../data/storeSensores'
 import { obtenerCultivo, suscribirCultivos } from '../data/storeCultivos'
-import { generarLectura, obtenerMediciones, suscribirMediciones } from '../data/medicionesSimuladas'
+import { eliminarMediciones, generarLectura, obtenerMediciones, suscribirMediciones } from '../data/medicionesSimuladas'
 import { cargarAlertas } from '../data/storeAlertas'
 import { COLORES_SENSOR, TIPOS_MEDICION, type ColorSensor, type TipoMedicion } from '../domain/tipos'
 import { ETIQUETAS_COLOR_SENSOR, ETIQUETAS_MEDICION, VAR_COLOR_SENSOR } from '../data/catalogo'
@@ -65,6 +66,24 @@ export default function Sensores() {
   async function cambiarColor(sensorId: string, color: ColorSensor): Promise<void> {
     const resultado = await actualizarColorSensor(sensorId, color)
     setErrorColor(resultado.ok ? '' : resultado.errores.map((e) => e.motivo).join('. '))
+  }
+
+  /**
+   * D34: elimina el sensor de la cuenta. En la BD caen en cascada sus
+   * enlaces y sus mediciones; aquí se purga también la caché local.
+   */
+  async function eliminar(sensorId: string): Promise<void> {
+    const resultado = await eliminarSensor(sensorId)
+    if (!resultado.ok) {
+      setErrorColor(resultado.errores.map((e) => e.motivo).join('. '))
+      return
+    }
+    try {
+      await eliminarMediciones([sensorId])
+    } catch (error) {
+      console.error('No se pudo purgar la caché de mediciones', error)
+    }
+    if (sensorActivoId === sensorId) setSensorActivoId(null)
   }
 
   const puntosSensor = sensorActivo
@@ -136,13 +155,24 @@ export default function Sensores() {
                   ))}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setSensorActivoId(sensor.id)}
-                  aria-expanded={sensorActivoId === sensor.id}
-                >
-                  Ver mediciones
-                </button>
+                <div className="acciones">
+                  <button
+                    type="button"
+                    onClick={() => setSensorActivoId(sensor.id)}
+                    aria-expanded={sensorActivoId === sensor.id}
+                  >
+                    Ver mediciones
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-peligro"
+                    data-testid="eliminar-sensor"
+                    aria-label={`Eliminar ${sensor.nombre}`}
+                    onClick={() => void eliminar(sensor.id)}
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </li>
             )
           })}

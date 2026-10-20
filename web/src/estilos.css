@@ -587,7 +587,9 @@ dd {
   gap: var(--espacio-1);
 }
 
-.nav-superior button {
+/* D33/D34 — Botón de sección: icono + texto en escritorio; solo icono en la
+   barra inferior de móvil. */
+.boton-seccion {
   display: flex;
   align-items: center;
   gap: var(--espacio-2);
@@ -596,13 +598,17 @@ dd {
   background: transparent;
   color: var(--texto-tenue);
   font-weight: 400;
+  /* Por encima del fondo del menú (z-40): con el menú abierto, las secciones
+     siguen siendo pulsables (y el disparador, reversible). */
+  position: relative;
+  z-index: 45;
 }
 
-.nav-superior button:hover {
+.boton-seccion:hover {
   border-color: var(--borde);
 }
 
-.nav-superior button[aria-current='page'] {
+.nav-superior .boton-seccion[aria-current='page'] {
   color: var(--marca);
   font-weight: 700;
   box-shadow: inset 0 -2px 0 var(--marca);
@@ -625,6 +631,9 @@ dd {
   background: transparent;
   color: var(--texto-tenue);
   font-weight: 400;
+  /* Por encima del fondo del menú (z-40): se puede volver a pulsar para cerrar. */
+  position: relative;
+  z-index: 45;
 }
 
 .btn-usuario:hover {
@@ -672,6 +681,84 @@ dd {
 .menu-usuario button:hover {
   border-color: var(--borde);
   background: var(--fondo);
+}
+
+/* D34 — Barra inferior de navegación (móvil): píldora flotante con los
+   iconos de las secciones y, a la derecha del todo, el icono de perfil. */
+.barra-inferior {
+  position: fixed;
+  left: var(--espacio-3);
+  right: var(--espacio-3);
+  bottom: calc(var(--espacio-3) + env(safe-area-inset-bottom, 0px));
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  padding: var(--espacio-2);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 0.14);
+}
+
+.boton-seccion-compacto {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--fondo);
+}
+
+.boton-seccion-compacto[aria-current='page'] {
+  background: var(--marca);
+  color: var(--sobre-marca);
+}
+
+.boton-perfil {
+  margin-left: auto;
+  background: var(--fondo);
+  background: color-mix(in srgb, var(--marca) 14%, var(--superficie));
+  color: var(--marca);
+}
+
+/* Texto solo para lectores de pantalla (WCAG 2.4.6). */
+.visualmente-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* D34 — Sensores del cultivo con la acción de desasociar. */
+.lista-sensores-cultivo {
+  list-style: none;
+  margin: 0 0 var(--espacio-4);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+}
+
+.fila-sensor-cultivo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+  padding: var(--espacio-2) var(--espacio-3);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: var(--superficie);
+}
+
+.nombre-sensor-cultivo {
+  font-weight: 700;
 }
 
 .zona-derecha {
@@ -998,6 +1085,17 @@ dd {
   .cuerpo {
     padding-left: var(--espacio-4);
     padding-right: var(--espacio-4);
+  }
+
+  /* D34: la barra inferior flota sobre el contenido: se le deja sitio. */
+  .cuerpo {
+    padding-bottom: 6rem;
+  }
+
+  /* El menú de la cuenta se abre hacia arriba (vive en la barra inferior). */
+  .menu-usuario {
+    top: auto;
+    bottom: calc(100% + 0.5rem);
   }
 }
 

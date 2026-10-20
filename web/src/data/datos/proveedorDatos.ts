@@ -47,6 +47,10 @@ export interface ProveedorDatos {
   cargarSensores(): Promise<Sensor[]>
   crearSensor(nombre: string): Promise<Resultado<Sensor>>
   asociarSensor(sensorId: string, cultivoId: string): Promise<Resultado<Sensor>>
+  /** D34: desasocia un sensor de un cultivo (borra solo el enlace N–N). */
+  desasociarSensor(sensorId: string, cultivoId: string): Promise<Resultado<Sensor>>
+  /** D34: elimina el sensor de la cuenta (la BD borra en cascada enlaces y mediciones). */
+  eliminarSensor(sensorId: string): Promise<void>
   /** Quita los enlaces del cultivo y devuelve los ids de sensores huérfanos eliminados. */
   quitarAsociacionesDeCultivo(cultivoId: string): Promise<string[]>
   /** D30: color de la línea del gráfico del sensor (paleta nombrada). */

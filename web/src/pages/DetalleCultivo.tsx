@@ -8,6 +8,7 @@ import {
 import {
   asociarSensor,
   crearSensor,
+  desasociarSensor,
   obtenerSensores,
   obtenerSensoresDeCultivo,
   suscribirSensores,
@@ -82,6 +83,15 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
     exigirProgramador().programar([asociacion.valor.id])
   }
 
+  /**
+   * D34: desasocia el sensor de este cultivo. El sensor sigue en la cuenta
+   * del usuario (con sus lecturas); solo deja de medir este cultivo.
+   */
+  async function desasociar(sensorId: string): Promise<void> {
+    const resultado = await desasociarSensor(sensorId, cultivoId)
+    setErrorSensor(resultado.ok ? '' : resultado.errores.map((e) => e.motivo).join('. '))
+  }
+
   return (
     <section>
       <header className="fila-entre">
@@ -98,9 +108,20 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
       {sensores.length === 0 ? (
         <p data-testid="sin-sensores" className="estado-vacio">Este cultivo aún no tiene sensores asociados.</p>
       ) : (
-        <ul data-testid="lista-sensores">
+        <ul data-testid="lista-sensores" className="lista-sensores-cultivo">
           {sensores.map((sensor) => (
-            <li key={sensor.id}>{sensor.nombre}</li>
+            <li key={sensor.id} className="fila-sensor-cultivo">
+              <span className="nombre-sensor-cultivo">{sensor.nombre}</span>
+              <button
+                type="button"
+                className="btn-peligro"
+                data-testid="desasociar-sensor"
+                aria-label={`Desasociar ${sensor.nombre} del cultivo`}
+                onClick={() => void desasociar(sensor.id)}
+              >
+                Desasociar
+              </button>
+            </li>
           ))}
         </ul>
       )}

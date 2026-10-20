@@ -98,6 +98,21 @@ export class DatosFalsos implements ProveedorDatos {
     return exito({ ...sensor, cultivoIds: [...sensor.cultivoIds] })
   }
 
+  /** D34: desasocia el sensor de un cultivo (borra solo el enlace N–N). */
+  async desasociarSensor(sensorId: string, cultivoId: string): Promise<Resultado<Sensor>> {
+    const sensor = this.sensores.find((s) => s.id === sensorId)
+    if (!sensor) return fallo([{ campo: 'sensor', motivo: 'Sensor no encontrado' }])
+    const actualizado: Sensor = { ...sensor, cultivoIds: sensor.cultivoIds.filter((id) => id !== cultivoId) }
+    this.sensores = this.sensores.map((s) => (s.id === sensorId ? actualizado : s))
+    return exito({ ...actualizado, cultivoIds: [...actualizado.cultivoIds] })
+  }
+
+  /** D34: elimina el sensor (la BD borra en cascada enlaces y mediciones). */
+  async eliminarSensor(sensorId: string): Promise<void> {
+    this.sensores = this.sensores.filter((s) => s.id !== sensorId)
+    this.mediciones.delete(sensorId)
+  }
+
   async quitarAsociacionesDeCultivo(cultivoId: string): Promise<string[]> {
     const borrados: string[] = []
     const restantes: Sensor[] = []

@@ -213,4 +213,17 @@ describe('registro y asociación de sensores (T-18/T-23, R-06)', () => {
     expect(await screen.findByTestId('vacio')).toBeTruthy()
     expect(obtenerSensores()).toHaveLength(0)
   })
+
+  it('D34: desasociar un sensor lo quita del cultivo y el sensor sigue en la cuenta', async () => {
+    render(<App />)
+    await crearCultivoConDetalle('Huerto desasociado')
+    crearSensor('Sensor que se va')
+    await waitFor(() => expect(screen.queryByTestId('lista-sensores')).toBeTruthy())
+
+    fireEvent.click(screen.getByRole('button', { name: /Desasociar/ }))
+
+    expect(await screen.findByTestId('sin-sensores')).toBeTruthy()
+    expect(obtenerSensores()).toHaveLength(1)
+    expect(obtenerSensores()[0].cultivoIds).toHaveLength(0)
+  })
 })

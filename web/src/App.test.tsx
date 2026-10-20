@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import App from './App'
 import { reiniciarCultivos } from './data/storeCultivos'
@@ -137,5 +137,43 @@ describe('flujo de cultivos en la interfaz (T-13/T-23)', () => {
     guardar()
 
     expect(await screen.findByText('Calabacines')).toBeTruthy()
+  })
+})
+
+describe('navegación según el ancho de la ventana (D34)', () => {
+  const anchoOriginal = window.innerWidth
+
+  function fijarAncho(px: number): void {
+    Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: px })
+  }
+
+  afterEach(() => {
+    fijarAncho(anchoOriginal)
+  })
+
+  it('en escritorio la navegación está en la cabecera y no hay barra inferior', () => {
+    fijarAncho(1280)
+    render(<App />)
+
+    expect(screen.getByTestId('nav-cultivos')).toBeTruthy()
+    expect(document.querySelector('.barra-inferior')).toBeNull()
+  })
+
+  it('en móvil la navegación baja a la barra inferior y el perfil va solo con icono', () => {
+    fijarAncho(390)
+    render(<App />)
+
+    const barra = document.querySelector('.barra-inferior')
+    expect(barra).toBeTruthy()
+    expect(barra?.querySelector('[data-testid="nav-cultivos"]')).toBeTruthy()
+    // En la cabecera no queda una navegación duplicada.
+    expect(document.querySelector('.nav-superior')).toBeNull()
+
+    // El perfil es solo el icono: nombre accesible «Mi cuenta» y sin texto visible.
+    const perfil = screen.getByTestId('menu-usuario')
+    expect(perfil.getAttribute('aria-label')).toBe('Mi cuenta')
+    expect(perfil.textContent).toBe('')
+    // El nombre sigue disponible para lectores de pantalla.
+    expect(screen.getByTestId('sesion-usuario').textContent).toContain('pruebas')
   })
 })
