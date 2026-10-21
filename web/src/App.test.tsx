@@ -202,3 +202,23 @@ describe('desplegable de sensores del tablero (D36)', () => {
     expect(screen.queryAllByRole('option')).toHaveLength(0)
   })
 })
+
+describe('estado en la URL (D40)', () => {
+  it('la navegación escribe la vista en la URL y el «atrás» restaura la anterior', async () => {
+    render(<App />)
+    await screen.findByTestId('vacio')
+
+    fireEvent.click(screen.getByTestId('nav-alertas'))
+
+    // La URL dice dónde está el usuario: la vista es enlazable.
+    expect(window.location.search).toBe('?vista=alertas')
+    expect(screen.getByTestId('rango-ciclo')).toBeTruthy()
+
+    // Botón «atrás» del navegador: la URL manda y se vuelve al tablero.
+    window.history.replaceState(null, '', '/app.html')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+
+    await waitFor(() => expect(screen.getByTestId('vacio')).toBeTruthy())
+    expect(screen.queryByTestId('rango-ciclo')).toBeNull()
+  })
+})

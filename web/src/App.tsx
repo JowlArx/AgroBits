@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import ListaCultivos from './pages/ListaCultivos'
 import FormularioCultivo from './pages/FormularioCultivo'
 import DetalleCultivo from './pages/DetalleCultivo'
@@ -15,6 +15,8 @@ import { obtenerSensores, suscribirSensores } from './data/storeSensores'
 import { alertasOrdenadas, obtenerAlertas, suscribirAlertas } from './data/storeAlertas'
 import { obtenerMediciones, suscribirMediciones } from './data/medicionesSimuladas'
 import { useEsMovil } from './hooks/useEsMovil'
+import { useParamsUrl } from './hooks/useParamsUrl'
+import { escribirParams } from './data/urlEstado'
 
 type Vista =
   | { tipo: 'lista' }
@@ -24,6 +26,29 @@ type Vista =
   | { tipo: 'alertas' }
   | { tipo: 'sensores' }
   | { tipo: 'cuenta' }
+
+/**
+ * D40 — Traduce la URL a la vista. `cultivos` es la vista por defecto y no
+ * deja rastro en la URL (la dirección queda limpia).
+ */
+function vistaDesdeParams(vista: string | null, id: string | null): Vista {
+  switch (vista) {
+    case 'alertas':
+      return { tipo: 'alertas' }
+    case 'sensores':
+      return { tipo: 'sensores' }
+    case 'cuenta':
+      return { tipo: 'cuenta' }
+    case 'nuevo':
+      return { tipo: 'nuevo' }
+    case 'editar':
+      return id ? { tipo: 'editar', id } : { tipo: 'lista' }
+    case 'detalle':
+      return id ? { tipo: 'detalle', id } : { tipo: 'lista' }
+    default:
+      return { tipo: 'lista' }
+  }
+}
 
 /** Título del topbar (D31) según la vista actual. */
 function tituloVista(vista: Vista): string {
@@ -135,7 +160,27 @@ function MenuCuenta({
 }
 
 export default function App() {
-  const [vista, setVista] = useState<Vista>({ tipo: 'lista' })
+  // D40: la vista vive en la URL (`?vista=alertas`, `?vista=detalle&id=…`).
+  // Cada navegación entra en el historial → el «atrás» del navegador (y el
+  // del móvil) vuelve a la sección anterior, y cada vista es enlazable.
+  const [params, escribirParamsUrl] = useParamsUrl<{ vista: string | null; id: string | null }>({
+    vista: 'cultivos',
+    id: null,
+  })
+  const vista = useMemo<Vista>(
+    () => vistaDesdeParams(params.vista, params.id),
+    [params.vista, params.id],
+  )
+  const irA = useCallback(
+    (nueva: Vista) => {
+      const id = 'id' in nueva ? nueva.id : null
+      escribirParamsUrl(
+        nueva.tipo === 'lista' ? { vista: null, id: null } : { vista: nueva.tipo, id },
+        'push',
+      )
+    },
+    [escribirParamsUrl],
+  )
   // D33: menú desplegable de la cuenta (Mi cuenta / Cerrar sesión).
   const [menuAbierto, setMenuAbierto] = useState(false)
   // D34: en móvil la navegación se dibuja en una barra inferior de iconos.
@@ -160,6 +205,12 @@ export default function App() {
   useEffect(() => {
     if (sesion) void cargarDatosSesion()
     else vaciarDatosSesion()
+  }, [sesion])
+
+  // D40: `?acceso=registro` solo sirve para abrir el formulario de alta; al
+  // entrar en el panel se retira de la URL (sin entrada en el historial).
+  useEffect(() => {
+    if (sesion) escribirParams({ acceso: null }, 'replace')
   }, [sesion])
 
   if (!sesion) {
@@ -202,7 +253,7 @@ export default function App() {
         aria-current={vista.tipo === 'lista' ? 'page' : undefined}
         onClick={() => {
           setMenuAbierto(false)
-          setVista({ tipo: 'lista' })
+          irA({ tipo: 'lista' })
         }}
       >
         {iconoHoja}
@@ -216,7 +267,7 @@ export default function App() {
         aria-current={vista.tipo === 'alertas' ? 'page' : undefined}
         onClick={() => {
           setMenuAbierto(false)
-          setVista({ tipo: 'alertas' })
+          irA({ tipo: 'alertas' })
         }}
       >
         {iconoCampana}
@@ -230,7 +281,7 @@ export default function App() {
         aria-current={vista.tipo === 'sensores' ? 'page' : undefined}
         onClick={() => {
           setMenuAbierto(false)
-          setVista({ tipo: 'sensores' })
+          irA({ tipo: 'sensores' })
         }}
       >
         {iconoSensor}
@@ -301,7 +352,7 @@ export default function App() {
                     onCerrar={() => setMenuAbierto(false)}
                     onCuenta={() => {
                       setMenuAbierto(false)
-                      setVista({ tipo: 'cuenta' })
+                      irA({ tipo: 'cuenta' })
                     }}
                     onSalir={() => {
                       setMenuAbierto(false)
@@ -347,7 +398,7 @@ export default function App() {
                   onCerrar={() => setMenuAbierto(false)}
                   onCuenta={() => {
                     setMenuAbierto(false)
-                    setVista({ tipo: 'cuenta' })
+                    irA({ tipo: 'cuenta' })
                   }}
                   onSalir={() => {
                     setMenuAbierto(false)
@@ -365,30 +416,30 @@ export default function App() {
               <>
                 <Tablero />
                 <ListaCultivos
-                  onNuevo={() => setVista({ tipo: 'nuevo' })}
-                  onEditar={(id) => setVista({ tipo: 'editar', id })}
-                  onVerMediciones={(id) => setVista({ tipo: 'detalle', id })}
+                  onNuevo={() => irA({ tipo: 'nuevo' })}
+                  onEditar={(id) => irA({ tipo: 'editar', id })}
+                  onVerMediciones={(id) => irA({ tipo: 'detalle', id })}
                 />
               </>
             )}
             {vista.tipo === 'nuevo' && (
-              <FormularioCultivo onGuardado={() => setVista({ tipo: 'lista' })} onCancelar={() => setVista({ tipo: 'lista' })} />
+              <FormularioCultivo onGuardado={() => irA({ tipo: 'lista' })} onCancelar={() => irA({ tipo: 'lista' })} />
             )}
             {vista.tipo === 'editar' && (
               <FormularioCultivo
                 cultivoId={vista.id}
-                onGuardado={() => setVista({ tipo: 'lista' })}
-                onCancelar={() => setVista({ tipo: 'lista' })}
+                onGuardado={() => irA({ tipo: 'lista' })}
+                onCancelar={() => irA({ tipo: 'lista' })}
               />
             )}
             {vista.tipo === 'detalle' && (
-              <DetalleCultivo cultivoId={vista.id} onVolver={() => setVista({ tipo: 'lista' })} />
+              <DetalleCultivo cultivoId={vista.id} onVolver={() => irA({ tipo: 'lista' })} />
             )}
             {vista.tipo === 'alertas' && <Alertas />}
             {vista.tipo === 'sensores' && <Sensores />}
             {vista.tipo === 'cuenta' && <Cuenta email={sesion.usuario.email} />}
           </main>
-          {vista.tipo === 'lista' && <PanelLateral onVerAlertas={() => setVista({ tipo: 'alertas' })} />}
+          {vista.tipo === 'lista' && <PanelLateral onVerAlertas={() => irA({ tipo: 'alertas' })} />}
         </div>
       </div>
     </div>

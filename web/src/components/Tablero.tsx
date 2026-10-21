@@ -24,6 +24,7 @@ import { obtenerAlertas, suscribirAlertas } from '../data/storeAlertas'
 import { obtenerMediciones, suscribirMediciones, ultimasPorTipo } from '../data/medicionesSimuladas'
 import { ETIQUETAS_MEDICION, ETIQUETAS_MEDICION_CORTA, VAR_COLOR_SENSOR } from '../data/catalogo'
 import { TIPOS_MEDICION, UNIDADES, type TipoMedicion } from '../domain/tipos'
+import { useParamsUrl } from '../hooks/useParamsUrl'
 import SelectorDesplegable from './SelectorDesplegable'
 
 /** Escalas solo para dimensionar las barras (los valores mostrados son reales). */
@@ -169,7 +170,13 @@ export default function Tablero() {
   // D31: «Última lectura por tipo» — sin elección manual, el widget sigue al
   // sensor que registró la última lectura (se deriva en cada render, sin
   // efectos); el usuario puede fijar un sensor (o «Todos») a mano.
-  const [sensorManualId, setSensorManualId] = useState<string | null>(null)
+  // D40: el sensor fijado también va en la URL (`?sensor=…`): es un filtro
+  // y se puede compartir. Al ser un filtro, sustituye la entrada actual.
+  const [params, escribirParamsUrl] = useParamsUrl<{ sensor: string | null }>({ sensor: null })
+  const sensorManualId = params.sensor
+  const setSensorManualId = (id: string | null): void => {
+    escribirParamsUrl({ sensor: id }, 'replace')
+  }
 
   const cultivos = obtenerCultivos()
   const sensores = obtenerSensores()

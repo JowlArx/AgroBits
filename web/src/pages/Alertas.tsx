@@ -1,8 +1,9 @@
-import { useState, useSyncExternalStore } from 'react'
+import { useSyncExternalStore } from 'react'
 import { alertasOrdenadas, obtenerAlertas, suscribirAlertas, type Alerta } from '../data/storeAlertas'
 import { obtenerCultivo } from '../data/storeCultivos'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
 import { UNIDADES } from '../domain/tipos'
+import { useParamsUrl } from '../hooks/useParamsUrl'
 
 function horaLegible(iso: string): string {
   const fecha = new Date(iso)
@@ -114,22 +115,33 @@ function aplicarFiltroTiempo(
 }
 
 export default function Alertas() {
-  // Estado del rango de tiempo: '5min' | '10min' | '15min' (por defecto) o 'personalizado'.
-  // El cambio de rango se gestiona en `elegirRango` (sin efectos): los
-  // preseleccionados limpian las fechas y «personalizar» propone hoy entero.
-  const [rango, setRango] = useState<RangoTiempo>({ tipo: '15min' })
-  const [desde, setDesde] = useState<Date | undefined>(undefined)
-  const [hasta, setHasta] = useState<Date | undefined>(undefined)
+  // D40: el rango vive en la URL (`?rango=5min`, `?rango=personalizado&desde=…`):
+  // un filtro se puede compartir y el «atrás» del navegador no se llena de
+  // pasos. Como es un filtro, sustituye la entrada actual (no la empuja).
+  const [params, escribirParamsUrl] = useParamsUrl<{
+    rango: string | null
+    desde: string | null
+    hasta: string | null
+  }>({ rango: '15min', desde: null, hasta: null })
+  const tipoRango: TipoPreseleccion | 'personalizado' =
+    params.rango === 'personalizado'
+      ? 'personalizado'
+      : (RANGOS_PRESELECCION as readonly string[]).includes(params.rango ?? '')
+        ? (params.rango as TipoPreseleccion)
+        : '15min'
+  const desde = params.desde ? desdeIsoLocal(params.desde) : undefined
+  const hasta = params.hasta ? desdeIsoLocal(params.hasta) : undefined
+  const rango: RangoTiempo = { tipo: tipoRango, desde, hasta }
 
-  function elegirRango(nuevo: RangoTiempo): void {
-    setRango(nuevo)
-    if (nuevo.tipo === 'personalizado') {
-      setDesde(inicioDeHoy())
-      setHasta(finDeHoy())
-    } else {
-      setDesde(undefined)
-      setHasta(undefined)
+  function elegirRango(tipo: TipoPreseleccion | 'personalizado'): void {
+    if (tipo === 'personalizado') {
+      escribirParamsUrl(
+        { rango: 'personalizado', desde: aIsoLocal(desde ?? inicioDeHoy()), hasta: aIsoLocal(hasta ?? finDeHoy()) },
+        'replace',
+      )
+      return
     }
+    escribirParamsUrl({ rango: tipo, desde: null, hasta: null }, 'replace')
   }
 
   // Suscripción al store de alertas.
@@ -197,7 +209,7 @@ export default function Alertas() {
                 data-testid={`rango-${tipo}`}
                 className={rango.tipo === tipo ? 'btn-primario' : 'btn-secundario'}
                 aria-pressed={rango.tipo === tipo}
-                onClick={() => elegirRango({ tipo })}
+                onClick={() => elegirRango(tipo)}
               >
                 <span className="solo-escritorio">Últimos </span>
                 {tipo.replace('min', ' min')}
@@ -208,7 +220,7 @@ export default function Alertas() {
             data-testid="rango-personalizado"
             className={rango.tipo === 'personalizado' ? 'btn-primario' : 'btn-secundario'}
             aria-pressed={rango.tipo === 'personalizado'}
-            onClick={() => elegirRango({ tipo: 'personalizado' })}
+            onClick={() => elegirRango('personalizado')}
           >
             Personalizar
           </button>
@@ -225,7 +237,7 @@ export default function Alertas() {
                 autoComplete="off"
                 max={hasta ? aIsoLocal(hasta) : undefined}
                 value={desde ? aIsoLocal(desde) : ''}
-                onChange={(e) => setDesde(e.target.value ? desdeIsoLocal(e.target.value) : undefined)}
+                onChange={(e) => escribirParamsUrl({ desde: e.target.value || null }, 'replace')}
               />
             </label>
             <label>
@@ -237,7 +249,7 @@ export default function Alertas() {
                 autoComplete="off"
                 min={desde ? aIsoLocal(desde) : undefined}
                 value={hasta ? aIsoLocal(hasta) : ''}
-                onChange={(e) => setHasta(e.target.value ? desdeIsoLocal(e.target.value) : undefined)}
+                onChange={(e) => escribirParamsUrl({ hasta: e.target.value || null }, 'replace')}
               />
             </label>
           </div>
