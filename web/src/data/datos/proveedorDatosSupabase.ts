@@ -12,7 +12,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { ColorSensor, Cultivo, Medicion, TipoMedicion, UmbralesPorTipo } from '../../domain/tipos'
 import { TIPOS_MEDICION, esColorSensor } from '../../domain/tipos'
-import type { NuevoCultivo, Perfil, ProveedorDatos, Localidad, Resultado } from './proveedorDatos'
+import type {
+  NuevoCultivo,
+  Perfil,
+  ProveedorDatos,
+  Localidad,
+  Resultado,
+  SolicitudEliminacion,
+} from './proveedorDatos'
 import type { Sensor } from '../storeSensores'
 import type { Alerta } from '../storeAlertas'
 import { CATALOGO_CULTIVOS } from '../catalogo'
@@ -465,5 +472,49 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
     const fila = data as { telefono: string; localidad_id: number } | null
     if (!fila) return SERVIDOR('sin datos devueltos', 'guardar el perfil')
     return { ok: true, valor: { telefono: fila.telefono, localidadId: fila.localidad_id } }
+  }
+
+  // — Eliminación de la cuenta (D46) ——————————————————————————————
+
+  async cargarSolicitudEliminacion(): Promise<SolicitudEliminacion | null> {
+    const { data, error } = await this.cliente
+      .from('solicitudes_eliminacion')
+      .select('programada_para')
+      .maybeSingle()
+    if (error) {
+      console.error('cargarSolicitudEliminacion:', error)
+      return null
+    }
+    const fila = data as { programada_para: string } | null
+    if (!fila) return null
+    return { programadaPara: fila.programada_para }
+  }
+
+  async solicitarEliminacion(confirmacionEmail: string): Promise<Resultado<string>> {
+    const { data, error } = await this.cliente.rpc('solicitar_eliminacion_cuenta', {
+      p_confirmacion_email: confirmacionEmail.trim(),
+    })
+    if (error) {
+      console.error('solicitarEliminacion:', error)
+      const motivo = error.message.includes('confirmacion_incorrecta')
+        ? 'El email no coincide con el de tu cuenta'
+        : error.message.includes('sesion_requerida')
+          ? 'Inicia sesión de nuevo para continuar'
+          : error.message
+      return { ok: false, errores: [{ campo: 'confirmacion', motivo }] }
+    }
+    return { ok: true, valor: String(data) }
+  }
+
+  async cancelarEliminacion(): Promise<Resultado<null>> {
+    const { error } = await this.cliente
+      .from('solicitudes_eliminacion')
+      .delete()
+      .eq('user_id', (await this.cliente.auth.getUser()).data.user?.id ?? '')
+    if (error) {
+      console.error('cancelarEliminacion:', error)
+      return { ok: false, errores: [{ campo: 'general', motivo: 'No se pudo cancelar el borrado. Inténtalo de nuevo.' }] }
+    }
+    return { ok: true, valor: null }
   }
 }

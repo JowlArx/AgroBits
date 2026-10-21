@@ -5,7 +5,7 @@
 // localidad del catálogo (>0). La escritura REAL es del RPC
 // `actualizar_perfil` (único punto servidor, D19/D27).
 
-import type { Resultado, Perfil } from '../data/datos/proveedorDatos'
+import type { Resultado, Perfil, SolicitudEliminacion } from '../data/datos/proveedorDatos'
 import { exigirProveedor } from './datos/proveedorDatos'
 import { telefonoValido } from './storeSesion'
 
@@ -64,7 +64,53 @@ export async function guardarPerfil(telefono: string, localidadId: number): Prom
 /** Vacia la caché local sin tocar el proveedor (cierre de sesión / tests). */
 export function vaciarPerfil(): void {
   perfil = null
+  solicitudEliminacion = null
   notificar()
+}
+
+// — Eliminación de la cuenta (D46) ————————————————————————————————————
+
+/** Solicitud de borrado pendiente (null si no hay). */
+let solicitudEliminacion: SolicitudEliminacion | null = null
+
+/** Estado actual de la solicitud de eliminación. */
+export function obtenerSolicitudEliminacion(): SolicitudEliminacion | null {
+  return solicitudEliminacion
+}
+
+/** Carga la solicitud pendiente desde el servidor (al abrir «Mi cuenta»). */
+export async function cargarSolicitudEliminacion(): Promise<void> {
+  try {
+    solicitudEliminacion = await exigirProveedor().cargarSolicitudEliminacion()
+    notificar()
+  } catch (error) {
+    console.error('No se pudo cargar la solicitud de eliminación', error)
+  }
+}
+
+/**
+ * Pide el borrado de la cuenta. El servidor exige que el email escrito
+ * coincida con el de la sesión; devuelve la fecha programada (7 días).
+ */
+export async function solicitarEliminacion(
+  confirmacionEmail: string,
+): Promise<Resultado<string>> {
+  const resultado = await exigirProveedor().solicitarEliminacion(confirmacionEmail)
+  if (resultado.ok) {
+    solicitudEliminacion = { programadaPara: resultado.valor }
+    notificar()
+  }
+  return resultado
+}
+
+/** Cancela la solicitud pendiente (dentro del período de gracia). */
+export async function cancelarEliminacion(): Promise<Resultado<null>> {
+  const resultado = await exigirProveedor().cancelarEliminacion()
+  if (resultado.ok) {
+    solicitudEliminacion = null
+    notificar()
+  }
+  return resultado
 }
 
 /** Solo para tests: vuelve al estado inicial. */
