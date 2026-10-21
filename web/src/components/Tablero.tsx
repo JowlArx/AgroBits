@@ -108,6 +108,13 @@ interface SerieGrafico {
   color: string
 }
 
+const VENTANA_MS = 5 * 60_000
+
+/** D45: inicio de la ventana de 5 minutos a la que pertenece una lectura. */
+function ventanaDe(iso: string): string {
+  return new Date(Math.floor(Date.parse(iso) / VENTANA_MS) * VENTANA_MS).toISOString()
+}
+
 /** Serie para el gráfico: una columna POR SENSOR (con su color, D30). */
 function serieDe(
   tipo: TipoMedicion,
@@ -128,10 +135,14 @@ function serieDe(
     if (serie.length === 0) continue
     series.push({ nombre, color: VAR_COLOR_SENSOR[sensor.colorLinea] })
 
+    // D45: las lecturas se agrupan en ventanas de 5 minutos. Cada sensor
+    // tiene su propio temporizador; sin agrupar, sus lecturas caían en
+    // instantes distintos y las curvas aparecían sueltas.
     for (const medicion of serie) {
-      const punto = porInstante.get(medicion.medidaEn) ?? { medidaEn: medicion.medidaEn, hora: horaCorta(medicion.medidaEn) }
+      const ventana = ventanaDe(medicion.medidaEn)
+      const punto = porInstante.get(ventana) ?? { medidaEn: ventana, hora: horaCorta(ventana) }
       punto[nombre] = medicion.valor
-      porInstante.set(medicion.medidaEn, punto)
+      porInstante.set(ventana, punto)
     }
   }
 
@@ -299,6 +310,8 @@ export default function Tablero() {
                       key={serie.nombre}
                       type="monotone"
                       dataKey={serie.nombre}
+                      /* D45: une los huecos de una ventana sin lectura. */
+                      connectNulls
                       stroke={serie.color}
                       strokeWidth={2}
                       dot={false}
