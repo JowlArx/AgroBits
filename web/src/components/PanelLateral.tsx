@@ -12,7 +12,7 @@ import { obtenerCultivo, obtenerCultivos, suscribirCultivos } from '../data/stor
 import { obtenerSensores, suscribirSensores } from '../data/storeSensores'
 import { obtenerMediciones, suscribirMediciones } from '../data/medicionesSimuladas'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
-import type { Medicion } from '../domain/tipos'
+import { UNIDADES, type Medicion } from '../domain/tipos'
 
 function horaLegible(iso: string): string {
   const fecha = new Date(iso)
@@ -71,7 +71,8 @@ export default function PanelLateral({ onVerAlertas }: { onVerAlertas?: () => vo
                       </time>
                     </div>
                     <p className="item-detalles">
-                      {cultivo ? cultivo.nombre : 'Cultivo eliminado'} · {alerta.valor}
+                      {cultivo ? cultivo.nombre : 'Cultivo eliminado'} · {alerta.valor}{' '}
+                      {UNIDADES[alerta.tipo]}
                     </p>
                   </li>
                 )

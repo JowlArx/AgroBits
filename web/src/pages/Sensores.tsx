@@ -25,7 +25,7 @@ import {
 import { obtenerCultivo, suscribirCultivos } from '../data/storeCultivos'
 import { eliminarMediciones, generarLectura, obtenerMediciones, suscribirMediciones } from '../data/medicionesSimuladas'
 import { cargarAlertas } from '../data/storeAlertas'
-import { COLORES_SENSOR, TIPOS_MEDICION, type ColorSensor, type TipoMedicion } from '../domain/tipos'
+import { COLORES_SENSOR, TIPOS_MEDICION, UNIDADES, type ColorSensor, type TipoMedicion } from '../domain/tipos'
 import { ETIQUETAS_COLOR_SENSOR, ETIQUETAS_MEDICION, ETIQUETAS_MEDICION_CORTA, VAR_COLOR_SENSOR } from '../data/catalogo'
 import ConfirmacionEnLinea from '../components/ConfirmacionEnLinea'
 
@@ -223,8 +223,8 @@ export default function Sensores() {
               ver la curva.
             </p>
           ) : (
-            <div className="grafico-lineas">
-              <ResponsiveContainer width="100%" height={220}>
+            <div className="grafico-lineas grafico-sensor">
+              <ResponsiveContainer width="100%" height="100%">
                 {/* D31: eje Y alineado con el título + relleno degradado. */}
                 <ComposedChart data={puntosSensor} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
                   <defs>
@@ -244,7 +244,7 @@ export default function Sensores() {
                       color: 'var(--texto)',
                       fontFamily: 'var(--fuente-texto)',
                     }}
-                    formatter={(valor) => [`${valor}`, ETIQUETAS_MEDICION[tipoActivo]]}
+                    formatter={(valor) => [`${valor} ${UNIDADES[tipoActivo]}`, ETIQUETAS_MEDICION[tipoActivo]]}
                   />
                   <Area
                     type="monotone"
@@ -284,9 +284,9 @@ export default function Sensores() {
           <table className="tabla-umbrales" data-testid="tabla-mediciones-sensor">
             <thead>
               <tr>
-                <th>Medición</th>
-                <th>Valor</th>
-                <th>Hora</th>
+                <th scope="col">Medición</th>
+                <th scope="col">Valor</th>
+                <th scope="col">Hora</th>
               </tr>
             </thead>
             <tbody>

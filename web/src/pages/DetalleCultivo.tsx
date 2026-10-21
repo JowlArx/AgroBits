@@ -150,6 +150,7 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
           <label>
             Sensor de tu cuenta
             <select
+              name="sensorParaAsociar"
               data-testid="sensor-para-asociar"
               value={sensorParaAsociar}
               onChange={(e) => setSensorParaAsociar(e.target.value)}
@@ -174,6 +175,7 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
           <input
             type="text"
             name="nombreSensor"
+            autoComplete="off"
             data-testid="nombre-sensor"
             value={nombreSensor}
             onChange={(e) => setNombreSensor(e.target.value)}
@@ -222,9 +224,9 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
       <table className="tabla-umbrales" data-testid="tabla-mediciones">
         <thead>
           <tr>
-            <th>Medición</th>
-            <th>Valor</th>
-            <th>Hora</th>
+            <th scope="col">Medición</th>
+            <th scope="col">Valor</th>
+            <th scope="col">Hora</th>
           </tr>
         </thead>
         <tbody>

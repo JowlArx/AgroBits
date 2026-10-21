@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface Props {
   /** Texto del botón que dispara la confirmación («Eliminar», «Desasociar»). */
@@ -19,6 +19,10 @@ interface Props {
  * Al pulsar, el botón se convierte en la pregunta y dos opciones («Sí» /
  * «No»): sin modal, sin `window.confirm` y sin salir de la tarjeta. Es la
  * forma menos ruidosa de evitar un borrado accidental con el dedo.
+ *
+ * D40 — El foco ya no se pierde: al abrir la pregunta el foco pasa a «Sí» y,
+ * al cancelar, vuelve al botón original (antes el elemento enfocado se
+ * desmontaba y el teclado quedaba en el cuerpo de la página).
  */
 export default function ConfirmacionEnLinea({
   etiqueta,
@@ -28,10 +32,30 @@ export default function ConfirmacionEnLinea({
   testId,
 }: Props) {
   const [preguntando, setPreguntando] = useState(false)
+  const devolverFoco = useRef(false)
+  const botonOriginal = useRef<HTMLButtonElement>(null)
+  const botonSi = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (preguntando) {
+      botonSi.current?.focus()
+      return
+    }
+    if (devolverFoco.current) {
+      devolverFoco.current = false
+      botonOriginal.current?.focus()
+    }
+  }, [preguntando])
 
   if (!preguntando) {
     return (
-      <button type="button" className={className} data-testid={testId} onClick={() => setPreguntando(true)}>
+      <button
+        type="button"
+        ref={botonOriginal}
+        className={className}
+        data-testid={testId}
+        onClick={() => setPreguntando(true)}
+      >
         {etiqueta}
       </button>
     )
@@ -42,6 +66,7 @@ export default function ConfirmacionEnLinea({
       <span className="confirmacion-pregunta">{pregunta}</span>
       <button
         type="button"
+        ref={botonSi}
         className="btn-peligro"
         data-testid={testId ? `${testId}-confirmar` : undefined}
         onClick={() => {
@@ -54,7 +79,10 @@ export default function ConfirmacionEnLinea({
       <button
         type="button"
         data-testid={testId ? `${testId}-cancelar` : undefined}
-        onClick={() => setPreguntando(false)}
+        onClick={() => {
+          setPreguntando(false)
+          devolverFoco.current = true
+        }}
       >
         No
       </button>

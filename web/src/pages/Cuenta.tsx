@@ -88,8 +88,10 @@ export default function Cuenta({ email }: Props) {
         <label>
           Teléfono
           <input
-            type="text"
+            type="tel"
+            id="campo-telefono-cuenta"
             name="telefono"
+            inputMode="tel"
             autoComplete="tel"
             data-testid="telefono-cuenta"
             value={telefono}
@@ -100,6 +102,7 @@ export default function Cuenta({ email }: Props) {
         <label>
           Provincia
           <select
+            name="provincia"
             data-testid="provincia-cuenta"
             value={provincia}
             onChange={(e) => {
@@ -118,6 +121,7 @@ export default function Cuenta({ email }: Props) {
         <label>
           Localidad
           <select
+            name="localidad"
             data-testid="localidad-cuenta"
             value={localidadId}
             onChange={(e) => setLocalidadId(e.target.value)}
@@ -138,8 +142,10 @@ export default function Cuenta({ email }: Props) {
           </button>
         </div>
 
+        {/* D40: el mensaje de éxito se anuncia (polite) sin robarle el foco
+            al campo que el usuario está editando. */}
         {mensaje && (
-          <p className="aviso-exito" data-testid="perfil-guardado" role="status">
+          <p className="aviso-exito" data-testid="perfil-guardado" role="status" aria-live="polite">
             {mensaje}
           </p>
         )}

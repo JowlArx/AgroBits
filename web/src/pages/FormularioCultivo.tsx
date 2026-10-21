@@ -102,12 +102,24 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
 
       {errores.length > 0 && (
         <div role="alert" data-testid="errores">
-          <p>No se pudo guardar:</p>
-          <ul>
-            {errores.map((e) => (
-              <li key={`${e.campo}-${e.motivo}`}>{e.motivo}</li>
-            ))}
-          </ul>
+          {/* D40: con un solo error, una línea; la lista solo cuando hay varios.
+              Cada error lleva id para que el campo lo anuncie con
+              `aria-describedby` (antes el mensaje y el campo quedaban
+              desconectados). */}
+          {errores.length === 1 ? (
+            <p id={`error-${errores[0].campo}`}>{errores[0].motivo}</p>
+          ) : (
+            <>
+              <p>No se pudo guardar:</p>
+              <ul>
+                {errores.map((e) => (
+                  <li key={`${e.campo}-${e.motivo}`} id={`error-${e.campo}`}>
+                    {e.motivo}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
       )}
 
@@ -118,7 +130,9 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
             type="text"
             id="campo-nombre"
             name="nombre"
+            autoComplete="off"
             aria-invalid={conError('nombre') || undefined}
+            aria-describedby={conError('nombre') ? 'error-nombre' : undefined}
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
             placeholder="Ej.: Tomates del balcón"
@@ -131,6 +145,7 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
             id="campo-tipoCultivo"
             name="tipoCultivo"
             aria-invalid={conError('tipoCultivo') || undefined}
+            aria-describedby={conError('tipoCultivo') ? 'error-tipoCultivo' : undefined}
             value={esPersonalizado ? TIPO_PERSONALIZADO : tipoCultivo}
             onChange={(e) => cambiarTipo(e.target.value)}
           >
@@ -146,9 +161,14 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
         {esPersonalizado && (
           <label>
             Nombre del tipo personalizado
+            {/* D40: con id, el foco al primer error puede encontrarlo. */}
             <input
               type="text"
+              id="campo-tipoPersonalizado"
               name="tipoPersonalizado"
+              autoComplete="off"
+              aria-invalid={conError('tipoPersonalizado') || undefined}
+              aria-describedby={conError('tipoPersonalizado') ? 'error-tipoPersonalizado' : undefined}
               value={tipoCultivo === TIPO_PERSONALIZADO ? '' : tipoCultivo}
               onChange={(e) => setTipoCultivo(e.target.value)}
             />
@@ -169,6 +189,7 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
                   data-testid={`min-${tipo}`}
                   aria-label={`Mínimo de ${ETIQUETAS_MEDICION[tipo].toLowerCase()}`}
                   aria-invalid={conError(`umbrales.${tipo}`) || undefined}
+                  aria-describedby={conError(`umbrales.${tipo}`) ? `error-umbrales.${tipo}` : undefined}
                   value={cadenas[tipo].min}
                   onChange={(e) => cambiarUmbral(tipo, 'min', e.target.value)}
                 />
@@ -182,6 +203,7 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
                   data-testid={`max-${tipo}`}
                   aria-label={`Máximo de ${ETIQUETAS_MEDICION[tipo].toLowerCase()}`}
                   aria-invalid={conError(`umbrales.${tipo}`) || undefined}
+                  aria-describedby={conError(`umbrales.${tipo}`) ? `error-umbrales.${tipo}` : undefined}
                   value={cadenas[tipo].max}
                   onChange={(e) => cambiarUmbral(tipo, 'max', e.target.value)}
                 />

@@ -8,7 +8,8 @@ import {
 import { obtenerSensores, quitarAsociacionesDeCultivo, suscribirSensores } from '../data/storeSensores'
 import { eliminarMediciones } from '../data/medicionesSimuladas'
 import { cargarAlertas } from '../data/storeAlertas'
-import { TIPOS_MEDICION, UNIDADES } from '../domain/tipos'
+import { TIPOS_MEDICION } from '../domain/tipos'
+import { ETIQUETAS_MEDICION } from '../data/catalogo'
 import IconoCultivo from '../components/IconoCultivo'
 import ConfirmacionEnLinea from '../components/ConfirmacionEnLinea'
 
@@ -104,15 +105,15 @@ export default function ListaCultivos({ onNuevo, onEditar, onVerMediciones }: Pr
                 <table className="tabla-umbrales">
                   <thead>
                     <tr>
-                      <th>Medición</th>
-                      <th>Mínimo</th>
-                      <th>Máximo</th>
+                      <th scope="col">Medición</th>
+                      <th scope="col">Mínimo</th>
+                      <th scope="col">Máximo</th>
                     </tr>
                   </thead>
                   <tbody>
                     {TIPOS_MEDICION.map((tipo) => (
                       <tr key={tipo}>
-                        <td>{UNIDADES[tipo] ? tipo.replace(/_/g, ' ') : tipo}</td>
+                        <td>{ETIQUETAS_MEDICION[tipo]}</td>
                         <td>{cultivo.umbrales[tipo].min}</td>
                         <td>{cultivo.umbrales[tipo].max}</td>
                       </tr>

@@ -23,8 +23,8 @@ import { obtenerSensores, suscribirSensores, type Sensor } from '../data/storeSe
 import { obtenerAlertas, suscribirAlertas } from '../data/storeAlertas'
 import { obtenerMediciones, suscribirMediciones, ultimasPorTipo } from '../data/medicionesSimuladas'
 import { ETIQUETAS_MEDICION, ETIQUETAS_MEDICION_CORTA, VAR_COLOR_SENSOR } from '../data/catalogo'
-import { TIPOS_MEDICION, type TipoMedicion } from '../domain/tipos'
-import { useEsMovil } from '../hooks/useEsMovil'
+import { TIPOS_MEDICION, UNIDADES, type TipoMedicion } from '../domain/tipos'
+import { useParamsUrl } from '../hooks/useParamsUrl'
 import SelectorDesplegable from './SelectorDesplegable'
 
 /** Escalas solo para dimensionar las barras (los valores mostrados son reales). */
@@ -170,7 +170,13 @@ export default function Tablero() {
   // D31: «Última lectura por tipo» — sin elección manual, el widget sigue al
   // sensor que registró la última lectura (se deriva en cada render, sin
   // efectos); el usuario puede fijar un sensor (o «Todos») a mano.
-  const [sensorManualId, setSensorManualId] = useState<string | null>(null)
+  // D40: el sensor fijado también va en la URL (`?sensor=…`): es un filtro
+  // y se puede compartir. Al ser un filtro, sustituye la entrada actual.
+  const [params, escribirParamsUrl] = useParamsUrl<{ sensor: string | null }>({ sensor: null })
+  const sensorManualId = params.sensor
+  const setSensorManualId = (id: string | null): void => {
+    escribirParamsUrl({ sensor: id }, 'replace')
+  }
 
   const cultivos = obtenerCultivos()
   const sensores = obtenerSensores()
@@ -186,8 +192,6 @@ export default function Tablero() {
   // D35: el gráfico se acompaña de su lectura en texto (en móvil el tooltip
   // es difícil de acertar con el dedo).
   const ultimaDelTipo = ultimasPorTipo(sensores.map((s) => s.id))[tipoActivo]
-  // D35: en móvil el lienzo se achica para dejar respirar al resto.
-  const esMovil = useEsMovil()
 
   return (
     <section className="tablero" aria-label="Resumen del panel">
@@ -232,7 +236,9 @@ export default function Tablero() {
             </p>
           ) : (
             <div className="grafico-lineas">
-              <ResponsiveContainer width="100%" height={esMovil ? 200 : 300}>
+              {/* D40: el alto lo pone el CSS (`.grafico-lineas`), no un punto de
+                  corte medido en JavaScript: dos fuentes para lo mismo. */}
+              <ResponsiveContainer width="100%" height="100%">
                 {/* D31/D33: ComposedChart con relleno degradado bajo cada
                     línea; margen izquierdo 0 porque el eje Y mide 44 px. */}
                 <ComposedChart data={puntos} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
@@ -255,7 +261,7 @@ export default function Tablero() {
                       color: 'var(--texto)',
                       fontFamily: 'var(--fuente-texto)',
                     }}
-                    formatter={(valor) => [`${valor}`, ETIQUETAS_MEDICION[tipoActivo]]}
+                    formatter={(valor) => [`${valor} ${UNIDADES[tipoActivo]}`, ETIQUETAS_MEDICION[tipoActivo]]}
                   />
                   {series.length > 1 && <Legend wrapperStyle={{ fontSize: 12 }} />}
                   {series.map((serie, indice) => (

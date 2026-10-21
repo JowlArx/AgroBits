@@ -40,6 +40,10 @@ export function programadorFalsoActual(): ProgramadorFalso {
 }
 
 beforeEach(() => {
+  // D40: la vista vive en la URL, y jsdom conserva la query entre pruebas:
+  // sin esta limpieza, un test que navega deja al siguiente en otra vista.
+  window.history.replaceState(null, '', '/app.html')
+
   actual = new AuthFalso()
   actual.sembrar('pruebas@agrobits.test', 'secreta')
   configurarProveedorAuth(actual)
