@@ -1,0 +1,35 @@
+version = 1
+SPDX-PackageName = "AgroBits"
+SPDX-PackageSupplier = "Joel Arce <117461449+JowlArx@users.noreply.github.com>"
+SPDX-PackageDownloadLocation = "https://github.com/JowlArx/AgroBits"
+
+# Licencias por tipo de archivo (estándar REUSE: https://reuse.software).
+# El texto completo de la AGPL está en `LICENSE`; el de Creative Commons, en
+# `LICENSES/CC-BY-NC-ND-4.0.txt`.
+
+[[annotations]]
+path = [
+  "web/**",
+  "supabase/**",
+  "skills-lock.json",
+  "opencode.json",
+  ".impeccable/**",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Joel Arce"
+SPDX-License-Identifier = "AGPL-3.0-or-later"
+
+[[annotations]]
+path = [
+  "docs/**",
+  "AGENTS.md",
+  "DESIGN.md",
+  "MEMORY.md",
+  "NOTICE",
+  "PRODUCT.md",
+  "README.md",
+  "REUSE.toml",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Joel Arce"
+SPDX-License-Identifier = "CC-BY-NC-ND-4.0"

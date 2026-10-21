@@ -1,0 +1,78 @@
+AgroBits
+Copyright (C) 2026 Joel Arce <117461449+JowlArx@users.noreply.github.com>
+
+=============================================================================
+LICENCIAS APLICABLES
+=============================================================================
+
+Este proyecto usa dos licencias según el tipo de archivo (estándar REUSE; el
+mapa completo está en `REUSE.toml`):
+
+- **Código fuente** (`web/`, `supabase/`, `.impeccable/`): Licencia Pública
+  Affero General de GNU v3.0 o posterior — **AGPL-3.0-or-later**.
+  Texto completo en `LICENSE`.
+
+- **Documentación y diseño** (`docs/`, `README.md`, `PRODUCT.md`,
+  `DESIGN.md`, `MEMORY.md`, `AGENTS.md`, este `NOTICE`): Creative Commons
+  **CC BY-NC-ND 4.0** (Atribución – No Comercial – Sin Derivadas).
+  Texto completo en `LICENSES/CC-BY-NC-ND-4.0.txt`.
+
+En resumen: puedes leer y estudiar el código, usarlo y modificarlo; si
+publicas una versión modificada (incluido si la sirves por web) tienes que
+publicar ese código con la misma licencia y ofrecer su fuente a quien lo use.
+La documentación se puede citar indicando la autoría, pero no se puede copiar
+para uso comercial ni adaptar.
+
+=============================================================================
+OFERTA DEL CÓDIGO FUENTE (AGPL §13)
+=============================================================================
+
+Quien interactúe con AgroBits a través de la red puede obtener el código
+fuente correspondiente en:
+
+    https://github.com/JowlArx/AgroBits
+
+El mismo enlace está en el pie de la web y en «Mi cuenta» de la aplicación.
+
+=============================================================================
+MARCA
+=============================================================================
+
+«AgroBits», el nombre del proyecto, el logotipo
+(`web/public/icono-hoja-senial.svg`) y la identidad visual son propiedad de
+Joel Arce.
+
+**La licencia del código NO concede ningún derecho sobre la marca.** No está
+autorizado a usar el nombre, el logotipo, los colores de marca ni la
+identidad visual de AgroBits en obras derivadas, fork o servicios que puedan
+confundirse con el original, ni a sugerir que están autorizados u oficiales.
+Para usar la marca hay que pedir permiso previo.
+
+=============================================================================
+RECONOCIMIENTOS
+=============================================================================
+
+- **Diseño del layout del panel:** la estructura sigue la del kit comunitario
+  de Figma «Snow Dashboard UI Kit» (nodo `98469:145265`, fileKey
+  `jh9Rc1nsakFUSujdmiShCt`). El código, los tokens, el sistema de color y la
+  implementación son originales de este proyecto.
+
+- **Tipografías:** Fraunces y Atkinson Hyperlegible, bajo SIL Open Font
+  License 1.1, servidas desde Google Fonts.
+
+- **Dependencias de terceros:** React, React DOM, Vite, Recharts, Supabase
+  (MIT), TypeScript, Playwright, ESLint y testing-library (MIT o Apache-2.0).
+  Sus licencias originales se encuentran en sus respectivos repositorios.
+
+- **Material generado con ayuda de herramientas de IA** (la skill de diseño
+  `impeccable`, Apache-2.0, y la de auditoría `web-design-guidelines` de
+  Vercel). La salida de esas herramientas se ha revisado y editado en este
+  repositorio; las licencias y atribuciones originales se conservan aquí.
+
+=============================================================================
+CONTACTO
+=============================================================================
+
+Para consultas sobre la licencia, autorizaciones de uso de la marca o
+colaboraciones: abre una incidencia en
+https://github.com/JowlArx/AgroBits

@@ -161,6 +161,20 @@ export default function Cuenta({ email }: Props) {
         dimensión de la futura capa analítica y solo los ves tú (dato personal, Ley 25.326).
       </p>
 
+      {/* AGPL §13: el código fuente de la versión que se está usando. */}
+      <p className="licencia-app">
+        AgroBits es software libre: esta versión se publica bajo la licencia{' '}
+        <a href="https://github.com/JowlArx/AgroBits" target="_blank" rel="noreferrer license">
+          AGPL-3.0
+        </a>
+        , con el{' '}
+        <a href="https://github.com/JowlArx/AgroBits" target="_blank" rel="noreferrer">
+          código fuente
+        </a>{' '}
+        disponible. El nombre «AgroBits» y el logotipo son marca de su autor y su uso requiere
+        permiso previo.
+      </p>
+
       {/* D35: cerrar sesión también vive aquí (donde se espera), además del
           menú del icono de perfil. */}
       <div className="acciones acciones-formulario">
