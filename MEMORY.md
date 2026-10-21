@@ -121,6 +121,8 @@ Higiene del proyecto (17/10/2026):
 
 **20/10/2026 — D42 publicado en producción (orden del humano: «Apruebo»):** merge `--no-ff` a `main` (`fd8328d`) y push → auto-deploy. Verificado en producción: el aviso de licencia aparece en el pie de la landing y en «Mi cuenta» (ambos con enlace al código fuente, como exige la AGPL §13), y los cuatro ficheros de licencia (`LICENSE`, `NOTICE`, `REUSE.toml`, `LICENSES/CC-BY-NC-ND-4.0.txt`) son accesibles en el repo. **E2E 15/15 contra producción** ✔.
 
+**21/10/2026 — D43 publicado en producción (orden del humano: «Apruebo»):** merge `--no-ff` a `main` (`c9885e0`) y push → auto-deploy. Verificado en producción: build nuevo (`app-Cg3ZRzfm.js`), **E2E 15/15 ✔**, la rejilla de «Mi cuenta» a dos columnas (469 + 427 px, 718 px de alto), el contador de «Alertas activas» con desalineación 0 y el nombre de usuario editable (guardado y borrado comprobados en vivo, con la cuenta de prueba restaurada).
+
 ## Reglas de actualización
 
 Registrar únicamente hechos comprobados y decisiones aceptadas. Identificar expresamente las hipótesis y actualizar este archivo cuando cambie el estado del proyecto.
