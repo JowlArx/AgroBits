@@ -14,15 +14,19 @@ import { guardarPerfil, obtenerPerfil } from '../data/storePerfil'
 import { actualizarNombreUsuario, cerrarSesion } from '../data/storeSesion'
 import { exigirProveedor } from '../data/datos/proveedorDatos'
 import type { Localidad } from '../data/datos/proveedorDatos'
+import type { Cultivo } from '../domain/tipos'
+import type { Sensor } from '../data/storeSensores'
 
 interface Props {
   email: string
   /** D43: nombre de usuario actual, para prellenar el campo. */
   nombreUsuario?: string
-  /** D43: resumen de la cuenta (lo que tiene a un vistazo). */
-  cultivos: number
-  sensores: number
+  /** D44: lo que tiene la cuenta, para ocuparla con contenido real. */
+  cultivos: Cultivo[]
+  sensores: Sensor[]
   alertasActivas: number
+  /** D44: abre el detalle de un cultivo. */
+  onVerCultivo: (id: string) => void
 }
 
 export default function Cuenta({
@@ -31,6 +35,7 @@ export default function Cuenta({
   cultivos,
   sensores,
   alertasActivas,
+  onVerCultivo,
 }: Props) {
   const [localidades, setLocalidades] = useState<Localidad[]>([])
   const [telefono, setTelefono] = useState('')
@@ -260,12 +265,12 @@ export default function Cuenta({
             <h3>Tu cuenta</h3>
             <ul className="perfil-stats">
               <li>
-                <strong>{cultivos}</strong>
-                <span>{cultivos === 1 ? 'cultivo' : 'cultivos'}</span>
+                <strong>{cultivos.length}</strong>
+                <span>{cultivos.length === 1 ? 'cultivo' : 'cultivos'}</span>
               </li>
               <li>
-                <strong>{sensores}</strong>
-                <span>{sensores === 1 ? 'sensor' : 'sensores'}</span>
+                <strong>{sensores.length}</strong>
+                <span>{sensores.length === 1 ? 'sensor' : 'sensores'}</span>
               </li>
               <li className={alertasActivas > 0 ? 'con-alerta' : undefined}>
                 <strong>{alertasActivas}</strong>
@@ -290,6 +295,58 @@ export default function Cuenta({
               Tus datos personales no se comparten con nadie y no se usan con fines comerciales
               (Ley 25.326).
             </p>
+          </section>
+        </aside>
+
+        {/* D44 — Tercera columna: lo que hay en la cuenta. Antes, en pantallas
+            anchas, la mitad derecha quedaba vacía; ahora se ocupa con las
+            listas reales de cultivos y sensores (y da un atajo a cada cultivo). */}
+        <aside className="perfil-lateral" aria-label="Tus cultivos y sensores">
+          <section className="perfil-bloque">
+            <h3>Tus cultivos</h3>
+            {cultivos.length === 0 ? (
+              <p className="panel-nota">Todavía no tienes cultivos: créalos desde «Cultivos».</p>
+            ) : (
+              <ul className="perfil-lista">
+                {cultivos.map((cultivo) => (
+                  <li key={cultivo.id}>
+                    <button type="button" onClick={() => onVerCultivo(cultivo.id)}>
+                      {cultivo.nombre}
+                    </button>
+                    <span>
+                      {sensores.filter((s) => s.cultivoIds.includes(cultivo.id)).length === 1
+                        ? '1 sensor'
+                        : `${sensores.filter((s) => s.cultivoIds.includes(cultivo.id)).length} sensores`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="perfil-bloque">
+            <h3>Tus sensores</h3>
+            {sensores.length === 0 ? (
+              <p className="panel-nota">Todavía no tienes sensores: añádelos a un cultivo.</p>
+            ) : (
+              <ul className="perfil-lista">
+                {sensores.map((sensor) => (
+                  <li key={sensor.id}>
+                    <span className="perfil-sensor-nombre">
+                      <span className="chip-color" style={{ background: `var(--linea-${sensor.colorLinea})` }} aria-hidden="true" />
+                      {sensor.nombre}
+                    </span>
+                    <span>
+                      {sensor.cultivoIds.length === 0
+                        ? 'sin cultivo'
+                        : sensor.cultivoIds.length === 1
+                          ? '1 cultivo'
+                          : `${sensor.cultivoIds.length} cultivos`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
           {/* AGPL §13: el código fuente de la versión que se está usando. */}

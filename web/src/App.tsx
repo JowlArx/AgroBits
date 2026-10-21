@@ -441,9 +441,10 @@ export default function App() {
               <Cuenta
                 email={sesion.usuario.email}
                 nombreUsuario={sesion.usuario.nombreUsuario}
-                cultivos={cultivos.length}
-                sensores={sensores.length}
+                cultivos={cultivos}
+                sensores={sensores}
                 alertasActivas={alertasActivas}
+                onVerCultivo={(id) => irA({ tipo: 'detalle', id })}
               />
             )}
           </main>
