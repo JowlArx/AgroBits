@@ -251,9 +251,23 @@ export default function Tablero() {
                     ))}
                   </defs>
                   <CartesianGrid stroke="var(--borde)" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="hora" stroke="var(--texto-tenue)" tickLine={false} axisLine={false} fontSize={12} />
+                  {/* D41: la clave del eje es el instante completo, no la hora
+                      formateada: dos lecturas del mismo segundo producían
+                      categorías repetidas (etiquetas duplicadas en el eje) y
+                      dejaban el tooltip vacío. */}
+                  <XAxis
+                    dataKey="medidaEn"
+                    tickFormatter={(valor: string) => horaCorta(valor)}
+                    stroke="var(--texto-tenue)"
+                    tickLine={false}
+                    axisLine={false}
+                    fontSize={12}
+                  />
                   <YAxis stroke="var(--texto-tenue)" tickLine={false} axisLine={false} fontSize={12} width={44} />
                   <Tooltip
+                    /* D41: la etiqueta del tooltip es el instante; se muestra
+                       como hora legible, no como marca de tiempo cruda. */
+                    labelFormatter={(valor) => horaCorta(String(valor))}
                     contentStyle={{
                       background: 'var(--superficie)',
                       border: '1px solid var(--borde)',
@@ -269,6 +283,12 @@ export default function Tablero() {
                       key={`${serie.nombre}-area`}
                       type="monotone"
                       dataKey={serie.nombre}
+                      /* D41: el relleno es decoración de la línea: sin esto,
+                         Recharts lo añade también a la leyenda y al tooltip, y
+                         cada sensor aparecía dos veces (una con el color de la
+                         línea y otra con el degradado pálido). */
+                      legendType="none"
+                      tooltipType="none"
                       stroke="none"
                       fill={`url(#relleno-tablero-${indice})`}
                       isAnimationActive={false}

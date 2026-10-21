@@ -91,7 +91,7 @@ export default function Sensores() {
     ? obtenerMediciones(sensorActivo.id)
         .filter((m) => m.tipo === tipoActivo)
         .slice(-15)
-        .map((m) => ({ hora: horaCorta(m.medidaEn), valor: m.valor }))
+        .map((m) => ({ medidaEn: m.medidaEn, hora: horaCorta(m.medidaEn), valor: m.valor }))
     : []
 
   const serieSensor = sensorActivo ? obtenerMediciones(sensorActivo.id) : []
@@ -234,9 +234,21 @@ export default function Sensores() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid stroke="var(--borde)" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="hora" stroke="var(--texto-tenue)" tickLine={false} axisLine={false} fontSize={12} />
+                  {/* D41: la clave del eje es el instante completo, no la hora
+                      formateada (misma razón que en el tablero). */}
+                  <XAxis
+                    dataKey="medidaEn"
+                    tickFormatter={(valor: string) => horaCorta(valor)}
+                    stroke="var(--texto-tenue)"
+                    tickLine={false}
+                    axisLine={false}
+                    fontSize={12}
+                  />
                   <YAxis stroke="var(--texto-tenue)" tickLine={false} axisLine={false} fontSize={12} width={44} />
                   <Tooltip
+                    /* D41: la etiqueta del tooltip es el instante; se muestra
+                        como hora legible, no como marca de tiempo cruda. */
+                    labelFormatter={(valor) => horaCorta(String(valor))}
                     contentStyle={{
                       background: 'var(--superficie)',
                       border: '1px solid var(--borde)',
@@ -249,6 +261,9 @@ export default function Sensores() {
                   <Area
                     type="monotone"
                     dataKey="valor"
+                    /* D41: el relleno no va al tooltip (si no, el sensor
+                       aparecía dos veces). */
+                    tooltipType="none"
                     stroke="none"
                     fill="url(#relleno-sensor-0)"
                     isAnimationActive={false}
