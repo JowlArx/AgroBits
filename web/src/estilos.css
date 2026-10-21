@@ -1765,8 +1765,13 @@ button.boton-google:hover {
 
 /* D43: «Mi cuenta» pasa a dos columnas en escritorio. Antes era una columna
    estrecha de 30 rem y la mitad de la pantalla quedaba vacía. */
+/* D44: y a TRES columnas en pantallas anchas, con contenido real (tus
+   cultivos y tus sensores). El conjunto se centra con un ancho máximo
+   generoso: en pantallas muy anchas sobran márgenes simétricos a ambos lados
+   en vez de un vacío enorme a la derecha. */
 .perfil-cuenta {
-  max-width: 58rem;
+  max-width: 84rem;
+  margin-inline: auto;
 }
 
 .perfil-rejilla {
@@ -1780,6 +1785,12 @@ button.boton-google:hover {
   .perfil-rejilla {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
     gap: var(--espacio-6);
+  }
+}
+
+@media (min-width: 72rem) {
+  .perfil-rejilla {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 0.9fr);
   }
 }
 
@@ -1858,6 +1869,62 @@ button.boton-google:hover {
   margin: 0;
   color: var(--texto-tenue);
   font-size: 0.85rem;
+}
+
+/* Listas de cultivos y sensores (D44). */
+.perfil-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.perfil-lista li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+  padding: var(--espacio-2) 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.perfil-lista li:last-child {
+  border-bottom: none;
+}
+
+.perfil-lista button {
+  min-height: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--marca);
+  font-weight: 700;
+  text-align: left;
+}
+
+.perfil-lista button:hover {
+  color: var(--marca-hover);
+  text-decoration: underline;
+}
+
+.perfil-lista > li > span {
+  flex: none;
+  font-size: 0.8rem;
+  color: var(--texto-tenue);
+  white-space: nowrap;
+}
+
+.perfil-sensor-nombre {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--texto);
+  font-weight: 400;
 }
 
 /* Zona de acción irreversible. El borde se queda neutro: el ámbar del
