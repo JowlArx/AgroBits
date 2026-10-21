@@ -124,6 +124,8 @@ Higiene del proyecto (17/10/2026):
 
 **21/10/2026 — D43 publicado en producción (orden del humano: «Apruebo»):** merge `--no-ff` a `main` (`c9885e0`) y push → auto-deploy. Verificado en producción: build nuevo (`app-Cg3ZRzfm.js`), **E2E 15/15 ✔**, la rejilla de «Mi cuenta» a dos columnas (469 + 427 px, 718 px de alto), el contador de «Alertas activas» con desalineación 0 y el nombre de usuario editable (guardado y borrado comprobados en vivo, con la cuenta de prueba restaurada).
 
+**21/10/2026 — D44 publicado en producción (orden del humano: «APRUEBO»):** merge `--no-ff` a `main` (`61b8c35`) y push → auto-deploy. Verificado en producción a 1920 px: tres columnas de 457 + 411 + 411 px, bloque de 1344 px con márgenes simétricos de 288 px, y los cinco bloques («Tu cuenta», «Qué datos guardamos», «Tus cultivos», «Tus sensores», «Cerrar sesión»). **E2E 15/15 contra producción** ✔.
+
 ## Reglas de actualización
 
 Registrar únicamente hechos comprobados y decisiones aceptadas. Identificar expresamente las hipótesis y actualizar este archivo cuando cambie el estado del proyecto.
