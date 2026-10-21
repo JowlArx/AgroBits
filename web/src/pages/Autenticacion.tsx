@@ -177,6 +177,8 @@ export default function Autenticacion() {
             name="email"
             inputMode="email"
             autoComplete="email"
+            /* D40: el corrector ortográfico no tiene nada que aportar a un email. */
+            spellCheck={false}
             aria-invalid={invalido('email') || undefined}
             data-testid="email"
             value={email}
@@ -224,6 +226,7 @@ export default function Autenticacion() {
                 id="campo-nombreUsuario"
                 name="nombreUsuario"
                 autoComplete="nickname"
+                spellCheck={false}
                 aria-invalid={invalido('nombreUsuario') || undefined}
                 data-testid="nombre-usuario"
                 value={nombreUsuario}
@@ -254,6 +257,7 @@ export default function Autenticacion() {
             <label>
               Provincia
               <select
+                id="campo-provincia"
                 name="provincia"
                 data-testid="provincia"
                 value={provincia}

@@ -65,6 +65,26 @@ function finDeHoy(): Date {
   return fin
 }
 
+/**
+ * D40 — Fecha en formato `YYYY-MM-DD` con las componentes **locales**.
+ * `toISOString()` convertía a UTC: a última hora de la tarde, la fecha
+ * mostrada era la del día siguiente.
+ */
+function aIsoLocal(fecha: Date): string {
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0')
+  const dia = String(fecha.getDate()).padStart(2, '0')
+  return `${fecha.getFullYear()}-${mes}-${dia}`
+}
+
+/**
+ * D40 — Fecha local a medianoche. `new Date('2026-10-20')` se interpretaba
+ * como UTC y, con desfase negativo, el rango empezaba unas horas antes (la
+ * tarde del día anterior) y el «Hasta» excluía el final del día.
+ */
+function desdeIsoLocal(valor: string): Date {
+  return new Date(`${valor}T00:00:00`)
+}
+
 interface RangoTiempo {
   tipo: TipoPreseleccion | 'personalizado'
   desde?: Date
@@ -200,16 +220,24 @@ export default function Alertas() {
               Desde
               <input
                 type="date"
-                value={desde?.toISOString().split('T')[0] ?? ''}
-                onChange={(e) => setDesde(new Date(e.target.value))}
+                id="campo-desde"
+                name="desde"
+                autoComplete="off"
+                max={hasta ? aIsoLocal(hasta) : undefined}
+                value={desde ? aIsoLocal(desde) : ''}
+                onChange={(e) => setDesde(e.target.value ? desdeIsoLocal(e.target.value) : undefined)}
               />
             </label>
             <label>
               Hasta
               <input
                 type="date"
-                value={hasta?.toISOString().split('T')[0] ?? ''}
-                onChange={(e) => setHasta(new Date(e.target.value))}
+                id="campo-hasta"
+                name="hasta"
+                autoComplete="off"
+                min={desde ? aIsoLocal(desde) : undefined}
+                value={hasta ? aIsoLocal(hasta) : ''}
+                onChange={(e) => setHasta(e.target.value ? desdeIsoLocal(e.target.value) : undefined)}
               />
             </label>
           </div>

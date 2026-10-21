@@ -24,7 +24,6 @@ import { obtenerAlertas, suscribirAlertas } from '../data/storeAlertas'
 import { obtenerMediciones, suscribirMediciones, ultimasPorTipo } from '../data/medicionesSimuladas'
 import { ETIQUETAS_MEDICION, ETIQUETAS_MEDICION_CORTA, VAR_COLOR_SENSOR } from '../data/catalogo'
 import { TIPOS_MEDICION, UNIDADES, type TipoMedicion } from '../domain/tipos'
-import { useEsMovil } from '../hooks/useEsMovil'
 import SelectorDesplegable from './SelectorDesplegable'
 
 /** Escalas solo para dimensionar las barras (los valores mostrados son reales). */
@@ -186,8 +185,6 @@ export default function Tablero() {
   // D35: el gráfico se acompaña de su lectura en texto (en móvil el tooltip
   // es difícil de acertar con el dedo).
   const ultimaDelTipo = ultimasPorTipo(sensores.map((s) => s.id))[tipoActivo]
-  // D35: en móvil el lienzo se achica para dejar respirar al resto.
-  const esMovil = useEsMovil()
 
   return (
     <section className="tablero" aria-label="Resumen del panel">
@@ -232,7 +229,9 @@ export default function Tablero() {
             </p>
           ) : (
             <div className="grafico-lineas">
-              <ResponsiveContainer width="100%" height={esMovil ? 200 : 300}>
+              {/* D40: el alto lo pone el CSS (`.grafico-lineas`), no un punto de
+                  corte medido en JavaScript: dos fuentes para lo mismo. */}
+              <ResponsiveContainer width="100%" height="100%">
                 {/* D31/D33: ComposedChart con relleno degradado bajo cada
                     línea; margen izquierdo 0 porque el eje Y mide 44 px. */}
                 <ComposedChart data={puntos} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>

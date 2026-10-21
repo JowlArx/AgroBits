@@ -105,9 +105,9 @@ export default function ListaCultivos({ onNuevo, onEditar, onVerMediciones }: Pr
                 <table className="tabla-umbrales">
                   <thead>
                     <tr>
-                      <th>Medición</th>
-                      <th>Mínimo</th>
-                      <th>Máximo</th>
+                      <th scope="col">Medición</th>
+                      <th scope="col">Mínimo</th>
+                      <th scope="col">Máximo</th>
                     </tr>
                   </thead>
                   <tbody>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 
 export interface OpcionSelector {
   valor: string
@@ -24,6 +24,11 @@ interface Props {
  * propio la flecha apunta hacia arriba mientras el menú está abierto, el
  * control cambia de aspecto y el teclado funciona como corresponde (flechas
  * para moverse, Intro para elegir, Escape para cerrar).
+ *
+ * D40 — Patrón listbox corregido: al abrirse el foco pasa a la lista (que es
+ * quien recibe el teclado) y la opción resaltada se anuncia con
+ * `aria-activedescendant`; el botón solo abre y cierra. Además, el nombre
+ * accesible del control incluye su texto visible (WCAG 2.5.3 «Label in Name»).
  */
 export default function SelectorDesplegable({
   etiqueta,
@@ -37,6 +42,10 @@ export default function SelectorDesplegable({
   const [resaltado, setResaltado] = useState(() => Math.max(0, opciones.findIndex((o) => o.valor === valor)))
   const contenedor = useRef<HTMLDivElement>(null)
   const boton = useRef<HTMLButtonElement>(null)
+  const lista = useRef<HTMLUListElement>(null)
+  const idBase = useId()
+  const idLista = `${idBase}-lista`
+  const idOpcion = (indice: number): string => `${idBase}-opcion-${indice}`
 
   // Clic fuera: cierra el menú sin afectar al contenido.
   useEffect(() => {
@@ -48,7 +57,18 @@ export default function SelectorDesplegable({
     return () => document.removeEventListener('mousedown', alClic)
   }, [abierto])
 
+  // Al abrirse, el foco pasa a la lista: es quien recibe el teclado.
+  useEffect(() => {
+    if (abierto) lista.current?.focus()
+  }, [abierto])
+
   const seleccionada = opciones.find((o) => o.valor === valor)
+  const textoVisible = seleccionada?.texto ?? '—'
+
+  function cerrar(): void {
+    setAbierto(false)
+    boton.current?.focus()
+  }
 
   function elegir(nuevoValor: string): void {
     onChange(nuevoValor)
@@ -56,9 +76,15 @@ export default function SelectorDesplegable({
     boton.current?.focus()
   }
 
-  function alTeclado(evento: React.KeyboardEvent): void {
+  function mover(paso: number): void {
+    if (opciones.length === 0) return
+    setResaltado((indice) => (indice + paso + opciones.length) % opciones.length)
+  }
+
+  function alTecladoDelBoton(evento: React.KeyboardEvent): void {
     if (evento.key === 'Escape' && abierto) {
-      setAbierto(false)
+      evento.preventDefault()
+      cerrar()
       return
     }
     if (evento.key === 'ArrowDown' || evento.key === 'ArrowUp') {
@@ -67,11 +93,37 @@ export default function SelectorDesplegable({
         setAbierto(true)
         return
       }
-      const paso = evento.key === 'ArrowDown' ? 1 : -1
-      setResaltado((indice) => (indice + paso + opciones.length) % opciones.length)
+      mover(evento.key === 'ArrowDown' ? 1 : -1)
+    }
+  }
+
+  function alTecladoDeLaLista(evento: React.KeyboardEvent): void {
+    if (evento.key === 'Escape') {
+      evento.preventDefault()
+      cerrar()
       return
     }
-    if ((evento.key === 'Enter' || evento.key === ' ') && abierto) {
+    if (evento.key === 'ArrowDown') {
+      evento.preventDefault()
+      mover(1)
+      return
+    }
+    if (evento.key === 'ArrowUp') {
+      evento.preventDefault()
+      mover(-1)
+      return
+    }
+    if (evento.key === 'Home') {
+      evento.preventDefault()
+      setResaltado(0)
+      return
+    }
+    if (evento.key === 'End') {
+      evento.preventDefault()
+      setResaltado(Math.max(0, opciones.length - 1))
+      return
+    }
+    if (evento.key === 'Enter' || evento.key === ' ') {
       evento.preventDefault()
       const opcion = opciones[resaltado]
       if (opcion) elegir(opcion.valor)
@@ -87,11 +139,13 @@ export default function SelectorDesplegable({
         data-testid={testId}
         aria-haspopup="listbox"
         aria-expanded={abierto}
-        aria-label={etiqueta}
+        aria-controls={idLista}
+        /* D40: el nombre accesible incluye el texto visible (WCAG 2.5.3). */
+        aria-label={`${etiqueta}: ${textoVisible}`}
         onClick={() => setAbierto((estaAbierto) => !estaAbierto)}
-        onKeyDown={alTeclado}
+        onKeyDown={alTecladoDelBoton}
       >
-        <span className="selector-valor">{seleccionada?.texto ?? '—'}</span>
+        <span className="selector-valor">{textoVisible}</span>
         <svg
           className="selector-flecha"
           viewBox="0 0 10 6"
@@ -112,10 +166,20 @@ export default function SelectorDesplegable({
       </button>
 
       {abierto && (
-        <ul className="selector-lista" role="listbox" aria-label={etiqueta}>
+        <ul
+          className="selector-lista"
+          role="listbox"
+          id={idLista}
+          ref={lista}
+          tabIndex={-1}
+          aria-label={etiqueta}
+          aria-activedescendant={opciones.length > 0 ? idOpcion(resaltado) : undefined}
+          onKeyDown={alTecladoDeLaLista}
+        >
           {opciones.map((opcion, indice) => (
             <li
               key={opcion.valor}
+              id={idOpcion(indice)}
               role="option"
               aria-selected={opcion.valor === valor}
               className={

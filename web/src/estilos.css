@@ -1306,6 +1306,13 @@ button.boton-google:hover {
 
 .grafico-lineas {
   width: 100%;
+  /* D40: el alto del lienzo lo decide el CSS (200 px en móvil), no un punto
+     de corte medido en JavaScript. */
+  height: 300px;
+}
+
+.grafico-sensor {
+  height: 220px;
 }
 
 .barras-tipo {
@@ -1503,6 +1510,11 @@ button.boton-google:hover {
   .pestanas-widget {
     flex-wrap: nowrap;
     overflow-x: auto;
+  }
+
+  /* D40: el lienzo se achica en móvil (antes lo decidía JavaScript). */
+  .grafico-lineas {
+    height: 200px;
   }
 
   .pestanas-widget button {
