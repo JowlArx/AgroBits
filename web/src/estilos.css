@@ -49,15 +49,24 @@ h3 {
 }
 
 /* D35 — Micro-movimiento: un solo patrón (exponencial suave) y solo donde
-   responde a una acción. `prefers-reduced-motion` lo desactiva abajo. */
+   responde a una acción. `prefers-reduced-motion` lo desactiva abajo.
+   D40: esta regla es la única fuente de la transición; la regla `button` de
+   más abajo la sobrescribía (y dejaba el `transform` del pulsado sin animar). */
 button,
 a,
-summary {
+summary,
+input,
+select,
+textarea {
   transition:
     background-color var(--transicion),
     border-color var(--transicion),
     color var(--transicion),
     transform var(--transicion);
+  /* D40: sin retardo del doble toque en táctil y con el resaltado del toque
+     del sistema sustituido por el estado `:active` propio. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .boton-seccion-compacto:active {
@@ -222,7 +231,8 @@ button {
   background: var(--superficie);
   color: var(--texto);
   cursor: pointer;
-  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+  /* D40: la transición la hereda de la regla global (token `--transicion`),
+     con el `transform` incluido: el pulsado se anima. */
 }
 
 button:hover {
@@ -1000,8 +1010,9 @@ button.boton-google:hover {
    iconos de las secciones y, a la derecha del todo, el icono de perfil. */
 .barra-inferior {
   position: fixed;
-  left: var(--espacio-3);
-  right: var(--espacio-3);
+  /* D40: en horizontal, con muesca, la píldora no puede tocar el borde. */
+  left: max(var(--espacio-3), env(safe-area-inset-left, 0px));
+  right: max(var(--espacio-3), env(safe-area-inset-right, 0px));
   bottom: calc(var(--espacio-3) + env(safe-area-inset-bottom, 0px));
   z-index: 50;
   display: flex;
@@ -1520,7 +1531,7 @@ button.boton-google:hover {
 
   .segmentado-rangos {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--espacio-1);
   }
 
@@ -1544,7 +1555,7 @@ button.boton-google:hover {
   .acciones-tarjeta {
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: var(--espacio-2);
   }
 
@@ -1607,6 +1618,12 @@ button.boton-google:hover {
   }
 
   button:active {
+    transform: none;
+  }
+
+  /* D40: la escala de la barra inferior también se anula (su especificidad
+     ganaba a `button:active`). */
+  .boton-seccion-compacto:active {
     transform: none;
   }
 }
