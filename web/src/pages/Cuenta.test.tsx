@@ -16,7 +16,7 @@ describe('edición del nombre de usuario (D43)', () => {
     configurarProveedorAuth(doble)
     await iniciarSesion('pruebas@agrobits.test', 'secreta')
 
-    render(<Cuenta email="pruebas@agrobits.test" nombreUsuario="Joel" />)
+    render(<Cuenta email="pruebas@agrobits.test" nombreUsuario="Joel" cultivos={2} sensores={1} alertasActivas={0} />)
 
     const campo = (await screen.findByTestId('nombre-usuario-cuenta')) as HTMLInputElement
     expect(campo.value).toBe('Joel')
@@ -34,7 +34,7 @@ describe('edición del nombre de usuario (D43)', () => {
     configurarProveedorAuth(doble)
     await iniciarSesion('pruebas@agrobits.test', 'secreta')
 
-    render(<Cuenta email="pruebas@agrobits.test" nombreUsuario="Joel" />)
+    render(<Cuenta email="pruebas@agrobits.test" nombreUsuario="Joel" cultivos={2} sensores={1} alertasActivas={0} />)
 
     const campo = (await screen.findByTestId('nombre-usuario-cuenta')) as HTMLInputElement
     fireEvent.change(campo, { target: { value: 'J' } })
@@ -51,7 +51,7 @@ describe('edición del nombre de usuario (D43)', () => {
     configurarProveedorAuth(doble)
     await iniciarSesion('pruebas@agrobits.test', 'secreta')
 
-    render(<Cuenta email="pruebas@agrobits.test" nombreUsuario="Joel" />)
+    render(<Cuenta email="pruebas@agrobits.test" nombreUsuario="Joel" cultivos={2} sensores={1} alertasActivas={0} />)
 
     const campo = (await screen.findByTestId('nombre-usuario-cuenta')) as HTMLInputElement
     fireEvent.change(campo, { target: { value: '' } })
