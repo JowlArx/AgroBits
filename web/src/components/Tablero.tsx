@@ -23,7 +23,7 @@ import { obtenerSensores, suscribirSensores, type Sensor } from '../data/storeSe
 import { obtenerAlertas, suscribirAlertas } from '../data/storeAlertas'
 import { obtenerMediciones, suscribirMediciones, ultimasPorTipo } from '../data/medicionesSimuladas'
 import { ETIQUETAS_MEDICION, ETIQUETAS_MEDICION_CORTA, VAR_COLOR_SENSOR } from '../data/catalogo'
-import { TIPOS_MEDICION, type TipoMedicion } from '../domain/tipos'
+import { TIPOS_MEDICION, UNIDADES, type TipoMedicion } from '../domain/tipos'
 import { useEsMovil } from '../hooks/useEsMovil'
 import SelectorDesplegable from './SelectorDesplegable'
 
@@ -255,7 +255,7 @@ export default function Tablero() {
                       color: 'var(--texto)',
                       fontFamily: 'var(--fuente-texto)',
                     }}
-                    formatter={(valor) => [`${valor}`, ETIQUETAS_MEDICION[tipoActivo]]}
+                    formatter={(valor) => [`${valor} ${UNIDADES[tipoActivo]}`, ETIQUETAS_MEDICION[tipoActivo]]}
                   />
                   {series.length > 1 && <Legend wrapperStyle={{ fontSize: 12 }} />}
                   {series.map((serie, indice) => (

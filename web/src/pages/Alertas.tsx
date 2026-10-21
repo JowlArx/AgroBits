@@ -127,7 +127,6 @@ export default function Alertas() {
   // repiten: cada alerta aparece en una de las dos secciones.
   const activas = todas.filter((a) => a.estado === 'activa')
   const historial = enRango.filter((a) => a.estado === 'resuelta')
-  const resueltas = todas.length - activas.length
 
   // --- UI ---
 
@@ -140,7 +139,7 @@ export default function Alertas() {
             {activas.length} {activas.length === 1 ? 'activa' : 'activas'}
           </strong>
           {' · '}
-          {resueltas} {resueltas === 1 ? 'resuelta' : 'resueltas'}
+          {historial.length} {historial.length === 1 ? 'resuelta' : 'resueltas'}
         </p>
       </header>
 
