@@ -437,7 +437,9 @@ export default function App() {
             )}
             {vista.tipo === 'alertas' && <Alertas />}
             {vista.tipo === 'sensores' && <Sensores />}
-            {vista.tipo === 'cuenta' && <Cuenta email={sesion.usuario.email} />}
+            {vista.tipo === 'cuenta' && (
+              <Cuenta email={sesion.usuario.email} nombreUsuario={sesion.usuario.nombreUsuario} />
+            )}
           </main>
           {vista.tipo === 'lista' && <PanelLateral onVerAlertas={() => irA({ tipo: 'alertas' })} />}
         </div>

@@ -3,18 +3,23 @@
 // valida el formato antes de delegar en el RPC `actualizar_perfil` de la BD
 // (único punto servidor, D19/D27). El catálogo de localidades es el mismo
 // que el registro (provincia → ciudad en cascada).
+// D43 — Se añade la edición del nombre de usuario: vive en la metadata de
+// Auth (D32), no en la tabla de perfiles, así que va en su propio formulario
+// (una escritura distinta, un botón distinto).
 
 import { useEffect, useMemo, useState } from 'react'
 import { guardarPerfil, obtenerPerfil } from '../data/storePerfil'
-import { cerrarSesion } from '../data/storeSesion'
+import { actualizarNombreUsuario, cerrarSesion } from '../data/storeSesion'
 import { exigirProveedor } from '../data/datos/proveedorDatos'
 import type { Localidad } from '../data/datos/proveedorDatos'
 
 interface Props {
   email: string
+  /** D43: nombre de usuario actual, para prellenar el campo. */
+  nombreUsuario?: string
 }
 
-export default function Cuenta({ email }: Props) {
+export default function Cuenta({ email, nombreUsuario }: Props) {
   const [localidades, setLocalidades] = useState<Localidad[]>([])
   const [telefono, setTelefono] = useState('')
   const [provincia, setProvincia] = useState('')
@@ -22,6 +27,11 @@ export default function Cuenta({ email }: Props) {
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState('')
   const [error, setError] = useState('')
+  // D43: estado del bloque de nombre de usuario (independiente del perfil).
+  const [nombre, setNombre] = useState(nombreUsuario ?? '')
+  const [guardandoNombre, setGuardandoNombre] = useState(false)
+  const [mensajeNombre, setMensajeNombre] = useState('')
+  const [errorNombre, setErrorNombre] = useState('')
 
   // Carga el catálogo de localidades y prellena el formulario con el perfil
   // ya cargado por `cargarDatosSesion` (D30). El setState vive en el callback
@@ -74,11 +84,78 @@ export default function Cuenta({ email }: Props) {
     setMensaje('Perfil actualizado.')
   }
 
+  /** D43: guarda el nombre de usuario (metadata de Auth). */
+  async function guardarNombre(evento: React.FormEvent): Promise<void> {
+    evento.preventDefault()
+    if (guardandoNombre) return
+    setGuardandoNombre(true)
+    setMensajeNombre('')
+    setErrorNombre('')
+    const resultado = await actualizarNombreUsuario(nombre)
+    setGuardandoNombre(false)
+    if (!resultado.ok) {
+      setErrorNombre(resultado.errores.map((e) => e.motivo).join('. '))
+      return
+    }
+    setErrorNombre('')
+    setMensajeNombre(
+      nombre.trim() === ''
+        ? 'Nombre quitado: en el panel se verá la parte de tu email anterior a la «@».'
+        : 'Nombre actualizado.',
+    )
+  }
+
   return (
     <section className="perfil-cuenta" data-testid="vista-cuenta">
       <h2>Mi cuenta</h2>
 
+      {/* D43 — Nombre de usuario: se guarda en la metadata de Auth, así que va
+          en su propio formulario (no comparte escritura con el perfil). */}
+      <form onSubmit={guardarNombre} noValidate data-testid="form-nombre">
+        <h3>Nombre de usuario</h3>
+        <label>
+          Nombre visible
+          <input
+            type="text"
+            id="campo-nombreUsuario"
+            name="nombreUsuario"
+            autoComplete="nickname"
+            spellCheck={false}
+            maxLength={30}
+            data-testid="nombre-usuario-cuenta"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            placeholder="Ej.: Joel…"
+          />
+          <small>
+            Es el nombre que aparece en el panel. Si lo dejas vacío, se muestra la parte de tu
+            email anterior a la «@».
+          </small>
+        </label>
+        <div className="acciones acciones-formulario">
+          <button
+            type="submit"
+            className="btn-primario"
+            data-testid="guardar-nombre"
+            disabled={guardandoNombre}
+          >
+            {guardandoNombre ? 'Guardando…' : 'Guardar nombre'}
+          </button>
+        </div>
+        {mensajeNombre && (
+          <p className="aviso-exito" data-testid="nombre-guardado" role="status" aria-live="polite">
+            {mensajeNombre}
+          </p>
+        )}
+        {errorNombre && (
+          <p role="alert" data-testid="error-nombre">
+            {errorNombre}
+          </p>
+        )}
+      </form>
+
       <form onSubmit={enviar} noValidate>
+        <h3>Contacto</h3>
         {/* D35: el email lo gestiona el acceso, no el perfil: se muestra como
             texto (un input de solo lectura aparenta ser editable). */}
         <div className="campo-solo-lectura">

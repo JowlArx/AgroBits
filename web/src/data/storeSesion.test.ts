@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
+  actualizarNombreUsuario,
   cerrarSesion,
   iniciarSesion,
   iniciarSesionConGoogle,
@@ -48,6 +49,9 @@ function espiaDeRegistro(): { proveedor: ProveedorAuth; llamadas: () => number; 
       registraciones++
       perfil = p
       return { ok: true, valor: { usuario: { email: 'espia@ejemplo.com' } } }
+    },
+    actualizarNombreUsuario: async () => {
+      throw new Error('no debe llamarse en estos tests')
     },
     cerrarSesion: async () => {},
   }
@@ -175,6 +179,9 @@ describe('acceso con Google (T-28)', () => {
         llamadas++
         return { ok: true, valor: { url: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=abc' } }
       },
+      actualizarNombreUsuario: async () => {
+        throw new Error('no debe llamarse')
+      },
       cerrarSesion: async () => {},
     }
     configurarProveedorAuth(proveedor)
@@ -200,6 +207,9 @@ describe('acceso con Google (T-28)', () => {
         ok: false,
         errores: [{ campo: 'google', motivo: 'El acceso con Google no está habilitado en el proyecto.' }],
       }),
+      actualizarNombreUsuario: async () => {
+        throw new Error('no debe llamarse')
+      },
       cerrarSesion: async () => {},
     }
     configurarProveedorAuth(proveedor)
@@ -344,5 +354,84 @@ describe('registro enriquecido (T-27, R-01 v3 / D27)', () => {
     expect(telefonoValido('9'.repeat(21))).toBe(false) // 21 dígitos
     expect(telefonoValido('abc123456')).toBe(false)
     expect(telefonoValido('261-555?')).toBe(false)
+  })
+})
+
+// D43 — El nombre de usuario se puede cambiar desde «Mi cuenta». La store
+// valida antes de tocar el proveedor (mismo criterio que el registro, D32).
+describe('nombre de usuario editable (D43)', () => {
+  it('rechaza un nombre demasiado corto sin tocar al proveedor', async () => {
+    let llamadas = 0
+    const proveedor: ProveedorAuth = {
+      sesionActual: () => null,
+      suscribir: () => () => {},
+      iniciarSesion: async () => {
+        throw new Error('no debe llamarse')
+      },
+      registrarse: async () => {
+        throw new Error('no debe llamarse')
+      },
+      iniciarSesionConGoogle: async () => {
+        throw new Error('no debe llamarse')
+      },
+      actualizarNombreUsuario: async () => {
+        llamadas++
+        return { ok: true, valor: { usuario: { email: 'x@ejemplo.com' } } }
+      },
+      cerrarSesion: async () => {},
+    }
+    configurarProveedorAuth(proveedor)
+
+    const resultado = await actualizarNombreUsuario('J')
+
+    expect(resultado.ok).toBe(false)
+    if (!resultado.ok) expect(resultado.errores[0].campo).toBe('nombreUsuario')
+    expect(llamadas).toBe(0)
+  })
+
+  it('delega el cambio y devuelve la sesión con el nombre nuevo', async () => {
+    const recibidos: string[] = []
+    const proveedor: ProveedorAuth = {
+      sesionActual: () => null,
+      suscribir: () => () => {},
+      iniciarSesion: async () => {
+        throw new Error('no debe llamarse')
+      },
+      registrarse: async () => {
+        throw new Error('no debe llamarse')
+      },
+      iniciarSesionConGoogle: async () => {
+        throw new Error('no debe llamarse')
+      },
+      actualizarNombreUsuario: async (nombre) => {
+        recibidos.push(nombre)
+        return { ok: true, valor: { usuario: { email: 'x@ejemplo.com', nombreUsuario: nombre } } }
+      },
+      cerrarSesion: async () => {},
+    }
+    configurarProveedorAuth(proveedor)
+
+    const resultado = await actualizarNombreUsuario('  Ana  ')
+
+    expect(resultado.ok).toBe(true)
+    if (resultado.ok) expect(resultado.valor.usuario.nombreUsuario).toBe('Ana')
+    expect(recibidos).toEqual(['Ana'])
+  })
+
+  it('un nombre vacío quita el nombre y la UI vuelve al email', async () => {
+    const doble = new AuthFalso()
+    doble.sembrar('pruebas@agrobits.test', 'secreta', {
+      telefono: '2615550000',
+      localidadId: 1,
+      nombreUsuario: 'Joel',
+    })
+    configurarProveedorAuth(doble)
+    await iniciarSesion('pruebas@agrobits.test', 'secreta')
+
+    const resultado = await actualizarNombreUsuario('')
+
+    expect(resultado.ok).toBe(true)
+    expect(obtenerSesion()?.usuario.nombreUsuario).toBeUndefined()
+    expect(obtenerSesion()?.usuario.email).toBe('pruebas@agrobits.test')
   })
 })

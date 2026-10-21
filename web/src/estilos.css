@@ -612,7 +612,9 @@ legend {
   background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: var(--radio-sm);
-  padding: var(--espacio-3) var(--espacio-3) var(--espacio-3) var(--espacio-4);
+  /* D43: el margen izquierdo deja hueco al punto de marca (que llega a
+     18,4 px): con 16 px el punto se pegaba al texto. */
+  padding: var(--espacio-3) var(--espacio-3) var(--espacio-3) var(--espacio-5);
   margin: 0 0 var(--espacio-4);
 }
 
@@ -2008,8 +2010,20 @@ button.boton-google:hover {
   color: var(--marca);
 }
 
-/* D31: separación entre el botón «Guardar cambios» y el mensaje inferior. */
-.perfil-cuenta form > button[type='submit'] {
+/* D43: los dos formularios de «Mi cuenta» (nombre de usuario y contacto) van
+   separados por un bloque con su propio título. */
+.perfil-cuenta form + form {
+  margin-top: var(--espacio-5);
+}
+
+.perfil-cuenta h3 {
+  margin-top: 0;
+}
+
+/* D43: separación entre el bloque de acciones («Guardar cambios») y lo que
+   viene después. La regla anterior (`form > button[type='submit']`) no
+   casaba con el marcado real: el botón vive dentro de `div.acciones`. */
+.perfil-cuenta .acciones-formulario {
   margin-bottom: var(--espacio-5);
 }
 

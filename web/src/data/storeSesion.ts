@@ -109,15 +109,19 @@ function validarRegistro(datos: DatosRegistro): ErrorCampo[] {
   // D32: el nombre de usuario es OPCIONAL; solo se valida su longitud si se
   // escribe (2–30 caracteres). La UI muestra el texto del email antes de la
   // «@» cuando no existe.
-  const nombre = datos.nombreUsuario?.trim() ?? ''
-  if (nombre !== '' && (nombre.length < 2 || nombre.length > 30)) {
-    errores.push({
-      campo: 'nombreUsuario',
-      motivo: 'El nombre de usuario debe tener entre 2 y 30 caracteres',
-    })
+  if (!nombreUsuarioValido(datos.nombreUsuario ?? '')) {
+    errores.push({ campo: 'nombreUsuario', motivo: MOTIVO_NOMBRE })
   }
   return errores
 }
+
+/** D32/D43: el nombre de usuario es opcional; si se escribe, 2–30 caracteres. */
+export function nombreUsuarioValido(nombre: string): boolean {
+  const limpio = nombre.trim()
+  return limpio === '' || (limpio.length >= 2 && limpio.length <= 30)
+}
+
+const MOTIVO_NOMBRE = 'El nombre de usuario debe tener entre 2 y 30 caracteres'
 
 /** Registro real (R-01 v3, D27): valida el PERFIL aquí (AC4/AC5) y delega. */
 export async function registrarse(datos: DatosRegistro): Promise<Resultado<Sesion>> {
@@ -134,6 +138,19 @@ export async function registrarse(datos: DatosRegistro): Promise<Resultado<Sesio
 /** Cierre de sesión (R-03 AC1): al volver, el gate vuelve a exigir acceso. */
 export async function cerrarSesion(): Promise<void> {
   await exigirProveedor().cerrarSesion()
+}
+
+/**
+ * D43 — Cambia el nombre de usuario de la sesión abierta («Mi cuenta»). Vive
+ * en la metadata de Auth (D32), no en la tabla de perfiles. Un nombre vacío lo
+ * quita y la UI vuelve a mostrar la parte del email anterior a la «@».
+ */
+export async function actualizarNombreUsuario(nombre: string): Promise<Resultado<Sesion>> {
+  const limpio = nombre.trim()
+  if (!nombreUsuarioValido(limpio)) {
+    return { ok: false, errores: [{ campo: 'nombreUsuario', motivo: MOTIVO_NOMBRE }] }
+  }
+  return exigirProveedor().actualizarNombreUsuario(limpio)
 }
 
 /**
