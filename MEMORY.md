@@ -18,6 +18,7 @@ Construir una plataforma de monitoreo agrícola que conecte sensores IoT con una
 - El presupuesto inicial es limitado (objetivo ~0 €/mes en infraestructura).
 - Se valida el software con datos simulados antes de invertir en hardware.
 - El desarrollo utiliza OpenCode y metodología SDD.
+- **Herramientas de diseño instaladas (20/10/2026, orden de JowlArx):** `impeccable` (auditoría UX y sistema de diseño, con `DESIGN.md` y sidecar), `frontend-design` (anthropics), `accessibility` (WCAG 2.2) y **`web-design-guidelines` (Vercel, `vercel-labs/agent-skills`)**, que audita ficheros contra las *Web Interface Guidelines* devolviendo hallazgos en `file:line`. Las skills viven en `.agents/skills/` y `.opencode/skills/` (ignorados por git); lo versionado es `skills-lock.json`, que registra origen y hash de cada una.
 
 ## Decisiones aprobadas
 
