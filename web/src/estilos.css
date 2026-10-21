@@ -612,7 +612,9 @@ legend {
   background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: var(--radio-sm);
-  padding: var(--espacio-3) var(--espacio-3) var(--espacio-3) var(--espacio-4);
+  /* D43: el margen izquierdo deja hueco al punto de marca (que llega a
+     18,4 px): con 16 px el punto se pegaba al texto. */
+  padding: var(--espacio-3) var(--espacio-3) var(--espacio-3) var(--espacio-5);
   margin: 0 0 var(--espacio-4);
 }
 
@@ -1376,6 +1378,13 @@ button.boton-google:hover {
   margin: 0 0 var(--espacio-3);
 }
 
+/* D43: la regla anterior (`.panel-lateral h2`, más abajo en el fichero) le
+   ganaba en especificidad y el título heredaba un margen inferior de 12 px:
+   en la fila del flex eso descentraba el texto 6 px respecto al contador. */
+.panel-cabecera h2 {
+  margin: 0;
+}
+
 .panel-vacio {
   margin: 0;
   font-size: 0.9rem;
@@ -1753,8 +1762,115 @@ button.boton-google:hover {
 }
 
 /* Vista de cuenta */
+
+/* D43: «Mi cuenta» pasa a dos columnas en escritorio. Antes era una columna
+   estrecha de 30 rem y la mitad de la pantalla quedaba vacía. */
 .perfil-cuenta {
-  max-width: 30rem;
+  max-width: 58rem;
+}
+
+.perfil-rejilla {
+  display: grid;
+  gap: var(--espacio-5);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+@media (min-width: 48rem) {
+  .perfil-rejilla {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: var(--espacio-6);
+  }
+}
+
+.perfil-columna > form + form {
+  margin-top: var(--espacio-5);
+}
+
+.perfil-lateral {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-4);
+}
+
+/* Resumen de la cuenta: lo que tiene el usuario a un vistazo. */
+.perfil-stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--espacio-2);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.perfil-stats li {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-sm);
+  padding: var(--espacio-3) var(--espacio-2);
+  text-align: center;
+}
+
+.perfil-stats strong {
+  display: block;
+  font-family: var(--fuente-titulo);
+  font-size: 1.4rem;
+  line-height: 1.2;
+  /* La cifra va en tinta, como en las tarjetas KPI del tablero (el verde es
+     de marca, no de lectura). */
+  color: var(--texto);
+}
+
+/* D43: el ámbar solo cuando hay alertas activas (D20). */
+.perfil-stats li.con-alerta strong {
+  color: var(--senal);
+}
+
+.perfil-stats span {
+  font-size: 0.75rem;
+  color: var(--texto-tenue);
+}
+
+/* Bloques informativos de la columna derecha. */
+.perfil-bloque {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-sm);
+  padding: var(--espacio-4);
+}
+
+.perfil-bloque h3 {
+  margin: 0 0 var(--espacio-2);
+  font-size: 1rem;
+}
+
+.perfil-bloque dl {
+  margin: 0;
+  gap: var(--espacio-1) var(--espacio-3);
+}
+
+.perfil-bloque dt {
+  font-weight: 700;
+  color: var(--texto);
+}
+
+.perfil-bloque dd {
+  margin: 0;
+  color: var(--texto-tenue);
+  font-size: 0.85rem;
+}
+
+/* Zona de acción irreversible. El borde se queda neutro: el ámbar del
+   sistema está reservado a las alertas activas (D20) y aquí la señal la
+   lleva el botón de peligro. */
+.perfil-bloque.perfil-zona {
+  border-color: var(--borde);
+}
+
+.perfil-zona p {
+  margin: 0 0 var(--espacio-3);
+  font-size: 0.85rem;
+  color: var(--texto-tenue);
 }
 
 /* D35: campo que se muestra, no se edita. */
@@ -2008,8 +2124,20 @@ button.boton-google:hover {
   color: var(--marca);
 }
 
-/* D31: separación entre el botón «Guardar cambios» y el mensaje inferior. */
-.perfil-cuenta form > button[type='submit'] {
+/* D43: los dos formularios de «Mi cuenta» (nombre de usuario y contacto) van
+   separados por un bloque con su propio título. */
+.perfil-cuenta form + form {
+  margin-top: var(--espacio-5);
+}
+
+.perfil-cuenta h3 {
+  margin-top: 0;
+}
+
+/* D43: separación entre el bloque de acciones («Guardar cambios») y lo que
+   viene después. La regla anterior (`form > button[type='submit']`) no
+   casaba con el marcado real: el botón vive dentro de `div.acciones`. */
+.perfil-cuenta .acciones-formulario {
   margin-bottom: var(--espacio-5);
 }
 

@@ -43,5 +43,11 @@ export interface ProveedorAuth {
    * (el alta solo ocurre si la cuenta de Google no existía).
    */
   iniciarSesionConGoogle(): Promise<Resultado<UrlRedireccion>>
+  /**
+   * D43 — Cambia el nombre de usuario de la sesión abierta. El nombre vive
+   * en la metadata de Auth (D32), no en la tabla de perfiles. Un nombre vacío
+   * lo quita: la UI vuelve a mostrar la parte del email anterior a la «@».
+   */
+  actualizarNombreUsuario(nombre: string): Promise<Resultado<Sesion>>
   cerrarSesion(): Promise<void>
 }

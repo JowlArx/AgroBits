@@ -57,6 +57,20 @@ export class AuthFalso implements ProveedorAuth {
   }
 
   /**
+   * D43 — Cambia el nombre de usuario de la sesión abierta (en memoria). Un
+   * nombre vacío lo quita.
+   */
+  async actualizarNombreUsuario(nombre: string): Promise<Resultado<Sesion>> {
+    if (!this.sesion) {
+      return { ok: false, errores: [{ campo: 'nombreUsuario', motivo: 'No hay ninguna sesión abierta.' }] }
+    }
+    const email = this.sesion.usuario.email
+    this.sesion = { usuario: { email, ...(nombre ? { nombreUsuario: nombre } : {}) } }
+    this.notificar()
+    return { ok: true, valor: this.sesion }
+  }
+
+  /**
    * T-28 — El doble NO navega: devuelve la URL de OAuth para que la prueba
    * compruebe que la pantalla redirige a donde debe.
    */

@@ -151,6 +151,29 @@ export class ProveedorSupabase implements ProveedorAuth {
   }
 
   /**
+   * D43 — Cambia el nombre de usuario (metadata de Auth). Un nombre vacío
+   * quita la clave: la UI vuelve a mostrar la parte local del email. No es una
+   * escritura en la tabla de perfiles (el nombre no vive ahí), sino en
+   * `user_metadata`, que es lo que lee `nombreDeUsuario`.
+   */
+  async actualizarNombreUsuario(nombre: string): Promise<Resultado<Sesion>> {
+    const { data, error } = await this.cliente.auth.updateUser({
+      data: { nombre_usuario: nombre === '' ? null : nombre },
+    })
+    if (error) {
+      return { ok: false, errores: [{ campo: 'nombreUsuario', motivo: mensajeAuth(error) }] }
+    }
+    const email = data.user?.email ?? this.cache?.usuario.email ?? ''
+    const nombreUsuario = nombreDeUsuario(data.user)
+    const sesion: Sesion = { usuario: { email, ...(nombreUsuario ? { nombreUsuario } : {}) } }
+    // La caché se actualiza aquí (y no solo con el evento de Auth) para que el
+    // panel muestre el nombre nuevo sin esperar al siguiente evento.
+    this.cache = sesion
+    this.notificar()
+    return { ok: true, valor: sesion }
+  }
+
+  /**
    * T-28 — Acceso con Google (OAuth). `skipBrowserRedirect` deja la
    * navegación en manos de la app (así la URL se puede probar y el error se
    * puede mostrar en pantalla); la vuelta la resuelve Supabase Auth con
