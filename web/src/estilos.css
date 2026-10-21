@@ -1997,6 +1997,17 @@ button.boton-google:hover {
   }
 }
 
+/* Aviso de licencia en la app (AGPL §13: ofrecer el código fuente). */
+.licencia-app {
+  margin-top: var(--espacio-4);
+  font-size: 0.8rem;
+  color: var(--texto-tenue);
+}
+
+.licencia-app a {
+  color: var(--marca);
+}
+
 /* D31: separación entre el botón «Guardar cambios» y el mensaje inferior. */
 .perfil-cuenta form > button[type='submit'] {
   margin-bottom: var(--espacio-5);

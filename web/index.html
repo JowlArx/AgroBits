@@ -543,6 +543,16 @@
         max-width: 44rem;
       }
 
+      /* Aviso de licencia: la AGPL §13 obliga a ofrecer el código fuente a
+         quien interactúa con la aplicación por red. */
+      .pie .licencia {
+        font-size: 0.8rem;
+      }
+
+      .pie a {
+        color: inherit;
+      }
+
       @media (prefers-reduced-motion: reduce) {
         .boton {
           transition: none;
@@ -851,6 +861,15 @@
           AgroBits es un proyecto de monitoreo agrícola para cultivadores pequeños (balcón y
           huerto). Versión en pruebas: las mediciones se generan de forma simulada mientras se
           integra el hardware de sensores.
+        </p>
+        <!-- AGPL §13: quien usa la web interactúa con el software por red y
+             debe poder obtener el código fuente correspondiente. -->
+        <p class="licencia">
+          © 2026 Joel Arce · AgroBits es software libre: el código de esta versión está bajo la
+          licencia
+          <a href="https://github.com/JowlArx/AgroBits" rel="license">AGPL-3.0</a> ·
+          <a href="https://github.com/JowlArx/AgroBits">código fuente</a>.
+          El nombre y el logotipo son marca de su autor: su uso requiere permiso previo.
         </p>
       </div>
     </footer>
