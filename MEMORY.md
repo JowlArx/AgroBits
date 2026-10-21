@@ -127,6 +127,8 @@ Higiene del proyecto (17/10/2026):
 
 **21/10/2026 — D44 publicado en producción (orden del humano: «APRUEBO»):** merge `--no-ff` a `main` (`61b8c35`) y push → auto-deploy. Verificado en producción a 1920 px: tres columnas de 457 + 411 + 411 px, bloque de 1344 px con márgenes simétricos de 288 px, y los cinco bloques («Tu cuenta», «Qué datos guardamos», «Tus cultivos», «Tus sensores», «Cerrar sesión»). **E2E 15/15 contra producción** ✔.
 
+**21/10/2026 — D45 publicado en producción (orden del humano: «El gráfico está OK»):** merge `--no-ff` a `main` (`1a705b0`) y push, tras integrar el commit de cierre de T-28 de origin (`72593a2`, sin cambios de código). Build nuevo (`app-BUwd1eFy.js`) y **E2E 15/15 contra producción** ✔. La especificación de «eliminar mi cuenta» (`docs/eliminar-cuenta.md`) queda pendiente de sus cuatro decisiones y no se ha implementado.
+
 ## Reglas de actualización
 
 Registrar únicamente hechos comprobados y decisiones aceptadas. Identificar expresamente las hipótesis y actualizar este archivo cuando cambie el estado del proyecto.
