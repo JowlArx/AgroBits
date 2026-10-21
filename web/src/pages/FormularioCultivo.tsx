@@ -102,12 +102,19 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
 
       {errores.length > 0 && (
         <div role="alert" data-testid="errores">
-          <p>No se pudo guardar:</p>
-          <ul>
-            {errores.map((e) => (
-              <li key={`${e.campo}-${e.motivo}`}>{e.motivo}</li>
-            ))}
-          </ul>
+          {/* D40: con un solo error, una línea; la lista solo cuando hay varios. */}
+          {errores.length === 1 ? (
+            <p>{errores[0].motivo}</p>
+          ) : (
+            <>
+              <p>No se pudo guardar:</p>
+              <ul>
+                {errores.map((e) => (
+                  <li key={`${e.campo}-${e.motivo}`}>{e.motivo}</li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
       )}
 

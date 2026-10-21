@@ -292,7 +292,11 @@ button.enlace-boton:hover {
 
 /* Formularios ------------------------------------------------------------- */
 
-form label {
+/* D40: el estilo de etiqueta y campo no depende de estar dentro de un
+   `<form>`: los campos de fecha de la vista de alertas quedan fuera y salían
+   con el aspecto por defecto del navegador (21 px, borde inset, monoespaciada,
+   caja blanca en tema oscuro). */
+label {
   display: flex;
   flex-direction: column;
   gap: var(--espacio-1);
@@ -301,8 +305,8 @@ form label {
   font-weight: 700;
 }
 
-form input,
-form select {
+input:not([type='checkbox']):not([type='radio']),
+select {
   font: inherit;
   font-weight: 400;
   color: var(--texto);
@@ -313,15 +317,15 @@ form select {
   min-height: 2.75rem;
 }
 
-form input::placeholder {
+input::placeholder {
   color: var(--texto-tenue);
 }
 
-form input[aria-invalid='true'] {
+input[aria-invalid='true'] {
   border-color: var(--senal);
 }
 
-form small {
+small {
   color: var(--texto-tenue);
   font-weight: 400;
   font-size: 0.8rem;
@@ -702,6 +706,7 @@ dd {
 
 .rango-fechas label {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: var(--espacio-2);
   margin-bottom: 0;
@@ -775,8 +780,18 @@ dd {
   border: 1px solid var(--senal);
   border-radius: var(--radio-sm);
   padding: var(--espacio-2) var(--espacio-3);
-  margin: 0 0 var(--espacio-4);
+  margin: 0 0 var(--espacio-3);
   color: var(--texto);
+}
+
+/* D40: el bloque no crece con el contenido: sin márgenes por defecto dentro
+   (un «No se pudo guardar:» medía 124 px de alto para un mensaje). */
+[role='alert'] > :first-child {
+  margin-top: 0;
+}
+
+[role='alert'] > :last-child {
+  margin-bottom: 0;
 }
 
 [role='alert'] ul {
@@ -1374,8 +1389,19 @@ button.boton-google:hover {
 .item-cabecera {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
   gap: var(--espacio-2);
+}
+
+/* D40: el título cede espacio y la hora no se parte (mismo patrón que la
+   tarjeta de sensor: con un título largo, la hora bajaba de línea). */
+.item-cabecera strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.item-hora {
+  flex: none;
 }
 
 .item-detalles {
@@ -1530,14 +1556,12 @@ button.boton-google:hover {
     grid-column: 1 / -1;
   }
 
-  /* D35: «Guardar» queda pegado al fondo, por encima de la barra inferior,
-     para no tener que llegar al final del formulario con el dedo. */
+  /* D40: el bloque de acciones deja de flotar. En D35 se pegaba al fondo
+     sobre la barra inferior; el humano pidió lo contrario (20/10/2026): los
+     botones van al final de su formulario, sin tapar el contenido. Afecta a
+     los cuatro usos de `.acciones-formulario`: acceso, guardar cambios de
+     cuenta, cerrar sesión y guardar cultivo. */
   .acciones-formulario {
-    position: sticky;
-    bottom: 5.25rem;
-    z-index: 3;
-    background: var(--fondo);
-    padding: var(--espacio-3) 0;
     margin-top: var(--espacio-2);
   }
 
@@ -1627,7 +1651,9 @@ button.boton-google:hover {
   border-radius: var(--radio);
   padding: var(--espacio-4);
   display: flex;
-  align-items: center;
+  /* D40: los bloques empiezan arriba (no centrados): así la «Últ. lectura», la
+     paleta y los botones caen a la misma altura en todas las tarjetas. */
+  align-items: flex-start;
   gap: var(--espacio-4);
   flex-wrap: wrap;
 }
@@ -1808,12 +1834,26 @@ button.boton-google:hover {
 }
 
 /* D31: filas de la tarjeta de sensor con la hora arriba a la derecha. */
+/* D40: el nombre cede espacio y la hora no se parte: con nombres largos la
+   «Últ. lectura» se partía en dos líneas y quedaba a una altura distinta en
+   cada tarjeta. */
 .fila-datos-sensor {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: var(--espacio-3);
   width: 100%;
+}
+
+.fila-datos-sensor strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ultima-lectura-sensor {
+  flex: none;
+  white-space: nowrap;
+  text-align: right;
 }
 
 /* D31: icono del tipo de cultivo (SVG en línea, verde botánico). */
