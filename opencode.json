@@ -17,10 +17,9 @@
       "url": "https://mcp.supabase.com/mcp?project_ref=fxiukidjxdcsrhyiphmu&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching",
       "enabled": true
     },
-      "vercel": {
-        "url": "https://mcp.vercel.com"
-      },
-    {
-      "plugins": ["opencode-model-router"]
+    "vercel": {
+      "url": "https://mcp.vercel.com"
     }
-  }
+  },
+  "plugins": ["opencode-model-router"]
+}
