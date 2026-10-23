@@ -72,6 +72,22 @@ export interface ProveedorDatos {
   // (único punto servidor, D19/D27). `null` si la cuenta no tiene fila.
   cargarPerfil(): Promise<Perfil | null>
   actualizarPerfil(telefono: string, localidadId: number): Promise<Resultado<Perfil>>
+
+  // Eliminación de la cuenta (D46): petición con 7 días de gracia, mediante
+  // RPC `solicitar_eliminacion_cuenta` (SECURITY DEFINER). El servidor exige
+  // que el email escrito coincida con el de la sesión.
+  /** Estado de la solicitud: `null` si no hay ninguna pendiente. */
+  cargarSolicitudEliminacion(): Promise<SolicitudEliminacion | null>
+  /** Pide el borrado; devuelve la fecha programada (7 días después). */
+  solicitarEliminacion(confirmacionEmail: string): Promise<Resultado<string>>
+  /** Cancela la solicitud pendiente (dentro del período de gracia). */
+  cancelarEliminacion(): Promise<Resultado<null>>
+}
+
+/** Solicitud de eliminación pendiente (D46). */
+export interface SolicitudEliminacion {
+  /** Fecha en que se borrará la cuenta (7 días después de pedirlo). */
+  programadaPara: string
 }
 
 let proveedor: ProveedorDatos | null = null

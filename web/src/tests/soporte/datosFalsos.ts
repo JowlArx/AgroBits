@@ -190,6 +190,33 @@ export class DatosFalsos implements ProveedorDatos {
     return this.perfil ? { ...this.perfil } : null
   }
 
+  // — Eliminación de la cuenta (D46) ————————————————————————————————
+  /** Solicitud pendiente en el doble (null = no hay ninguna). */
+  solicitud: { programadaPara: string } | null = null
+  /** Email de la cuenta, para comprobar la confirmación. */
+  emailCuenta = 'pruebas@agrobits.test'
+
+  async cargarSolicitudEliminacion(): Promise<{ programadaPara: string } | null> {
+    return this.solicitud ? { ...this.solicitud } : null
+  }
+
+  async solicitarEliminacion(confirmacionEmail: string): Promise<Resultado<string>> {
+    if (confirmacionEmail.trim().toLowerCase() !== this.emailCuenta.toLowerCase()) {
+      return {
+        ok: false,
+        errores: [{ campo: 'confirmacion', motivo: 'El email no coincide con el de tu cuenta' }],
+      }
+    }
+    const programada = new Date(Date.now() + 7 * 24 * 60 * 60_000).toISOString()
+    this.solicitud = { programadaPara: programada }
+    return { ok: true, valor: programada }
+  }
+
+  async cancelarEliminacion(): Promise<Resultado<null>> {
+    this.solicitud = null
+    return { ok: true, valor: null }
+  }
+
   async actualizarPerfil(telefono: string, localidadId: number): Promise<Resultado<Perfil>> {
     // Emula los backstops del RPC `actualizar_perfil` (D30).
     if (!LOCALIDADES_FALSAS.some((l) => l.id === localidadId)) {

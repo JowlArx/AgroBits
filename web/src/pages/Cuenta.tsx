@@ -10,10 +10,17 @@
 // acciones a la derecha) para no dejar media pantalla vacía.
 
 import { useEffect, useMemo, useState } from 'react'
-import { guardarPerfil, obtenerPerfil } from '../data/storePerfil'
+import {
+  guardarPerfil,
+  obtenerPerfil,
+  obtenerSolicitudEliminacion,
+  cargarSolicitudEliminacion,
+  solicitarEliminacion,
+  cancelarEliminacion,
+} from '../data/storePerfil'
 import { actualizarNombreUsuario, cerrarSesion } from '../data/storeSesion'
 import { exigirProveedor } from '../data/datos/proveedorDatos'
-import type { Localidad } from '../data/datos/proveedorDatos'
+import type { Localidad, SolicitudEliminacion } from '../data/datos/proveedorDatos'
 import type { Cultivo } from '../domain/tipos'
 import type { Sensor } from '../data/storeSensores'
 
@@ -49,6 +56,13 @@ export default function Cuenta({
   const [guardandoNombre, setGuardandoNombre] = useState(false)
   const [mensajeNombre, setMensajeNombre] = useState('')
   const [errorNombre, setErrorNombre] = useState('')
+  // D46: eliminación de la cuenta (petición con 7 días de gracia).
+  const [solicitud, setSolicitud] = useState<SolicitudEliminacion | null>(null)
+  const [eliminando, setEliminando] = useState(false)
+  const [confirmacionEmail, setConfirmacionEmail] = useState('')
+  const [pidiendo, setPidiendo] = useState(false)
+  const [cancelando, setCancelando] = useState(false)
+  const [errorEliminacion, setErrorEliminacion] = useState('')
 
   // Carga el catálogo de localidades y prellena el formulario con el perfil
   // ya cargado por `cargarDatosSesion` (D30). El setState vive en el callback
@@ -82,6 +96,14 @@ export default function Cuenta({
     () => [...new Set(localidades.map((l) => l.provincia))].sort((a, b) => a.localeCompare(b, 'es')),
     [localidades],
   )
+  /** D46: la fecha de borrado, en formato legible. */
+  const fechaBorrado = solicitud
+    ? new Date(solicitud.programadaPara).toLocaleDateString('es-ES', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    : ''
   const localidadesDeLaProvincia = useMemo(
     () => localidades.filter((l) => l.provincia === provincia),
     [localidades, provincia],
@@ -102,6 +124,54 @@ export default function Cuenta({
   }
 
   /** D43: guarda el nombre de usuario (metadata de Auth). */
+  // D46: al abrir la vista, se consulta si ya hay un borrado pendiente.
+  useEffect(() => {
+    let vivo = true
+    void cargarSolicitudEliminacion().then(() => {
+      if (!vivo) return
+      const pendiente = obtenerSolicitudEliminacion()
+      if (pendiente) setSolicitud(pendiente)
+    })
+    return () => {
+      vivo = false
+    }
+  }, [])
+
+  /** El email escrito debe coincidir con el de la cuenta (lo exige el servidor). */
+  const emailCoincide =
+    confirmacionEmail.trim().toLowerCase() !== '' &&
+    confirmacionEmail.trim().toLowerCase() === email.trim().toLowerCase()
+
+  /** D46: pide el borrado. El servidor programa la fecha 7 días después. */
+  async function pedirEliminacion(): Promise<void> {
+    if (pidiendo) return
+    setPidiendo(true)
+    setErrorEliminacion('')
+    const resultado = await solicitarEliminacion(confirmacionEmail)
+    setPidiendo(false)
+    if (!resultado.ok) {
+      setErrorEliminacion(resultado.errores.map((e) => e.motivo).join('. '))
+      return
+    }
+    setSolicitud({ programadaPara: resultado.valor })
+    setEliminando(false)
+    setConfirmacionEmail('')
+  }
+
+  /** D46: cancela el borrado dentro del período de gracia. */
+  async function cancelar(): Promise<void> {
+    if (cancelando) return
+    setCancelando(true)
+    const resultado = await cancelarEliminacion()
+    setCancelando(false)
+    if (!resultado.ok) {
+      setErrorEliminacion(resultado.errores.map((e) => e.motivo).join('. '))
+      return
+    }
+    setSolicitud(null)
+    setErrorEliminacion('')
+  }
+
   async function guardarNombre(evento: React.FormEvent): Promise<void> {
     evento.preventDefault()
     if (guardandoNombre) return
@@ -379,6 +449,88 @@ export default function Cuenta({
               </button>
             </div>
           </section>
+
+          {/* D46: eliminar la cuenta. Durante los 7 días de gracia la cuenta
+              sigue funcionando; el aviso permite cancelar el borrado. */}
+          {solicitud ? (
+            <section className="perfil-bloque" data-testid="aviso-gracia">
+              <h3>Tu cuenta se borrará</h3>
+              <p>
+                Se eliminará el {fechaBorrado}. Hasta entonces puedes seguir usándola; si te
+                arrepientes, puedes cancelar el borrado.
+              </p>
+              <div className="acciones">
+                <button
+                  type="button"
+                  data-testid="cancelar-eliminacion"
+                  disabled={cancelando}
+                  onClick={() => void cancelar()}
+                >
+                  {cancelando ? 'Cancelando…' : 'Cancelar el borrado'}
+                </button>
+              </div>
+            </section>
+          ) : (
+            <section className="perfil-bloque perfil-zona">
+              <h3>Eliminar mi cuenta</h3>
+              <p>
+                Se borrarán tu cuenta, tus cultivos, tus sensores y todas tus mediciones. Puedes
+                cancelar el borrado durante los 7 días siguientes.
+              </p>
+              {!eliminando ? (
+                <div className="acciones">
+                  <button
+                    type="button"
+                    className="btn-peligro"
+                    data-testid="eliminar-cuenta"
+                    onClick={() => setEliminando(true)}
+                  >
+                    Eliminar mi cuenta
+                  </button>
+                </div>
+              ) : (
+                <div data-testid="confirmacion-eliminacion">
+                  <p>
+                    Vas a eliminar tu cuenta y todos sus datos. Esta acción no se puede deshacer.
+                    Para confirmar, escribe tu email.
+                  </p>
+                  <label>
+                    Tu email
+                    <input
+                      type="email"
+                      id="campo-confirmacion-email"
+                      name="confirmacionEmail"
+                      autoComplete="off"
+                      spellCheck={false}
+                      data-testid="confirmacion-email"
+                      value={confirmacionEmail}
+                      onChange={(e) => setConfirmacionEmail(e.target.value)}
+                      placeholder={email}
+                    />
+                  </label>
+                  <div className="acciones">
+                    <button
+                      type="button"
+                      className="btn-peligro"
+                      data-testid="confirmar-eliminacion"
+                      disabled={!emailCoincide || pidiendo}
+                      onClick={() => void pedirEliminacion()}
+                    >
+                      {pidiendo ? 'Enviando…' : 'Eliminar definitivamente'}
+                    </button>
+                    <button type="button" onClick={() => setEliminando(false)}>
+                      Cancelar
+                    </button>
+                  </div>
+                  {errorEliminacion && (
+                    <p role="alert" data-testid="error-eliminacion">
+                      {errorEliminacion}
+                    </p>
+                  )}
+                </div>
+              )}
+            </section>
+          )}
         </aside>
       </div>
     </section>

@@ -41,17 +41,26 @@ El catálogo de localidades no pertenece a la cuenta y **no se toca**.
 - AC4: tras borrar, el email puede volver a registrarse.
 - AC5: la acción queda registrada en un log de auditoría sin datos personales.
 
+## Decisiones aprobadas (21/10/2026, JowlArx)
+
+1. **Función SQL `SECURITY DEFINER`.** `solicitar_eliminacion_cuenta(confirmacion_email)` actúa solo sobre el usuario de la sesión y exige que el email escrito coincida con el de la sesión. No recibe ningún id.
+2. **Auditoría sin datos personales.** La tabla `auditoria_eliminaciones` guarda el hash SHA-256 del email, la fecha de la solicitud y la de ejecución. Ni el id ni el email.
+3. **Período de gracia de 7 días.** La solicitud se programa 7 días después. Durante ese plazo la cuenta sigue funcionando, con un aviso en «Mi cuenta» y un botón para cancelar el borrado. Un job diario (`purgar_cuentas_vencidas`, con `pg_cron`) borra las cuentas vencidas.
+4. **Texto de confirmación aprobado:** «Vas a eliminar tu cuenta y todos sus datos. Esta acción no se puede deshacer. Para confirmar, escribe tu email.»
+
+**Advertencia sobre la decisión 3:** el derecho de supresión de la Ley 25.326 pide atender la solicitud sin demora. Conservar 7 días los datos de una cuenta pendiente de borrado debería justificarse; el periodo de gracia se ha implementado por decisión del titular del proyecto, no por recomendación técnica.
+
+## Estado de la implementación
+
+- Migración: `supabase/migrations/20261021000001_eliminar_cuenta.sql` (**aplicada el 23/10/2026** vía MCP de Supabase; registrada como versión `20261023144823`).
+- Suite SQL: `supabase/tests/20261021_d46_eliminar_cuenta.sql` (**ejecutada el 23/10/2026** vía MCP: **12/12 pruebas OK**, residuo 0).
+- Interfaz: implementada en `src/pages/Cuenta.tsx`, con la store `src/data/storePerfil.ts` y el contrato del proveedor de datos ampliado. Cubierta por pruebas unitarias (4 casos nuevos).
+
+La migración y la suite ya están aplicadas y validadas (12/12 OK). El purgador (pg_cron) queda pendiente de habilitar si se quiere el borrado automático diario (la línea de `cron.schedule` está comentada en la migración).
+
 ## Verificación prevista
 
 - Suite SQL versionada en `supabase/tests/`, ejecutada en transacción con `ROLLBACK`, con identidades simuladas.
-- E2E sobre la cuenta de prueba `e2e-a`: crear datos, borrar la cuenta, comprobar residuo 0. La cuenta de prueba se recrea al final.
-- Pruebas unitarias de la validación del email de confirmación.
+- E2E sobre la cuenta de prueba `e2e-a`: crear datos, pedir el borrado, comprobar el aviso de gracia, cancelar y confirmar que no queda solicitud. La cuenta de prueba se recrea al final.
+- Pruebas unitarias de la validación del email de confirmación y del ciclo de gracia/cancelación.
 
-## Decisiones que requieren aprobación
-
-1. ¿Función `SECURITY DEFINER` en SQL o Edge Function?
-2. ¿Se conserva un registro de auditoría (fecha y hash del email, sin datos personales)?
-3. ¿Período de gracia (p. ej. 7 días para cancelar) o borrado inmediato?
-4. Texto legal de la confirmación (Ley 25.326: derecho de supresión).
-
-Ningún cambio de base de datos se aplica hasta aprobar esta especificación y su migración.
