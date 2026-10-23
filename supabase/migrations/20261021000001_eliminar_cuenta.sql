@@ -95,5 +95,7 @@ grant execute on function public.solicitar_eliminacion_cuenta(text) to authentic
 
 revoke all on function public.purgar_cuentas_vencidas() from public, anon, authenticated;
 
--- Programacion diaria (requiere la extension pg_cron habilitada en el proyecto).
--- select cron.schedule('purgar-cuentas-vencidas', '0 3 * * *', 'select public.purgar_cuentas_vencidas()');
+-- Programacion diaria (extension pg_cron habilitada en el proyecto).
+-- Programado el 23/10/2026: cron.schedule('purgar-cuentas-vencidas', '0 3 * * *', ...)
+-- → job id 1, ejecucion diaria a las 03:00 UTC.
+select cron.schedule('purgar-cuentas-vencidas', '0 3 * * *', 'select public.purgar_cuentas_vencidas()');

@@ -56,7 +56,7 @@ El catálogo de localidades no pertenece a la cuenta y **no se toca**.
 - Suite SQL: `supabase/tests/20261021_d46_eliminar_cuenta.sql` (**ejecutada el 23/10/2026** vía MCP: **12/12 pruebas OK**, residuo 0).
 - Interfaz: implementada en `src/pages/Cuenta.tsx`, con la store `src/data/storePerfil.ts` y el contrato del proveedor de datos ampliado. Cubierta por pruebas unitarias (4 casos nuevos).
 
-La migración y la suite ya están aplicadas y validadas (12/12 OK). El purgador (pg_cron) queda pendiente de habilitar si se quiere el borrado automático diario (la línea de `cron.schedule` está comentada en la migración).
+La migración y la suite ya están aplicadas y validadas (12/12 OK). El purgador está programado con `pg_cron` (job id 1, diario a las 03:00 UTC) y borra automáticamente las cuentas cuyo plazo de gracia (7 días) haya vencido.
 
 ## Verificación prevista
 
