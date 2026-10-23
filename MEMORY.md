@@ -130,7 +130,7 @@ Higiene del proyecto (17/10/2026):
 
 **21/10/2026 — D45 publicado en producción (orden del humano: «El gráfico está OK»):** merge `--no-ff` a `main` (`1a705b0`) y push, tras integrar el commit de cierre de T-28 de origin (`72593a2`, sin cambios de código). Build nuevo (`app-BUwd1eFy.js`) y **E2E 15/15 contra producción** ✔. La especificación de «eliminar mi cuenta» (`docs/eliminar-cuenta.md`) queda pendiente de sus cuatro decisiones y no se ha implementado.
 
-**21/10/2026 — D46 no publicado (rama `feat/eliminar-cuenta`, pendiente de merge a `main`):** migración aplicada el 23/10/2026 (versión `20261023144823`) y suite SQL ejecutada con 12/12 OK. Interfaz verificada localmente. Pendiente: habilitar pg_cron para el purgador (opcional), merge a `main` y despliegue, luego E2E 15/15 contra producción.
+**23/10/2026 — D46 publicado en producción (orden del humano: «esta OK»):** merge `--no-ff` a `main` (`0cbacc8`) y push → auto-deploy de Vercel. Build nuevo verificado (`app-C8lnyAFO.js`, coincide con el build local) y **E2E 15/15 contra producción** ✔. Migración aplicada (versión `20261023144823`) y suite SQL 12/12 OK. La cuenta de prueba `e2e-a` quedó con 0 solicitudes (flujo verificado: petición → aviso de gracia con fecha → cancelación). El purgador (pg_cron) sigue pendiente de habilitar (línea de `cron.schedule` comentada).
 
 ## Reglas de actualización
 
