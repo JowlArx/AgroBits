@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 80" width="420" height="80" role="img" aria-label="AgroBits" fill="none">
+  <title>AgroBits</title>
+  <!-- Icono: hoja con señal de wifi (sensor + planta) — variante para fondo oscuro -->
+  <g transform="translate(8,8) scale(0.125)" stroke="#74c894" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Relleno hoja izquierda -->
+    <path d="M14 194 C120 190 250 210 258 432 C150 440 80 410 40 360 C20 320 10 250 14 194 Z" fill="#cdeedb" stroke="none" opacity="0.18"/>
+    <!-- Señal wifi -->
+    <path d="M177 106 Q256 44 335 106"/>
+    <path d="M205 132 Q256 92 307 132"/>
+    <path d="M231 156 Q256 138 281 156"/>
+    <!-- Hoja izquierda -->
+    <path d="M14 194 C120 190 250 210 258 432 C150 440 85 412 52 370"/>
+    <path d="M14 194 C10 250 18 300 33 328"/>
+    <path d="M18 198 L252 430"/>
+    <path d="M112 205 L113 276"/>
+    <path d="M70 383 L170 356"/>
+    <!-- Hoja derecha -->
+    <path d="M496 192 C400 188 280 215 262 380 L260 432"/>
+    <path d="M496 192 C492 330 440 440 270 432"/>
+    <path d="M494 198 L264 430"/>
+    <path d="M310 248 L340 342"/>
+    <path d="M395 300 L487 296"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="80" y="54" font-family="'Fraunces', Georgia, 'Times New Roman', serif" font-size="36" font-weight="700" letter-spacing="-0.01em" fill="#74c894">AgroBits</text>
+</svg>
