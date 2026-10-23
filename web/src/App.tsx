@@ -5,6 +5,7 @@ import DetalleCultivo from './pages/DetalleCultivo'
 import Alertas from './pages/Alertas'
 import Autenticacion from './pages/Autenticacion'
 import Cuenta from './pages/Cuenta'
+import Historial from './pages/Historial'
 import Sensores from './pages/Sensores'
 import PanelLateral from './components/PanelLateral'
 import Tablero from './components/Tablero'
@@ -26,6 +27,7 @@ type Vista =
   | { tipo: 'alertas' }
   | { tipo: 'sensores' }
   | { tipo: 'cuenta' }
+  | { tipo: 'historial'; cultivoId?: string }
 
 /**
  * D40 — Traduce la URL a la vista. `cultivos` es la vista por defecto y no
@@ -39,6 +41,8 @@ function vistaDesdeParams(vista: string | null, id: string | null): Vista {
       return { tipo: 'sensores' }
     case 'cuenta':
       return { tipo: 'cuenta' }
+    case 'historial':
+      return { tipo: 'historial', cultivoId: id ?? undefined }
     case 'nuevo':
       return { tipo: 'nuevo' }
     case 'editar':
@@ -65,6 +69,8 @@ function tituloVista(vista: Vista): string {
       return 'Sensores'
     case 'cuenta':
       return 'Mi cuenta'
+    case 'historial':
+      return 'Historial de mediciones'
     default:
       return 'Cultivos'
   }
@@ -126,6 +132,13 @@ const iconoSensor = (
   </svg>
 )
 
+const iconoHistorial = (
+  <svg className="icono-nav" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+    <path d="M2.5 3.5h11M2.5 7h11M2.5 10.5h7" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    <path d="M11 10.5l1.5 1.5 2.5-3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
 const iconoCuenta = (
   <svg className="icono-nav" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
     <circle cx="8" cy="5.5" r="2.8" fill="none" stroke="currentColor" strokeWidth="1.4" />
@@ -137,10 +150,12 @@ const iconoCuenta = (
 function MenuCuenta({
   onCerrar,
   onCuenta,
+  onHistorial,
   onSalir,
 }: {
   onCerrar: () => void
   onCuenta: () => void
+  onHistorial: () => void
   onSalir: () => void
 }) {
   return (
@@ -150,6 +165,9 @@ function MenuCuenta({
       <div className="menu-usuario" role="menu">
         <button type="button" role="menuitem" data-testid="nav-cuenta" onClick={onCuenta}>
           Mi cuenta
+        </button>
+        <button type="button" role="menuitem" data-testid="nav-historial-menu" onClick={onHistorial}>
+          Historial
         </button>
         <button type="button" role="menuitem" data-testid="cerrar-sesion" onClick={onSalir}>
           Cerrar sesión
@@ -287,6 +305,20 @@ export default function App() {
         {iconoSensor}
         {compacto ? <span className="etiqueta-seccion">Sensores</span> : 'Sensores'}
       </button>
+      <button
+        type="button"
+        className={compacto ? 'boton-seccion boton-seccion-compacto' : 'boton-seccion'}
+        data-testid="nav-historial"
+        aria-label="Historial"
+        aria-current={vista.tipo === 'historial' ? 'page' : undefined}
+        onClick={() => {
+          setMenuAbierto(false)
+          irA({ tipo: 'historial' })
+        }}
+      >
+        {iconoHistorial}
+        {compacto ? <span className="etiqueta-seccion">Historial</span> : 'Historial'}
+      </button>
     </>
   )
 
@@ -354,6 +386,10 @@ export default function App() {
                       setMenuAbierto(false)
                       irA({ tipo: 'cuenta' })
                     }}
+                    onHistorial={() => {
+                      setMenuAbierto(false)
+                      irA({ tipo: 'historial' })
+                    }}
                     onSalir={() => {
                       setMenuAbierto(false)
                       void cerrarSesion()
@@ -400,6 +436,10 @@ export default function App() {
                     setMenuAbierto(false)
                     irA({ tipo: 'cuenta' })
                   }}
+                  onHistorial={() => {
+                    setMenuAbierto(false)
+                    irA({ tipo: 'historial' })
+                  }}
                   onSalir={() => {
                     setMenuAbierto(false)
                     void cerrarSesion()
@@ -433,7 +473,11 @@ export default function App() {
               />
             )}
             {vista.tipo === 'detalle' && (
-              <DetalleCultivo cultivoId={vista.id} onVolver={() => irA({ tipo: 'lista' })} />
+              <DetalleCultivo
+                cultivoId={vista.id}
+                onVolver={() => irA({ tipo: 'lista' })}
+                onVerHistorial={(id: string) => irA({ tipo: 'historial', cultivoId: id })}
+              />
             )}
             {vista.tipo === 'alertas' && <Alertas />}
             {vista.tipo === 'sensores' && <Sensores />}
@@ -446,6 +490,9 @@ export default function App() {
                 alertasActivas={alertasActivas}
                 onVerCultivo={(id) => irA({ tipo: 'detalle', id })}
               />
+            )}
+            {vista.tipo === 'historial' && (
+              <Historial cultivoIdInicial={vista.cultivoId} />
             )}
           </main>
           {vista.tipo === 'lista' && <PanelLateral onVerAlertas={() => irA({ tipo: 'alertas' })} />}

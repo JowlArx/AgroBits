@@ -2213,3 +2213,16 @@ button.boton-google:hover {
   font-weight: 700;
   margin: 0 0 var(--espacio-4);
 }
+/* Historial de mediciones (T-H5). */
+.historial { display: flex; flex-direction: column; gap: 1rem; }
+.historial-cabecera h2 { margin: 0; }
+.historial-descripcion { margin: 0.25rem 0 0; opacity: 0.75; font-size: 0.9rem; }
+.historial-filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
+.historial-filtros label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; }
+.historial-filtros select, .historial-filtros input { padding: 0.4rem 0.5rem; border: 1px solid var(--borde, #ccc); border-radius: 6px; background: var(--fondo-input, #fff); color: inherit; }
+.historial-acciones { display: flex; gap: 0.5rem; }
+.historial-acciones button { padding: 0.5rem 0.9rem; border-radius: 6px; border: 1px solid var(--borde, #ccc); background: var(--fondo-boton, #f5f5f5); cursor: pointer; }
+.historial-acciones button:disabled { opacity: 0.5; cursor: not-allowed; }
+.historial-error { color: #b91c1c; }
+.historial-cargando, .historial-vacio { opacity: 0.7; padding: 1rem 0; }
+.historial-grafico { width: 100%; }

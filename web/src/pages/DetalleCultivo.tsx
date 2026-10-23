@@ -23,6 +23,7 @@ import { ETIQUETAS_MEDICION } from '../data/catalogo'
 interface Props {
   cultivoId: string
   onVolver: () => void
+  onVerHistorial?: (cultivoId: string) => void
 }
 
 function horaLegible(iso: string): string {
@@ -30,7 +31,7 @@ function horaLegible(iso: string): string {
   return Number.isNaN(fecha.getTime()) ? iso : fecha.toLocaleString('es-ES')
 }
 
-export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
+export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: Props) {
   // Suscripciones a los almacenes que puede cambiar esta vista.
   // Nota: getSnapshot debe devolver valores estables; por eso se usan
   // referencias del store (cambian solo al notificar) y una huella de texto
@@ -122,6 +123,11 @@ export default function DetalleCultivo({ cultivoId, onVolver }: Props) {
         <button type="button" onClick={onVolver}>
           Volver
         </button>
+        {onVerHistorial && (
+          <button type="button" data-testid="ver-historial" onClick={() => onVerHistorial(cultivoId)}>
+            Ver historial
+          </button>
+        )}
       </header>
 
       <h3>Sensores</h3>

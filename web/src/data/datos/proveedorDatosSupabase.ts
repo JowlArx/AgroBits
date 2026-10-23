@@ -19,6 +19,7 @@ import type {
   Localidad,
   Resultado,
   SolicitudEliminacion,
+  AgregadoDiario,
 } from './proveedorDatos'
 import type { Sensor } from '../storeSensores'
 import type { Alerta } from '../storeAlertas'
@@ -52,6 +53,16 @@ interface FilaMedicion {
   value: number
   unit: string
   measured_at: string
+}
+
+interface FilaAgregado {
+  sensor_id: string
+  tipo: TipoMedicion
+  dia: string
+  valor_medio: number
+  valor_min: number
+  valor_max: number
+  n: number
 }
 
 interface FilaAlerta {
@@ -113,6 +124,18 @@ function aMedicion(fila: FilaMedicion): Medicion {
     valor: fila.value,
     unidad: fila.unit,
     medidaEn: aISO(fila.measured_at),
+  }
+}
+
+function aAgregado(fila: FilaAgregado): AgregadoDiario {
+  return {
+    sensorId: fila.sensor_id,
+    tipo: fila.tipo,
+    dia: fila.dia,
+    valorMedio: fila.valor_medio,
+    valorMin: fila.valor_min,
+    valorMax: fila.valor_max,
+    n: fila.n,
   }
 }
 
@@ -382,6 +405,35 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
       }),
     )
     return series.flat()
+  }
+
+  // — Historial de mediciones (R-H1, R-H4) ————————————————————————
+
+  async cargarMedicionesRango(sensorIds: readonly string[], desde: string, hasta: string): Promise<Medicion[]> {
+    if (sensorIds.length === 0) return []
+    const { data, error } = await this.cliente
+      .from('measurements')
+      .select('sensor_id, tipo, value, unit, measured_at')
+      .in('sensor_id', [...sensorIds])
+      .gte('measured_at', desde)
+      .lte('measured_at', hasta)
+      .order('measured_at', { ascending: true })
+      .limit(5000)
+    if (error) throw new Error(`No se pudo cargar el historial (${error.message})`)
+    return ((data ?? []) as unknown as FilaMedicion[]).map(aMedicion)
+  }
+
+  async cargarAgregadosDiarios(sensorIds: readonly string[], desde: string, hasta: string): Promise<AgregadoDiario[]> {
+    if (sensorIds.length === 0) return []
+    const { data, error } = await this.cliente
+      .from('mediciones_diarias')
+      .select('sensor_id, tipo, dia, valor_medio, valor_min, valor_max, n')
+      .in('sensor_id', [...sensorIds])
+      .gte('dia', desde.slice(0, 10))
+      .lte('dia', hasta.slice(0, 10))
+      .order('dia', { ascending: true })
+    if (error) throw new Error(`No se pudieron cargar los agregados (${error.message})`)
+    return ((data ?? []) as unknown as FilaAgregado[]).map(aAgregado)
   }
 
   async registrarLectura(mediciones: readonly Medicion[]): Promise<Resultado<Medicion[]>> {

@@ -4,7 +4,7 @@
 // `ProveedorAuth` (T-22). Inyección: `ProveedorDatosSupabase` en `main.tsx`
 // (aplicación real) y `DatosFalsos` en `src/tests/soporte/configurarTests.ts`.
 
-import type { ColorSensor, Cultivo, Medicion, UmbralesPorTipo } from '../../domain/tipos'
+import type { ColorSensor, Cultivo, Medicion, TipoMedicion, UmbralesPorTipo } from '../../domain/tipos'
 import type { Sensor } from '../storeSensores'
 import type { Alerta } from '../storeAlertas'
 
@@ -58,6 +58,10 @@ export interface ProveedorDatos {
 
   // Mediciones (contrato R-08 / R-09)
   cargarMediciones(sensorIds: readonly string[]): Promise<Medicion[]>
+  /** Historial: mediciones crudas en un rango de fechas (para exportación y reciente). */
+  cargarMedicionesRango(sensorIds: readonly string[], desde: string, hasta: string): Promise<Medicion[]>
+  /** Historial: agregados diarios (media/mín/máx/n) por sensor y tipo en un rango. */
+  cargarAgregadosDiarios(sensorIds: readonly string[], desde: string, hasta: string): Promise<AgregadoDiario[]>
   registrarLectura(mediciones: readonly Medicion[]): Promise<Resultado<Medicion[]>>
   eliminarMediciones(sensorIds: readonly string[]): Promise<void>
 
@@ -88,6 +92,17 @@ export interface ProveedorDatos {
 export interface SolicitudEliminacion {
   /** Fecha en que se borrará la cuenta (7 días después de pedirlo). */
   programadaPara: string
+}
+
+/** Agregado diario de mediciones (historial, R-H4). */
+export interface AgregadoDiario {
+  sensorId: string
+  tipo: TipoMedicion
+  dia: string // fecha ISO (YYYY-MM-DD)
+  valorMedio: number
+  valorMin: number
+  valorMax: number
+  n: number
 }
 
 let proveedor: ProveedorDatos | null = null

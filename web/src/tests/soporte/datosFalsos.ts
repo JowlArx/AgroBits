@@ -17,7 +17,7 @@ import {
   type Medicion,
   type TipoMedicion,
 } from '../../domain/tipos'
-import type { ErrorCampo, Localidad, NuevoCultivo, Perfil, ProveedorDatos, Resultado } from '../../data/datos/proveedorDatos'
+import type { AgregadoDiario, ErrorCampo, Localidad, NuevoCultivo, Perfil, ProveedorDatos, Resultado } from '../../data/datos/proveedorDatos'
 import type { Sensor } from '../../data/storeSensores'
 import type { Alerta } from '../../data/storeAlertas'
 
@@ -150,6 +150,49 @@ export class DatosFalsos implements ProveedorDatos {
     const resultado: Medicion[] = []
     for (const id of sensorIds) resultado.push(...(this.mediciones.get(id) ?? []))
     return resultado
+  }
+
+  async cargarMedicionesRango(sensorIds: readonly string[], desde: string, hasta: string): Promise<Medicion[]> {
+    const desdeMs = Date.parse(desde)
+    const hastaMs = Date.parse(hasta)
+    const resultado: Medicion[] = []
+    for (const id of sensorIds) {
+      for (const m of this.mediciones.get(id) ?? []) {
+        const t = Date.parse(m.medidaEn)
+        if (t >= desdeMs && t <= hastaMs) resultado.push(m)
+      }
+    }
+    return resultado.sort((a, b) => a.medidaEn.localeCompare(b.medidaEn))
+  }
+
+  async cargarAgregadosDiarios(sensorIds: readonly string[], desde: string, hasta: string): Promise<AgregadoDiario[]> {
+    const desdeMs = Date.parse(desde)
+    const hastaMs = Date.parse(hasta)
+    const grupos = new Map<string, { sensorId: string; tipo: TipoMedicion; dia: string; vals: number[] }>()
+    for (const id of sensorIds) {
+      for (const m of this.mediciones.get(id) ?? []) {
+        const t = Date.parse(m.medidaEn)
+        if (t < desdeMs || t > hastaMs) continue
+        const dia = m.medidaEn.slice(0, 10)
+        const clave = `${m.sensorId}|${m.tipo}|${dia}`
+        const g = grupos.get(clave) ?? { sensorId: m.sensorId, tipo: m.tipo, dia, vals: [] }
+        g.vals.push(m.valor)
+        grupos.set(clave, g)
+      }
+    }
+    const resultado: AgregadoDiario[] = []
+    for (const g of grupos.values()) {
+      resultado.push({
+        sensorId: g.sensorId,
+        tipo: g.tipo,
+        dia: g.dia,
+        valorMedio: g.vals.reduce((a, b) => a + b, 0) / g.vals.length,
+        valorMin: Math.min(...g.vals),
+        valorMax: Math.max(...g.vals),
+        n: g.vals.length,
+      })
+    }
+    return resultado.sort((a, b) => a.dia.localeCompare(b.dia))
   }
 
   async registrarLectura(mediciones: readonly Medicion[]): Promise<Resultado<Medicion[]>> {
