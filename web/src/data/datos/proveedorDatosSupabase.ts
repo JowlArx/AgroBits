@@ -492,7 +492,7 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
 
   async solicitarEliminacion(confirmacionEmail: string): Promise<Resultado<string>> {
     const { data, error } = await this.cliente.rpc('solicitar_eliminacion_cuenta', {
-      p_confirmacion_email: confirmacionEmail.trim(),
+      confirmacion_email: confirmacionEmail.trim(),
     })
     if (error) {
       console.error('solicitarEliminacion:', error)
