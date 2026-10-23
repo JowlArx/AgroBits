@@ -814,12 +814,58 @@ dd {
 /* Pantalla de acceso ------------------------------------------------------ */
 
 .pantalla-acceso {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--espacio-5);
   max-width: 24rem;
   margin: var(--espacio-6) auto 0;
   background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: var(--radio);
   padding: var(--espacio-5);
+}
+
+@media (min-width: 48rem) {
+  .pantalla-acceso {
+    grid-template-columns: 1fr 1fr;
+    max-width: 44rem;
+    align-items: center;
+  }
+  .pantalla-acceso-marca {
+    text-align: center;
+    padding: var(--espacio-4);
+  }
+  .pantalla-acceso-marca .marca-grande {
+    width: 96px;
+    height: 96px;
+  }
+}
+
+.pantalla-acceso-marca {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espacio-3);
+}
+
+.pantalla-acceso-marca .marca-titulo {
+  font-family: var(--fuente-display, inherit);
+  font-size: 1.75rem;
+  margin: 0;
+}
+
+.pantalla-acceso-marca .marca-lema {
+  margin: 0;
+  opacity: 0.75;
+  font-size: 0.95rem;
+  text-align: center;
+  max-width: 20rem;
+}
+
+@media (max-width: 47.99rem) {
+  .pantalla-acceso-marca {
+    display: none;
+  }
 }
 
 .pantalla-acceso form button[type='submit'] {
@@ -878,7 +924,7 @@ button.boton-google:hover {
 .estructura {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  height: 100vh;
+  height: 100vh; /* taste-skill-ignore: h-screen (fallback intencional para navegadores antiguos) */
   height: 100dvh;
   overflow: hidden;
 }
@@ -1248,12 +1294,8 @@ button.boton-google:hover {
 }
 
 .widget {
-  /* D31: degradado sutil de fondo para dar profundidad al panel. */
-  background: linear-gradient(
-    180deg,
-    var(--superficie) 0%,
-    color-mix(in srgb, var(--marca) 4%, var(--superficie)) 100%
-  );
+  /* D31: fondo plano (sin degradado; regla de house style). */
+  background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: var(--radio);
   padding: var(--espacio-4);

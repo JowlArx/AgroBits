@@ -144,7 +144,13 @@ export default function Autenticacion() {
 
   return (
     <section data-testid="pantalla-acceso" className="pantalla-acceso">
-      <h2>{modo === 'sesion' ? 'Iniciar sesión' : 'Crear cuenta'}</h2>
+      <div className="pantalla-acceso-marca" aria-hidden="true">
+        <img className="marca-grande" src="/icono-hoja-senial.svg" width="96" height="96" alt="" />
+        <h1 className="marca-titulo">AgroBits</h1>
+        <p className="marca-lema">El cultivo te avisa cuando algo no anda bien.</p>
+      </div>
+      <div className="pantalla-acceso-formulario">
+        <h2>{modo === 'sesion' ? 'Iniciar sesión' : 'Crear cuenta'}</h2>
 
       {/* T-28 — Acceso con Google (OAuth). */}
       <button
@@ -313,6 +319,7 @@ export default function Autenticacion() {
       <button type="button" className="enlace-boton" data-testid="cambiar-modo" onClick={cambiarModo}>
         {modo === 'sesion' ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
       </button>
+      </div>
     </section>
   )
 }
