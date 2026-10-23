@@ -3,7 +3,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -14,7 +13,8 @@ import { obtenerCultivos, suscribirCultivos } from '../data/storeCultivos'
 import { obtenerSensores, suscribirSensores } from '../data/storeSensores'
 import { exigirProveedor } from '../data/datos/proveedorDatos'
 import type { AgregadoDiario } from '../data/datos/proveedorDatos'
-import type { Medicion, TipoMedicion } from '../domain/tipos'
+import type { Medicion } from '../domain/tipos'
+import type { TipoMedicion } from '../domain/tipos'
 import { TIPOS_MEDICION } from '../domain/tipos'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
 
@@ -58,13 +58,11 @@ export default function Historial({
   const [error, setError] = useState<string | null>(null)
   const [exportando, setExportando] = useState(false)
 
-  // Sensores filtrados por cultivo seleccionado
   const sensoresFiltrados = useMemo(() => {
     if (!cultivoId) return sensores
     return sensores.filter((s) => s.cultivoIds.includes(cultivoId))
   }, [sensores, cultivoId])
 
-  // Sensor efectivo: si el elegido ya no está en la lista filtrada, se trata como "todos".
   const sensorIdEfectivo = sensoresFiltrados.some((s) => s.id === sensorId) ? sensorId : ''
 
   const sensoresObjetivo = useMemo(() => {
@@ -73,10 +71,6 @@ export default function Historial({
     return sensores
   }, [sensorIdEfectivo, cultivoId, sensores, sensoresFiltrados])
 
-  // Selector de sensor usa el valor efectivo.
-  // (el estado `sensorId` se mantiene para el control, pero se sanea al mostrar)
-
-  // Carga de agregados al cambiar filtros
   useEffect(() => {
     let vivo = true
     const ids = sensoresObjetivo.map((s) => s.id)
@@ -104,23 +98,10 @@ export default function Historial({
     }
   }, [sensoresObjetivo, desde, hasta, tipo])
 
-  // Datos para el gráfico: una fila por día, una columna por (sensor, tipo).
-  // Se usan los agregados diarios cuando existen; para los días recientes que
-  // aún no se han agregado (el job corre a las 03:15), se agregan en cliente
-  // a partir de las mediciones crudas.
-  const { puntos, series } = useMemo(() => {
-    const porDia = new Map<string, FilaBarra>()
-    const nombresUsados = new Set<string>()
-    const series: { nombre: string; color: string }[] = []
+  const { puntos, series, detalles } = useMemo(() => {
     const colores = ['#2563eb', '#16a34a', '#dc2626', '#0d9488', '#ea580c', '#0891b2']
-
-    // Conjunto de claves (sensor|tipo|dia) ya cubiertas por agregados.
     const cubiertas = new Set(agregados.map((a) => `${a.sensorId}|${a.tipo}|${a.dia}`))
-
-    // Agregados oficiales.
     const todos: AgregadoDiario[] = [...agregados]
-
-    // Agregación en cliente de las crudas para los días sin agregado.
     const grupos = new Map<string, number[]>()
     const meta = new Map<string, { sensorId: string; tipo: TipoMedicion; dia: string }>()
     for (const m of rawMediciones) {
@@ -134,36 +115,38 @@ export default function Historial({
     }
     for (const [clave, vals] of grupos) {
       const m = meta.get(clave)!
-      todos.push({
-        sensorId: m.sensorId,
-        tipo: m.tipo,
-        dia: m.dia,
-        valorMedio: vals.reduce((a, b) => a + b, 0) / vals.length,
-        valorMin: Math.min(...vals),
-        valorMax: Math.max(...vals),
-        n: vals.length,
-      })
+      todos.push({ sensorId: m.sensorId, tipo: m.tipo, dia: m.dia, valorMedio: vals.reduce((a, b) => a + b, 0) / vals.length, valorMin: Math.min(...vals), valorMax: Math.max(...vals), n: vals.length })
     }
 
+    const clavesSerie = new Set<string>()
+    const seriesMap = new Map<string, { nombre: string; color: string }>()
+    const nombresUsados = new Set<string>()
     for (const a of todos) {
+      const clave = `${a.sensorId}|${a.tipo}`
+      if (clavesSerie.has(clave)) continue
+      clavesSerie.add(clave)
       const sensor = sensores.find((s) => s.id === a.sensorId)
       const base = sensor?.nombre ?? a.sensorId
       let nombre = tipo ? base : `${base} · ${ETIQUETAS_MEDICION[a.tipo]}`
       let sufijo = 2
       while (nombresUsados.has(nombre)) nombre = `${nombre} (${sufijo++})`
       nombresUsados.add(nombre)
-      if (!series.some((s) => s.nombre === nombre)) {
-        series.push({ nombre, color: colores[series.length % colores.length] })
-      }
-      const fila = porDia.get(a.dia) ?? { dia: a.dia }
-      fila[`${nombre} (media)`] = a.valorMedio
-      fila[`${nombre} (máx)`] = a.valorMax
-      fila[`${nombre} (mín)`] = a.valorMin
-      porDia.set(a.dia, fila)
+      seriesMap.set(clave, { nombre, color: colores[seriesMap.size % colores.length] })
     }
+    const series = [...seriesMap.values()]
 
+    const porDia = new Map<string, FilaBarra>()
+    const detalles = new Map<string, { media: number; min: number; max: number; n: number }>()
+    for (const a of todos) {
+      const clave = `${a.sensorId}|${a.tipo}`
+      const serie = seriesMap.get(clave)!
+      const fila = porDia.get(a.dia) ?? { dia: a.dia }
+      fila[serie.nombre] = a.valorMedio
+      porDia.set(a.dia, fila)
+      detalles.set(`${a.dia}|${serie.nombre}`, { media: a.valorMedio, min: a.valorMin, max: a.valorMax, n: a.n })
+    }
     const puntos = [...porDia.values()].sort((a, b) => String(a.dia).localeCompare(String(b.dia)))
-    return { puntos, series }
+    return { puntos, series, detalles }
   }, [agregados, rawMediciones, sensores, tipo])
 
   const exportar = useCallback(async () => {
@@ -194,6 +177,27 @@ export default function Historial({
   }, [sensoresObjetivo, desde, hasta, tipo, sensores, cultivos])
 
   const hayDatos = agregados.length > 0 || rawMediciones.length > 0
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function renderTooltip(props: any) {
+    const { active, payload, label } = props
+    if (!active || !payload?.length) return null
+    return (
+      <div style={{ background: 'var(--superficie)', border: '1px solid var(--borde)', borderRadius: 6, padding: '0.5rem 0.7rem', fontSize: 12 }}>
+        <div style={{ fontWeight: 600, marginBottom: 4 }}>{label}</div>
+        {payload.map((entry: { name?: unknown; value?: number; color?: string }) => {
+          const nombre = String(entry.name ?? '')
+          const det = detalles.get(`${label}|${nombre}`)
+          return (
+            <div key={nombre} style={{ color: entry.color, marginBottom: 2 }}>
+              {nombre}: media {(entry.value ?? 0).toFixed(1)}
+              {det ? ` · mín ${det.min.toFixed(1)} · máx ${det.max.toFixed(1)} (n=${det.n})` : ''}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
 
   return (
     <section className="historial">
@@ -267,16 +271,9 @@ export default function Historial({
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="dia" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip />
-              <Legend />
+              <Tooltip content={renderTooltip} />
               {series.map((s) => (
-                <Bar key={`${s.nombre}-media`} dataKey={`${s.nombre} (media)`} fill={s.color} name={`${s.nombre} media`} />
-              ))}
-              {series.map((s) => (
-                <Bar key={`${s.nombre}-max`} dataKey={`${s.nombre} (máx)`} fill={s.color} fillOpacity={0.4} name={`${s.nombre} máx`} />
-              ))}
-              {series.map((s) => (
-                <Bar key={`${s.nombre}-min`} dataKey={`${s.nombre} (mín)`} fill={s.color} fillOpacity={0.2} name={`${s.nombre} mín`} />
+                <Bar key={s.nombre} dataKey={s.nombre} fill={s.color} name={s.nombre} />
               ))}
             </BarChart>
           </ResponsiveContainer>
