@@ -1,4 +1,4 @@
--- D46 — Eliminar mi cuenta con periodo de gracia de 7 dias (sin aplicar aun).
+-- D46 — Eliminar mi cuenta con periodo de gracia de 7 dias (aplicada el 23/10/2026 via MCP de Supabase).
 -- Decisiones aprobadas: borrado por funcion SECURITY DEFINER, registro de
 -- auditoria sin datos personales (hash del email) y 7 dias para cancelar.
 

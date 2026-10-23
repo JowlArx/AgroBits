@@ -1,7 +1,7 @@
 -- D46 — Suite de eliminacion de cuenta (gate de seguridad).
--- Pendiente de ejecucion: la herramienta de Supabase no esta disponible en la
--- sesion actual, asi que esta suite aun NO se ha ejecutado. Cuando se
--- ejecute, lo unico que hay que cambiar es la cabecera (resultado y fecha).
+-- Ejecutada el 23/10/2026 via MCP de Supabase (execute_sql) contra el proyecto
+-- de desarrollo: 12/12 pruebas OK (plan.md §4.2: "Supabase local (CLI) o
+-- proyecto de pruebas via MCP"). Metodologia y resultado: ver abajo.
 --
 -- Metodologia: identidades simuladas en SQL (set local role authenticated +
 -- request.jwt.claims con el email de la cuenta) dentro de UNA transaccion
@@ -92,14 +92,18 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true);
 
 do $$
+declare
+  v_afectadas integer;
 begin
-  -- La cuenta B no puede cancelar la solicitud de la cuenta A.
-  begin
-    delete from public.solicitudes_eliminacion where user_id = '11111111-1111-1111-1111-111111111111';
-    insert into public.t_d46_resultados values ('AC3b no puede cancelar otra','FALLO: la cuenta B cancelo la solicitud de la A');
-  exception when others then
-    insert into public.t_d46_resultados values ('AC3b no puede cancelar otra','OK: ' || sqlerrm);
-  end;
+  -- La cuenta B intenta cancelar la solicitud de la cuenta A. Con RLS, la fila
+  -- no le pertenece, asi que el delete afecta 0 filas (no lanza excepcion).
+  delete from public.solicitudes_eliminacion where user_id = '11111111-1111-1111-1111-111111111111';
+  get diagnostics v_afectadas = row_count;
+  if v_afectadas = 0 then
+    insert into public.t_d46_resultados values ('AC3b no puede cancelar otra','OK: 0 filas afectadas (RLS bloquea)');
+  else
+    insert into public.t_d46_resultados values ('AC3b no puede cancelar otra','FALLO: la cuenta B cancelo ' || v_afectadas || ' solicitud(es)');
+  end if;
 end;
 $$;
 

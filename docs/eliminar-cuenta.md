@@ -52,11 +52,11 @@ El catálogo de localidades no pertenece a la cuenta y **no se toca**.
 
 ## Estado de la implementación
 
-- Migración: `supabase/migrations/20261021000001_eliminar_cuenta.sql` (**escrita, no aplicada**).
-- Suite SQL: `supabase/tests/20261021_d46_eliminar_cuenta.sql` (**escrita, no ejecutada**: la herramienta de Supabase no está disponible en la sesión actual).
+- Migración: `supabase/migrations/20261021000001_eliminar_cuenta.sql` (**aplicada el 23/10/2026** vía MCP de Supabase; registrada como versión `20261023144823`).
+- Suite SQL: `supabase/tests/20261021_d46_eliminar_cuenta.sql` (**ejecutada el 23/10/2026** vía MCP: **12/12 pruebas OK**, residuo 0).
 - Interfaz: implementada en `src/pages/Cuenta.tsx`, con la store `src/data/storePerfil.ts` y el contrato del proveedor de datos ampliado. Cubierta por pruebas unitarias (4 casos nuevos).
 
-Ningún cambio de base de datos se aplica hasta aprobar la ejecución de la migración y de la suite.
+La migración y la suite ya están aplicadas y validadas (12/12 OK). El purgador (pg_cron) queda pendiente de habilitar si se quiere el borrado automático diario (la línea de `cron.schedule` está comentada en la migración).
 
 ## Verificación prevista
 
