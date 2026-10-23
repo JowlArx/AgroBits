@@ -2263,8 +2263,8 @@ button.boton-google:hover {
 .historial-filtros label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; }
 .historial-filtros select, .historial-filtros input { padding: 0.45rem var(--espacio-2); border: 1px solid var(--borde-input); border-radius: var(--radio-sm); background: var(--superficie); color: var(--texto); min-height: 2.75rem; }
 .historial-acciones { display: flex; gap: 0.5rem; }
-.historial-acciones button { padding: 0.5rem 0.9rem; border-radius: 6px; border: 1px solid var(--borde, #ccc); background: var(--fondo-boton, #f5f5f5); cursor: pointer; }
-.historial-acciones button:disabled { opacity: 0.5; cursor: not-allowed; }
+.historial-acciones button { padding: 0.5rem 0.9rem; border-radius: var(--radio-sm); border: 1px solid var(--borde-input); background: var(--superficie); color: var(--texto); cursor: pointer; font-weight: 600; }
+.historial-acciones button:disabled { opacity: 0.5; cursor: not-allowed; background: var(--fondo, var(--superficie)); }
 .historial-error { color: #b91c1c; }
 .historial-cargando, .historial-vacio { opacity: 0.7; padding: 1rem 0; }
 .historial-grafico { width: 100%; }

@@ -14,7 +14,7 @@ import { obtenerCultivos, suscribirCultivos } from '../data/storeCultivos'
 import { obtenerSensores, suscribirSensores } from '../data/storeSensores'
 import { exigirProveedor } from '../data/datos/proveedorDatos'
 import type { AgregadoDiario } from '../data/datos/proveedorDatos'
-import type { TipoMedicion } from '../domain/tipos'
+import type { Medicion, TipoMedicion } from '../domain/tipos'
 import { TIPOS_MEDICION } from '../domain/tipos'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
 
@@ -53,6 +53,7 @@ export default function Historial({
   const [hasta, setHasta] = useState<string>(() => fechaISO(new Date()))
 
   const [agregados, setAgregados] = useState<AgregadoDiario[]>([])
+  const [rawMediciones, setRawMediciones] = useState<Medicion[]>([])
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [exportando, setExportando] = useState(false)
@@ -83,9 +84,13 @@ export default function Historial({
       setCargando(true)
       setError(null)
       try {
-        const datos = await exigirProveedor().cargarAgregadosDiarios(ids, desde, hasta + 'T23:59:59')
+        const [datos, crudas] = await Promise.all([
+          exigirProveedor().cargarAgregadosDiarios(ids, desde, hasta + 'T23:59:59'),
+          exigirProveedor().cargarMedicionesRango(ids, desde, hasta + 'T23:59:59'),
+        ])
         if (!vivo) return
         setAgregados(tipo ? datos.filter((d) => d.tipo === tipo) : datos)
+        setRawMediciones(tipo ? crudas.filter((m) => m.tipo === tipo) : crudas)
       } catch (e) {
         if (!vivo) return
         setError(e instanceof Error ? e.message : 'No se pudo cargar el historial')
@@ -99,14 +104,48 @@ export default function Historial({
     }
   }, [sensoresObjetivo, desde, hasta, tipo])
 
-  // Datos para el gráfico: una fila por día, una columna por (sensor, tipo)
+  // Datos para el gráfico: una fila por día, una columna por (sensor, tipo).
+  // Se usan los agregados diarios cuando existen; para los días recientes que
+  // aún no se han agregado (el job corre a las 03:15), se agregan en cliente
+  // a partir de las mediciones crudas.
   const { puntos, series } = useMemo(() => {
     const porDia = new Map<string, FilaBarra>()
     const nombresUsados = new Set<string>()
     const series: { nombre: string; color: string }[] = []
-    const colores = ['#2563eb', '#16a34a', '#dc2626', '#9333ea', '#ea580c', '#0891b2']
+    const colores = ['#2563eb', '#16a34a', '#dc2626', '#0d9488', '#ea580c', '#0891b2']
 
-    for (const a of agregados) {
+    // Conjunto de claves (sensor|tipo|dia) ya cubiertas por agregados.
+    const cubiertas = new Set(agregados.map((a) => `${a.sensorId}|${a.tipo}|${a.dia}`))
+
+    // Agregados oficiales.
+    const todos: AgregadoDiario[] = [...agregados]
+
+    // Agregación en cliente de las crudas para los días sin agregado.
+    const grupos = new Map<string, number[]>()
+    const meta = new Map<string, { sensorId: string; tipo: TipoMedicion; dia: string }>()
+    for (const m of rawMediciones) {
+      const dia = m.medidaEn.slice(0, 10)
+      const clave = `${m.sensorId}|${m.tipo}|${dia}`
+      if (cubiertas.has(clave)) continue
+      const g = grupos.get(clave) ?? []
+      g.push(m.valor)
+      grupos.set(clave, g)
+      if (!meta.has(clave)) meta.set(clave, { sensorId: m.sensorId, tipo: m.tipo, dia })
+    }
+    for (const [clave, vals] of grupos) {
+      const m = meta.get(clave)!
+      todos.push({
+        sensorId: m.sensorId,
+        tipo: m.tipo,
+        dia: m.dia,
+        valorMedio: vals.reduce((a, b) => a + b, 0) / vals.length,
+        valorMin: Math.min(...vals),
+        valorMax: Math.max(...vals),
+        n: vals.length,
+      })
+    }
+
+    for (const a of todos) {
       const sensor = sensores.find((s) => s.id === a.sensorId)
       const base = sensor?.nombre ?? a.sensorId
       let nombre = tipo ? base : `${base} · ${ETIQUETAS_MEDICION[a.tipo]}`
@@ -125,7 +164,7 @@ export default function Historial({
 
     const puntos = [...porDia.values()].sort((a, b) => String(a.dia).localeCompare(String(b.dia)))
     return { puntos, series }
-  }, [agregados, sensores, tipo])
+  }, [agregados, rawMediciones, sensores, tipo])
 
   const exportar = useCallback(async () => {
     setExportando(true)
@@ -154,7 +193,7 @@ export default function Historial({
     }
   }, [sensoresObjetivo, desde, hasta, tipo, sensores, cultivos])
 
-  const hayDatos = agregados.length > 0
+  const hayDatos = agregados.length > 0 || rawMediciones.length > 0
 
   return (
     <section className="historial">
