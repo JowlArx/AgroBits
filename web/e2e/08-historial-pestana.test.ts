@@ -62,7 +62,7 @@ test('D40: «Ver historial» de un cultivo abre la pestaña de historial con ese
   await eliminarCultivo(page, nombre)
 })
 
-test('D40: el panel de historial dibuja las barras y el tooltip da media, mín y máx', async ({ page }) => {
+test('D40: el panel de historial dibuja las barras y el tooltip da media, mín y máx de la única serie bajo el cursor', async ({ page }) => {
   const nombre = `Huerto H40 ${sello()}`
   const nombreSensor = `Sensor H40 ${sello()}`
   await iniciarSesion(page, cuentaA)
@@ -92,17 +92,25 @@ test('D40: el panel de historial dibuja las barras y el tooltip da media, mín y
     // El tooltip de la barra da la media y el rango (mín/máx) de esa serie.
     // Se apunta a la barra más alta con el ratón (hover por coordenadas: las
     // barras pequeñas quedan bajo el eje y el eje intercepta el puntero). Se
-    // reintenta porque el gráfico puede redibujarse entre la medida y el
-    // movimiento del puntero.
-    const tooltip = page.locator('.recharts-tooltip-wrapper')
-    for (let intento = 0; intento < 3; intento++) {
-      const barrasAlta = await page.locator('.recharts-bar-rectangle path').evaluateAll((nodos) =>
+    // espera a que el gráfico tenga barras con tamaño real (el contenedor
+    // responsive mide en el primer ciclo) y se reintenta porque el gráfico
+    // puede redibujarse entre la medida y el movimiento del puntero.
+    const medirBarras = () =>
+      page.locator('.recharts-bar-rectangle path').evaluateAll((nodos) =>
         nodos.map((n) => {
           const r = n.getBoundingClientRect()
           return { x: r.x + r.width / 2, y: r.y + r.height / 2, alto: r.height }
         }),
       )
-      const masAlta = barrasAlta.sort((a, b) => b.alto - a.alto)[0]
+    await expect
+      .poll(async () => Math.max(0, ...(await medirBarras()).map((c) => c.alto)), {
+        timeout: 30_000,
+      })
+      .toBeGreaterThan(1)
+
+    const tooltip = page.locator('.recharts-tooltip-wrapper')
+    for (let intento = 0; intento < 3; intento++) {
+      const masAlta = (await medirBarras()).sort((a, b) => b.alto - a.alto)[0]
       expect(masAlta).toBeTruthy()
       await page.mouse.move(masAlta.x, masAlta.y)
       await page.waitForTimeout(250)
@@ -111,6 +119,20 @@ test('D40: el panel de historial dibuja las barras y el tooltip da media, mín y
     await expect(tooltip).toContainText('media')
     await expect(tooltip).toContainText('mín')
     await expect(tooltip).toContainText('máx')
+
+    // El tooltip describe SOLO la barra bajo el cursor, no todas las series
+    // del día: una única línea de datos (una sola «media»).
+    const textoTooltip = (await tooltip.textContent()) ?? ''
+    expect(textoTooltip.match(/media/g) ?? []).toHaveLength(1)
+    // Y el título con la fecha sigue presente.
+    expect(textoTooltip).toMatch(/\d{4}-\d{2}-\d{2}/)
+
+    // Fuera de cualquier barra no se informa de nada: el tooltip existe solo
+    // para la barra bajo el cursor.
+    const area = await page.locator('.recharts-wrapper').boundingBox()
+    await page.mouse.move((area?.x ?? 0) + 8, (area?.y ?? 0) + 8)
+    await page.waitForTimeout(300)
+    await expect(tooltip).toBeHidden()
   } finally {
     // Limpieza: sensor (con sus lecturas) y cultivo, aunque el test falle.
     await page.getByTestId('nav-sensores').click()

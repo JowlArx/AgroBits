@@ -34,6 +34,15 @@ interface FilaBarra {
   [clave: string]: string | number
 }
 
+/** Entrada que Recharts entrega al renderer del tooltip. */
+interface EntradaTooltip {
+  name?: unknown
+  value?: number
+  color?: string
+  /** Fila original del gráfico (contiene `dia`). */
+  payload?: FilaBarra
+}
+
 export default function Historial({
   cultivoIdInicial,
 }: {
@@ -178,16 +187,25 @@ export default function Historial({
 
   const hayDatos = agregados.length > 0 || rawMediciones.length > 0
 
+  // El tooltip del historial describe SOLO la barra bajo el cursor: con
+  // `shared={false}` Recharts entrega una única entrada en `payload` (la serie
+  // de esa barra) y deja `label` sin valor, así que el día se toma de la fila
+  // de esa barra (`entry.payload.dia`) y, si faltara, del índice activo.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function renderTooltip(props: any) {
-    const { active, payload, label } = props
+    const { active, payload, label, activeIndex } = props
     if (!active || !payload?.length) return null
+    const entradas = payload as EntradaTooltip[]
+    const diaActivo = puntos[Number(activeIndex)]?.dia
     return (
       <div style={{ background: 'var(--superficie)', border: '1px solid var(--borde)', borderRadius: 6, padding: '0.5rem 0.7rem', fontSize: 12 }}>
-        <div style={{ fontWeight: 600, marginBottom: 4 }}>{label}</div>
-        {payload.map((entry: { name?: unknown; value?: number; color?: string }) => {
+        <div style={{ fontWeight: 600, marginBottom: 4 }}>
+          {entradas[0]?.payload?.dia ?? diaActivo ?? label ?? ''}
+        </div>
+        {entradas.map((entry) => {
           const nombre = String(entry.name ?? '')
-          const det = detalles.get(`${label}|${nombre}`)
+          const dia = entry.payload?.dia ?? diaActivo ?? label ?? ''
+          const det = detalles.get(`${dia}|${nombre}`)
           return (
             <div key={nombre} style={{ color: entry.color, marginBottom: 2 }}>
               {nombre}: media {(entry.value ?? 0).toFixed(1)}
@@ -272,7 +290,9 @@ export default function Historial({
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="dia" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip content={renderTooltip} />
+              {/* `shared={false}`: el tooltip describe solo la barra bajo el
+                  cursor, no todas las series del día. */}
+              <Tooltip content={renderTooltip} shared={false} />
               {series.map((s) => (
                 <Bar key={s.nombre} dataKey={s.nombre} fill={s.color} name={s.nombre} />
               ))}

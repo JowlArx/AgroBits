@@ -26,6 +26,7 @@ El usuario ve una gráfica de barras con la media, el máximo y el mínimo del d
 - **AC1:** La gráfica muestra barras agrupadas por día, con media, máximo y mínimo.
 - **AC2:** El usuario puede cambiar el rango de fechas y el sensor/cultivo; la gráfica se actualiza.
 - **AC3:** La gráfica se renderiza con recharts (ya instalado), sin nueva dependencia de gráficos.
+- **AC4:** El tooltip describe **solo la barra bajo el cursor**: nombre de la serie, media, mínimo, máximo y nº de muestras del día, con la fecha como título. Al pasar el puntero por el fondo de la gráfica (fuera de cualquier barra) no se muestra tooltip.
 
 ### R-H3 — Exportación a Excel
 
