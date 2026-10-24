@@ -64,46 +64,64 @@ test('D40: «Ver historial» de un cultivo abre la pestaña de historial con ese
 
 test('D40: el panel de historial dibuja las barras y el tooltip da media, mín y máx', async ({ page }) => {
   const nombre = `Huerto H40 ${sello()}`
+  const nombreSensor = `Sensor H40 ${sello()}`
   await iniciarSesion(page, cuentaA)
-  await crearCultivo(page, nombre)
-  await abrirDetalle(page, nombre)
 
-  // El sensor escribe su primera lectura contra la API (R-08): hay datos que
-  // el historial debe representar.
-  await crearSensor(page, `Sensor ${sello()}`)
-  await esperarLectura(page, 'temperatura')
+  try {
+    await crearCultivo(page, nombre)
+    await abrirDetalle(page, nombre)
 
-  await page.getByTestId('nav-sensores').click()
-  await page.getByTestId('pestana-historial').click()
-  await expect(page.getByTestId('panel-historial')).toBeVisible()
+    // El sensor escribe su primera lectura contra la API (R-08): hay datos que
+    // el historial debe representar.
+    await crearSensor(page, nombreSensor)
+    await esperarLectura(page, 'temperatura')
 
-  // Una barra por serie y día (las lecturas recientes se agregan en cliente
-  // hasta que el job de las 03:15 consolida el día).
-  const barras = page.locator('.recharts-bar-rectangle')
-  await expect(barras.first()).toBeVisible({ timeout: 30_000 })
-  expect(await barras.count()).toBeGreaterThan(0)
+    await page.getByTestId('nav-sensores').click()
+    await page.getByTestId('pestana-historial').click()
+    await expect(page.getByTestId('panel-historial')).toBeVisible()
 
-  // Con datos, la exportación a Excel está habilitada.
-  await expect(page.getByRole('button', { name: 'Exportar a Excel' })).toBeEnabled()
+    // Una barra por serie y día (las lecturas recientes se agregan en cliente
+    // hasta que el job de las 03:15 consolida el día).
+    const barras = page.locator('.recharts-bar-rectangle')
+    await expect(barras.first()).toBeVisible({ timeout: 30_000 })
+    expect(await barras.count()).toBeGreaterThan(0)
 
-  // El tooltip de la barra da la media y el rango (mín/máx) de esa serie.
-  // Se apunta a la barra más alta con el ratón (hover por coordenadas: las
-  // barras pequeñas quedan bajo el eje y el eje intercepta el puntero).
-  const barrasAlta = await page.locator('.recharts-bar-rectangle path').evaluateAll((nodos) =>
-    nodos.map((n) => {
-      const r = n.getBoundingClientRect()
-      return { x: r.x + r.width / 2, y: r.y + r.height / 2, alto: r.height }
-    }),
-  )
-  const masAlta = barrasAlta.sort((a, b) => b.alto - a.alto)[0]
-  expect(masAlta).toBeTruthy()
-  await page.mouse.move(masAlta.x, masAlta.y)
-  const tooltip = page.locator('.recharts-tooltip-wrapper')
-  await expect(tooltip).toContainText('media')
-  await expect(tooltip).toContainText('mín')
-  await expect(tooltip).toContainText('máx')
+    // Con datos, la exportación a Excel está habilitada.
+    await expect(page.getByRole('button', { name: 'Exportar a Excel' })).toBeEnabled()
 
-  await eliminarCultivo(page, nombre)
+    // El tooltip de la barra da la media y el rango (mín/máx) de esa serie.
+    // Se apunta a la barra más alta con el ratón (hover por coordenadas: las
+    // barras pequeñas quedan bajo el eje y el eje intercepta el puntero).
+    const barrasAlta = await page.locator('.recharts-bar-rectangle path').evaluateAll((nodos) =>
+      nodos.map((n) => {
+        const r = n.getBoundingClientRect()
+        return { x: r.x + r.width / 2, y: r.y + r.height / 2, alto: r.height }
+      }),
+    )
+    const masAlta = barrasAlta.sort((a, b) => b.alto - a.alto)[0]
+    expect(masAlta).toBeTruthy()
+    await page.mouse.move(masAlta.x, masAlta.y)
+    const tooltip = page.locator('.recharts-tooltip-wrapper')
+    await expect(tooltip).toContainText('media')
+    await expect(tooltip).toContainText('mín')
+    await expect(tooltip).toContainText('máx')
+  } finally {
+    // Limpieza: sensor (con sus lecturas) y cultivo, aunque el test falle.
+    await page.getByTestId('nav-sensores').click()
+    const tarjeta = page.getByTestId('tarjeta-sensor').filter({ hasText: nombreSensor })
+    if ((await tarjeta.count()) > 0) {
+      await tarjeta.getByRole('button', { name: 'Eliminar' }).click()
+      await tarjeta.getByRole('button', { name: 'Sí', exact: true }).click()
+      await expect(tarjeta).toHaveCount(0, { timeout: 30_000 })
+    }
+    await page.getByTestId('nav-cultivos').click()
+    const ficha = page.locator('li.tarjeta-cultivo').filter({ hasText: nombre })
+    if ((await ficha.count()) > 0) {
+      await ficha.getByRole('button', { name: 'Eliminar' }).click()
+      await page.getByRole('button', { name: 'Sí', exact: true }).click()
+      await expect(ficha).toHaveCount(0, { timeout: 90_000 })
+    }
+  }
 })
 
 test.describe('en móvil (390×844)', () => {
