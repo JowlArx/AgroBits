@@ -179,7 +179,7 @@ El tema oscuro no es una paleta distinta: son los mismos roles con los valores i
 - **Una columna de contenido, un panel lateral opcional.** En escritorio (≥62rem) el panel divide en columna principal + panel de 19rem (alertas activas y lecturas recientes); por debajo, el panel cae bajo el contenido.
 - **Cabecera de una fila** (≥48rem): marca, navegación, título de la vista, chips de estado y cuenta. En móvil se reduce a marca + título + chip, y la navegación baja a una **barra inferior flotante** con los iconos de sección y el icono de perfil a la derecha.
 - **Rejilla de tarjetas** con `auto-fit` y mínimo de 22rem; las tarjetas alinean al inicio (`align-items: start`), de modo que una tarjeta que crece no estira a sus vecinas.
-- **Widgets**: dos columnas en escritorio, una en móvil; dentro de cada widget, pestañas de tipo a la izquierda y título a la derecha (en móvil, el título encima y las pestañas en una fila con scroll horizontal).
+- **Widgets**: dos columnas en escritorio, una en móvil; dentro de cada widget, pestañas de tipo a la izquierda y título a la derecha (en móvil, el título encima y las pestañas en una fila con scroll horizontal; el borde derecho de esa fila se desvanece para indicar que hay más pestañas).
 - **Ritmo de espacio** en base 8px (`--espacio-1` 4px … `--espacio-6` 32px). El espacio por encima de un título es mayor que el de debajo; los grupos tightness se mantienen juntos y los bloques se separan con `--espacio-5`.
 - **Puntos de ruptura:** 62rem (992px, se apila el panel), 48rem (768px, barra inferior de navegación y autos de móvil), 34rem (544px, KPIs cuadrados 2×2 y espaciados finos).
 
@@ -197,6 +197,26 @@ El sistema es **plano por defecto**: las superficies se apoyan en el papel con u
 ### Named Rules
 
 **La regla de la flotación.** Si un elemento no tapa contenido, no lleva sombra. Y si lleva sombra, la lleva con desplazamiento y desenfoque: una sombra sin desenfoque es disfraz, no profundidad.
+
+## Motion
+
+Tres duraciones y dos curvas, definidas en `web/src/tokens.css`:
+
+- `--duracion-rapida` (120ms): respuesta a la pulsación.
+- `--duracion-normal` (200ms): elevación de tarjetas y cambios de borde.
+- `--duracion-lenta` (320ms): entrada de la cabecera y de cada vista, con `--desplazamiento-entrada` (12px).
+- `--ease-salida` (`cubic-bezier(0.2, 0.8, 0.2, 1)`): entradas y respuesta al puntero.
+- `--ease-estado` (`cubic-bezier(0.45, 0, 0.55, 1)`): cambios de estado.
+
+`--transicion` (140ms) se mantiene para los controles existentes.
+
+- **Entrada:** al cambiar de vista, la cabecera y el contenido suben 12px y aparecen en 320ms.
+- **Puntero:** las tarjetas de cultivo y los KPI se elevan 2px al pasar el ratón y se reducen a 98% al pulsar.
+- **Botones:** al pulsar se reducen a 98%; ya no se desplazan 1px.
+
+### Named Rules
+
+**La regla del movimiento con función.** El movimiento explica un cambio de vista, de estado o de puntero; nunca decora. Con `prefers-reduced-motion: reduce` las duraciones pasan a 0,01ms (los cambios de estado son instantáneos), desaparecen la entrada y la elevación al pasar el puntero, y los botones no se escalan.
 
 ## Shapes
 

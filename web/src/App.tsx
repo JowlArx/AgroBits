@@ -447,55 +447,57 @@ export default function App() {
 
         <div className={vista.tipo === 'lista' ? 'cuerpo con-panel' : 'cuerpo'}>
           <main id="contenido">
-            {vista.tipo === 'lista' && (
-              <>
-                <Tablero />
-                <ListaCultivos
-                  onNuevo={() => irA({ tipo: 'nuevo' })}
-                  onEditar={(id) => irA({ tipo: 'editar', id })}
-                  onVerMediciones={(id) => irA({ tipo: 'detalle', id })}
+            <div key={vista.tipo} className="vista-entrada">
+              {vista.tipo === 'lista' && (
+                <>
+                  <Tablero />
+                  <ListaCultivos
+                    onNuevo={() => irA({ tipo: 'nuevo' })}
+                    onEditar={(id) => irA({ tipo: 'editar', id })}
+                    onVerMediciones={(id) => irA({ tipo: 'detalle', id })}
+                  />
+                </>
+              )}
+              {vista.tipo === 'nuevo' && (
+                <FormularioCultivo onGuardado={() => irA({ tipo: 'lista' })} onCancelar={() => irA({ tipo: 'lista' })} />
+              )}
+              {vista.tipo === 'editar' && (
+                <FormularioCultivo
+                  cultivoId={vista.id}
+                  onGuardado={() => irA({ tipo: 'lista' })}
+                  onCancelar={() => irA({ tipo: 'lista' })}
                 />
-              </>
-            )}
-            {vista.tipo === 'nuevo' && (
-              <FormularioCultivo onGuardado={() => irA({ tipo: 'lista' })} onCancelar={() => irA({ tipo: 'lista' })} />
-            )}
-            {vista.tipo === 'editar' && (
-              <FormularioCultivo
-                cultivoId={vista.id}
-                onGuardado={() => irA({ tipo: 'lista' })}
-                onCancelar={() => irA({ tipo: 'lista' })}
-              />
-            )}
-            {vista.tipo === 'detalle' && (
-              <DetalleCultivo
-                cultivoId={vista.id}
-                onVolver={() => irA({ tipo: 'lista' })}
-                onVerHistorial={(id: string) =>
-                  irA({ tipo: 'sensores', panel: 'historial', cultivoId: id })
-                }
-              />
-            )}
-            {vista.tipo === 'alertas' && <Alertas />}
-            {vista.tipo === 'sensores' && (
-              <Sensores
-                panel={vista.panel}
-                cultivoIdHistorial={vista.cultivoId}
-                onCambiarPanel={(panel, cultivoId) =>
-                  irA({ tipo: 'sensores', panel, cultivoId })
-                }
-              />
-            )}
-            {vista.tipo === 'cuenta' && (
-              <Cuenta
-                email={sesion.usuario.email}
-                nombreUsuario={sesion.usuario.nombreUsuario}
-                cultivos={cultivos}
-                sensores={sensores}
-                alertasActivas={alertasActivas}
-                onVerCultivo={(id) => irA({ tipo: 'detalle', id })}
-              />
-            )}
+              )}
+              {vista.tipo === 'detalle' && (
+                <DetalleCultivo
+                  cultivoId={vista.id}
+                  onVolver={() => irA({ tipo: 'lista' })}
+                  onVerHistorial={(id: string) =>
+                    irA({ tipo: 'sensores', panel: 'historial', cultivoId: id })
+                  }
+                />
+              )}
+              {vista.tipo === 'alertas' && <Alertas />}
+              {vista.tipo === 'sensores' && (
+                <Sensores
+                  panel={vista.panel}
+                  cultivoIdHistorial={vista.cultivoId}
+                  onCambiarPanel={(panel, cultivoId) =>
+                    irA({ tipo: 'sensores', panel, cultivoId })
+                  }
+                />
+              )}
+              {vista.tipo === 'cuenta' && (
+                <Cuenta
+                  email={sesion.usuario.email}
+                  nombreUsuario={sesion.usuario.nombreUsuario}
+                  cultivos={cultivos}
+                  sensores={sensores}
+                  alertasActivas={alertasActivas}
+                  onVerCultivo={(id) => irA({ tipo: 'detalle', id })}
+                />
+              )}
+            </div>
           </main>
           {vista.tipo === 'lista' && <PanelLateral onVerAlertas={() => irA({ tipo: 'alertas' })} />}
         </div>

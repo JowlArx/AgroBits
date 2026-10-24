@@ -258,7 +258,7 @@ button:hover {
 }
 
 button:active {
-  transform: translateY(1px);
+  transform: scale(0.98);
 }
 
 button:disabled {
@@ -1578,6 +1578,14 @@ button.boton-google:hover {
   .pestanas-widget {
     flex-wrap: nowrap;
     overflow-x: auto;
+    padding-inline-end: var(--espacio-6);
+    mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+    scrollbar-width: none;
+  }
+
+  .pestanas-widget::-webkit-scrollbar {
+    display: none;
   }
 
   /* D40: el lienzo se achica en móvil (antes lo decidía JavaScript). */
@@ -1685,6 +1693,46 @@ button.boton-google:hover {
   }
 }
 
+/* Movimiento: entrada de la cabecera y de cada vista, y respuesta al puntero */
+
+.cabecera-panel,
+.vista-entrada {
+  animation: entrar-bloque var(--duracion-lenta) var(--ease-salida) both;
+}
+
+.vista-entrada > section + section {
+  margin-top: var(--espacio-5);
+}
+
+@keyframes entrar-bloque {
+  from {
+    opacity: 0;
+    transform: translateY(var(--desplazamiento-entrada));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.tarjeta-kpi,
+.tarjeta-cultivo,
+.widget {
+  transition:
+    transform var(--duracion-normal) var(--ease-salida),
+    border-color var(--duracion-normal) var(--ease-estado);
+}
+
+.tarjeta-kpi:hover,
+.tarjeta-cultivo:hover {
+  transform: translateY(-2px);
+}
+
+.tarjeta-kpi:active,
+.tarjeta-cultivo:active {
+  transform: scale(0.98);
+}
+
 /* Accesibilidad: respeta la preferencia de movimiento reducido ------------ */
 
 @media (prefers-reduced-motion: reduce) {
@@ -1704,6 +1752,18 @@ button.boton-google:hover {
   /* D40: la escala de la barra inferior también se anula (su especificidad
      ganaba a `button:active`). */
   .boton-seccion-compacto:active {
+    transform: none;
+  }
+
+  .cabecera-panel,
+  .vista-entrada {
+    animation: none;
+  }
+
+  .tarjeta-kpi:hover,
+  .tarjeta-cultivo:hover,
+  .tarjeta-kpi:active,
+  .tarjeta-cultivo:active {
     transform: none;
   }
 }
