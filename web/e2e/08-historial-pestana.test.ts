@@ -91,17 +91,23 @@ test('D40: el panel de historial dibuja las barras y el tooltip da media, mín y
 
     // El tooltip de la barra da la media y el rango (mín/máx) de esa serie.
     // Se apunta a la barra más alta con el ratón (hover por coordenadas: las
-    // barras pequeñas quedan bajo el eje y el eje intercepta el puntero).
-    const barrasAlta = await page.locator('.recharts-bar-rectangle path').evaluateAll((nodos) =>
-      nodos.map((n) => {
-        const r = n.getBoundingClientRect()
-        return { x: r.x + r.width / 2, y: r.y + r.height / 2, alto: r.height }
-      }),
-    )
-    const masAlta = barrasAlta.sort((a, b) => b.alto - a.alto)[0]
-    expect(masAlta).toBeTruthy()
-    await page.mouse.move(masAlta.x, masAlta.y)
+    // barras pequeñas quedan bajo el eje y el eje intercepta el puntero). Se
+    // reintenta porque el gráfico puede redibujarse entre la medida y el
+    // movimiento del puntero.
     const tooltip = page.locator('.recharts-tooltip-wrapper')
+    for (let intento = 0; intento < 3; intento++) {
+      const barrasAlta = await page.locator('.recharts-bar-rectangle path').evaluateAll((nodos) =>
+        nodos.map((n) => {
+          const r = n.getBoundingClientRect()
+          return { x: r.x + r.width / 2, y: r.y + r.height / 2, alto: r.height }
+        }),
+      )
+      const masAlta = barrasAlta.sort((a, b) => b.alto - a.alto)[0]
+      expect(masAlta).toBeTruthy()
+      await page.mouse.move(masAlta.x, masAlta.y)
+      await page.waitForTimeout(250)
+      if ((await tooltip.textContent())?.includes('mín')) break
+    }
     await expect(tooltip).toContainText('media')
     await expect(tooltip).toContainText('mín')
     await expect(tooltip).toContainText('máx')
@@ -118,7 +124,7 @@ test('D40: el panel de historial dibuja las barras y el tooltip da media, mín y
     const ficha = page.locator('li.tarjeta-cultivo').filter({ hasText: nombre })
     if ((await ficha.count()) > 0) {
       await ficha.getByRole('button', { name: 'Eliminar' }).click()
-      await page.getByRole('button', { name: 'Sí', exact: true }).click()
+      await ficha.getByRole('button', { name: 'Sí', exact: true }).click()
       await expect(ficha).toHaveCount(0, { timeout: 90_000 })
     }
   }
