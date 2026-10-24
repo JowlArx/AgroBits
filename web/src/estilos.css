@@ -1795,49 +1795,18 @@ button.boton-google:hover {
 
 /* Vista de sensores */
 
-/* Pestañas de panel dentro de Sensores (Sensores / Historial): la misma
-   lengua visual que los botones de sección — la activa en verde, con peso
-   700 y el subrayado de 2 px (D40). */
-.pestanas-seccion {
-  display: flex;
-  gap: var(--espacio-1);
-  margin-bottom: var(--espacio-4);
-  border-bottom: 1px solid var(--borde);
-  /* En un ancho corto las pestañas se desplazan en vez de desbordar. */
-  overflow-x: auto;
-}
-
-.pestana-seccion {
-  border-color: transparent;
-  border-bottom-width: 2px;
-  border-radius: 0;
-  /* El subrayado de la pestaña se apoya en la regla del contenedor. */
-  margin-bottom: -1px;
-  background: transparent;
-  color: var(--texto-tenue);
-  font-size: var(--t-sm);
-  font-weight: 400;
-  white-space: nowrap;
-}
-
-.pestana-seccion:hover {
-  color: var(--texto);
-  border-bottom-color: var(--borde-input);
-}
-
-.pestana-seccion[aria-selected='true'] {
-  color: var(--marca);
-  font-weight: 700;
-  border-bottom-color: var(--marca);
-}
-
 .panel-sensores {
   min-width: 0;
 }
 
-/* El rótulo del panel va pegado a las pestañas (sin el margen del h3). */
+/* El rótulo del panel va pegado al borde superior (sin el margen del h3). */
 .panel-sensores > h3 {
   margin-top: 0;
+}
+
+/* D51: el historial va debajo de la lista de sensores, separado de ella. */
+.historial-sensores {
+  margin-top: var(--espacio-6);
 }
 
 .lista-sensores-panel {
@@ -1845,10 +1814,13 @@ button.boton-google:hover {
   margin: 0;
   padding: 0;
   display: grid;
+  /* D51: la columna no crece con el detalle desplegado dentro de la tarjeta. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--espacio-3);
 }
 
 .tarjeta-sensor {
+  min-width: 0;
   background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: var(--radio);
@@ -1914,6 +1886,14 @@ button.boton-google:hover {
   border: 1px solid var(--borde);
   border-radius: var(--radio);
   padding: var(--espacio-4);
+}
+
+/* D51: dentro de su tarjeta, el detalle ocupa toda la fila (la separación la da el gap).
+   min-width: 0 evita que las pestañas de tipo (sin salto de línea) lo ensanchen. */
+.tarjeta-sensor > .detalle-sensor {
+  flex: 0 0 100%;
+  min-width: 0;
+  margin-top: 0;
 }
 
 .chip-color {
@@ -2391,3 +2371,17 @@ button.boton-google:hover {
 .historial-error { color: #b91c1c; }
 .historial-cargando, .historial-vacio { opacity: 0.7; padding: 1rem 0; }
 .historial-grafico { width: 100%; }
+
+/* D51: el tooltip aparece con un fade en el sitio, sin deslizarse entre barras. */
+.tooltip-historial {
+  animation: aparecer-tooltip var(--duracion-rapida) ease-out both;
+}
+
+@keyframes aparecer-tooltip {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

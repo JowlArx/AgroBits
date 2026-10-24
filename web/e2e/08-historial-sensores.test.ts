@@ -1,7 +1,6 @@
-// D40 — El «Historial de mediciones» ya no es una sección propia de la
-// navegación: es una PESTAÑA dentro de la sección Sensores. El panel activo
-// vive en la URL (`?vista=sensores&panel=historial`), así que la vista es
-// enlazable y el «atrás» del navegador funciona.
+// D40/D51 — El «Historial de mediciones» es un bloque de la sección Sensores,
+// debajo de la lista de sensores y siempre visible (no es una pestaña). «Ver
+// historial» de un cultivo abre Sensores con el cultivo preseleccionado.
 
 import { test, expect } from '@playwright/test'
 import {
@@ -15,56 +14,50 @@ import {
   sello,
 } from './entorno'
 
-test('D40: el historial es una pestaña de Sensores y su estado vive en la URL', async ({ page }) => {
+test('D51: el historial va debajo de la lista de sensores, sin pestañas ni panel en la URL', async ({ page }) => {
   await iniciarSesion(page, cuentaA)
 
-  // La sección Sensores abre en su primer panel.
   await page.getByTestId('nav-sensores').click()
   await expect(page).toHaveURL(/[?&]vista=sensores/)
-  await expect(page.getByTestId('panel-sensores')).toBeVisible()
-  await expect(page.getByTestId('panel-historial')).toHaveCount(0)
+  await expect(page).not.toHaveURL(/panel=/)
+  await expect(page.getByTestId('pestana-historial')).toHaveCount(0)
+  await expect(page.locator('.titulo-topbar h2')).toHaveText('Sensores')
 
-  // La pestaña «Historial» abre el panel de historial y lo deja en la URL.
-  await page.getByTestId('pestana-historial').click()
-  await expect(page).toHaveURL(/[?&]vista=sensores/)
-  await expect(page).toHaveURL(/[?&]panel=historial/)
-  await expect(page.getByTestId('panel-historial')).toBeVisible()
-  await expect(page.getByTestId('panel-sensores')).toHaveCount(0)
-  // El topbar nombra la vista y el panel repite el título como subtítulo.
-  await expect(page.locator('.titulo-topbar h2')).toHaveText('Historial de mediciones')
-  await expect(
-    page.getByTestId('panel-historial').getByRole('heading', { name: 'Historial de mediciones' }),
-  ).toBeVisible()
+  const seccion = page.getByTestId('seccion-historial')
+  await expect(seccion.getByRole('heading', { name: 'Historial de mediciones' })).toBeVisible()
 
-  // Volver a «Sensores» deja la URL limpia y devuelve el panel de sensores.
-  await page.getByTestId('pestana-sensores').click()
-  await expect(page).toHaveURL(/[?&]vista=sensores/)
-  await expect(page.getByTestId('panel-sensores')).toBeVisible()
-  await expect(page.getByTestId('panel-historial')).toHaveCount(0)
+  // El historial empieza por debajo del bloque de sensores.
+  const panel = await page.getByTestId('panel-sensores').boundingBox()
+  const historial = await seccion.boundingBox()
+  expect(panel).not.toBeNull()
+  expect(historial).not.toBeNull()
+  expect(historial!.y).toBeGreaterThanOrEqual(panel!.y + panel!.height)
 })
 
-test('D40: «Ver historial» de un cultivo abre la pestaña de historial con ese cultivo', async ({ page }) => {
-  const nombre = `Huerto D40 ${sello()}`
+test('D51: «Ver historial» de un cultivo lleva a Sensores con ese cultivo preseleccionado', async ({ page }) => {
+  const nombre = `Huerto D51 ${sello()}`
   await iniciarSesion(page, cuentaA)
   await crearCultivo(page, nombre)
   await abrirDetalle(page, nombre)
 
-  // El botón del detalle abre la PESTAÑA de historial dentro de Sensores.
   await page.getByTestId('ver-historial').click()
   await expect(page).toHaveURL(/[?&]vista=sensores/)
-  await expect(page).toHaveURL(/[?&]panel=historial/)
-  await expect(page.getByTestId('panel-historial')).toBeVisible()
+  await expect(page).toHaveURL(/[?&]cultivo=/)
+  await expect(page).not.toHaveURL(/panel=/)
+
+  const seccion = page.getByTestId('seccion-historial')
+  await expect(seccion).toBeInViewport()
 
   // El cultivo queda preseleccionado en el filtro del historial.
-  const filtroCultivo = page.getByTestId('panel-historial').locator('select').first()
+  const filtroCultivo = seccion.locator('select').first()
   await expect(filtroCultivo).not.toHaveValue('')
 
   await eliminarCultivo(page, nombre)
 })
 
-test('D40: el panel de historial dibuja las barras y el tooltip da media, mín y máx de la única serie bajo el cursor', async ({ page }) => {
-  const nombre = `Huerto H40 ${sello()}`
-  const nombreSensor = `Sensor H40 ${sello()}`
+test('D51: el historial dibuja las barras y el tooltip da media, mín y máx de la única serie bajo el cursor', async ({ page }) => {
+  const nombre = `Huerto H51 ${sello()}`
+  const nombreSensor = `Sensor H51 ${sello()}`
   await iniciarSesion(page, cuentaA)
 
   try {
@@ -77,8 +70,7 @@ test('D40: el panel de historial dibuja las barras y el tooltip da media, mín y
     await esperarLectura(page, 'temperatura')
 
     await page.getByTestId('nav-sensores').click()
-    await page.getByTestId('pestana-historial').click()
-    await expect(page.getByTestId('panel-historial')).toBeVisible()
+    await expect(page.getByTestId('seccion-historial')).toBeVisible()
 
     // Una barra por serie y día (las lecturas recientes se agregan en cliente
     // hasta que el job de las 03:15 consolida el día).
@@ -127,6 +119,13 @@ test('D40: el panel de historial dibuja las barras y el tooltip da media, mín y
     // Y el título con la fecha sigue presente.
     expect(textoTooltip).toMatch(/\d{4}-\d{2}-\d{2}/)
 
+    // D51: el tooltip no se desliza entre barras (sin transición de transform)
+    // y su contenido aparece con un fade.
+    expect(await tooltip.evaluate((el) => getComputedStyle(el).transition)).not.toContain('transform')
+    expect(await page.locator('.tooltip-historial').evaluate((el) => getComputedStyle(el).animationName)).toBe(
+      'aparecer-tooltip',
+    )
+
     // Fuera de cualquier barra no se informa de nada: el tooltip existe solo
     // para la barra bajo el cursor.
     const area = await page.locator('.recharts-wrapper').boundingBox()
@@ -155,26 +154,16 @@ test('D40: el panel de historial dibuja las barras y el tooltip da media, mín y
 test.describe('en móvil (390×844)', () => {
   test.use({ viewport: { width: 390, height: 844 } })
 
-  test('D40: las pestañas de Sensores caben en 390 px sin desbordar', async ({ page }) => {
+  test('D51: el historial cabe en 390 px sin desbordar la página', async ({ page }) => {
     await iniciarSesion(page, cuentaA)
 
     await page.getByTestId('nav-sensores').click()
-    await expect(page.getByTestId('pestana-historial')).toBeVisible()
+    await expect(page.getByTestId('seccion-historial')).toBeVisible()
 
-    // La barra de pestañas entra entera en el ancho del móvil…
-    const caja = await page.getByTestId('pestana-historial').boundingBox()
-    expect(caja).not.toBeNull()
-    expect(caja!.x + caja!.width).toBeLessThanOrEqual(390)
-
-    // …y la página no genera scroll horizontal.
+    // La página no genera scroll horizontal.
     const desborda = await page.evaluate(
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
     )
     expect(desborda).toBe(false)
-
-    // La pestaña cambia de panel también en móvil.
-    await page.getByTestId('pestana-historial').click()
-    await expect(page.getByTestId('panel-historial')).toBeVisible()
-    await expect(page.getByTestId('panel-sensores')).toHaveCount(0)
   })
 })

@@ -1,6 +1,7 @@
 # Historial y gráficas de mediciones — Plan (borrador, pendiente de aprobación)
 
 > Especificación: `docs/historial-mediciones-spec.md` (aprobada 23/10/2026).
+> **Superado en parte por D51 (24/10/2026):** el historial ya no es una pestaña de Sensores sino un bloque debajo de la lista de sensores, sin `panel` en la URL. Las menciones a pestañas y a `panel=historial` de este documento no aplican.
 
 ## 1. Arquitectura
 

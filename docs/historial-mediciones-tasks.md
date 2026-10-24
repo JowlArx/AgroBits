@@ -2,6 +2,7 @@
 
 > Especificación: `docs/historial-mediciones-spec.md` (aprobada 23/10/2026).
 > Plan: `docs/historial-mediciones-plan.md` (pendiente de aprobación).
+> **Superado en parte por D51 (24/10/2026):** el historial es un bloque debajo de la lista de sensores, no una pestaña; las referencias a `panel=historial` y a las pestañas de este documento no aplican.
 
 ## T-H1 — Migración: tabla `mediciones_diarias` + RLS
 

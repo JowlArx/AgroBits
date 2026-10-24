@@ -25,28 +25,19 @@ type Vista =
   | { tipo: 'detalle'; id: string }
   | { tipo: 'alertas' }
   | { tipo: 'cuenta' }
-  | { tipo: 'sensores'; panel?: 'historial'; cultivoId?: string }
+  | { tipo: 'sensores'; cultivoId?: string }
 
 /**
  * D40 — Traduce la URL a la vista. `cultivos` es la vista por defecto y no
  * deja rastro en la URL (la dirección queda limpia).
  */
-function vistaDesdeParams(
-  vista: string | null,
-  id: string | null,
-  panel: string | null,
-  cultivo: string | null,
-): Vista {
+function vistaDesdeParams(vista: string | null, id: string | null, cultivo: string | null): Vista {
   switch (vista) {
     case 'alertas':
       return { tipo: 'alertas' }
     case 'sensores':
-      // El historial vive dentro de la sección Sensores (pestaña).
-      return {
-        tipo: 'sensores',
-        panel: panel === 'historial' ? 'historial' : undefined,
-        cultivoId: cultivo ?? undefined,
-      }
+      // D51: el historial de mediciones es un bloque de la sección Sensores.
+      return { tipo: 'sensores', cultivoId: cultivo ?? undefined }
     case 'cuenta':
       return { tipo: 'cuenta' }
     case 'nuevo':
@@ -72,7 +63,7 @@ function tituloVista(vista: Vista): string {
     case 'alertas':
       return 'Alertas'
     case 'sensores':
-      return vista.panel === 'historial' ? 'Historial de mediciones' : 'Sensores'
+      return 'Sensores'
     case 'cuenta':
       return 'Mi cuenta'
     default:
@@ -90,9 +81,7 @@ function resumenTopbar(vista: Vista, nCultivos: number, nSensores: number, nAler
     case 'alertas':
       return `${nAlertas} ${nAlertas === 1 ? 'alerta activa' : 'alertas activas'} en el momento`
     case 'sensores':
-      return vista.panel === 'historial'
-        ? 'Resumen diario de lecturas y exportación a Excel'
-        : `${nSensores} ${nSensores === 1 ? 'sensor registrado' : 'sensores registrados'}`
+      return `${nSensores} ${nSensores === 1 ? 'sensor registrado' : 'sensores registrados'}`
     case 'detalle':
       return 'Sensores y últimas mediciones del cultivo'
     case 'nuevo':
@@ -178,22 +167,20 @@ export default function App() {
   const [params, escribirParamsUrl] = useParamsUrl<{
     vista: string | null
     id: string | null
-    panel: string | null
     cultivo: string | null
   }>({
     vista: 'cultivos',
     id: null,
-    panel: null,
     cultivo: null,
   })
   const vista = useMemo<Vista>(
-    () => vistaDesdeParams(params.vista, params.id, params.panel, params.cultivo),
-    [params.vista, params.id, params.panel, params.cultivo],
+    () => vistaDesdeParams(params.vista, params.id, params.cultivo),
+    [params.vista, params.id, params.cultivo],
   )
   const irA = useCallback(
     (nueva: Vista) => {
       if (nueva.tipo === 'lista') {
-        escribirParamsUrl({ vista: null, id: null, panel: null, cultivo: null }, 'push')
+        escribirParamsUrl({ vista: null, id: null, cultivo: null }, 'push')
         return
       }
       if (nueva.tipo === 'sensores') {
@@ -201,7 +188,6 @@ export default function App() {
           {
             vista: 'sensores',
             id: null,
-            panel: nueva.panel ?? null,
             cultivo: nueva.cultivoId ?? null,
           },
           'push',
@@ -210,7 +196,7 @@ export default function App() {
       }
       const id = 'id' in nueva ? nueva.id : null
       escribirParamsUrl(
-        { vista: nueva.tipo, id, panel: null, cultivo: null },
+        { vista: nueva.tipo, id, cultivo: null },
         'push',
       )
     },
@@ -472,20 +458,12 @@ export default function App() {
                 <DetalleCultivo
                   cultivoId={vista.id}
                   onVolver={() => irA({ tipo: 'lista' })}
-                  onVerHistorial={(id: string) =>
-                    irA({ tipo: 'sensores', panel: 'historial', cultivoId: id })
-                  }
+                  onVerHistorial={(id: string) => irA({ tipo: 'sensores', cultivoId: id })}
                 />
               )}
               {vista.tipo === 'alertas' && <Alertas />}
               {vista.tipo === 'sensores' && (
-                <Sensores
-                  panel={vista.panel}
-                  cultivoIdHistorial={vista.cultivoId}
-                  onCambiarPanel={(panel, cultivoId) =>
-                    irA({ tipo: 'sensores', panel, cultivoId })
-                  }
-                />
+                <Sensores cultivoIdHistorial={vista.cultivoId} />
               )}
               {vista.tipo === 'cuenta' && (
                 <Cuenta

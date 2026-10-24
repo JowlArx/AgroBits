@@ -1,14 +1,14 @@
 // D30 — Vista de sensores: lista global de los sensores de la cuenta
 // (nombre, cultivos vinculados, última lectura y selector del color de su
-// línea) y detalle del sensor elegido con sus mediciones INDIVIDUALES
-// (gráfico con su color y tabla completa). El color se persiste en la BD
-// (`sensors.color_linea`, paleta nombrada sin ámbar/rojo por D20) a través
-// de la store de sensores. Presentación sobre stores existentes.
+// línea). «Ver mediciones» despliega el detalle de UN sensor justo debajo de
+// su tarjeta (gráfica y última lectura en texto plano, D51). El color se
+// persiste en la BD (`sensors.color_linea`, paleta nombrada sin ámbar/rojo por
+// D20) a través de la store de sensores. Presentación sobre stores existentes.
 //
-// D40 — El «Historial de mediciones» es una PESTAÑA de esta sección (no una
-// sección propia de la navegación): el panel activo vive en la URL.
+// D40/D51 — El «Historial de mediciones» es un bloque debajo de la lista de
+// sensores, siempre visible: no es una pestaña ni una sección propia.
 
-import { useState, useSyncExternalStore } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import {
   Area,
   CartesianGrid,
@@ -28,18 +28,14 @@ import {
 import { obtenerCultivo, suscribirCultivos } from '../data/storeCultivos'
 import { eliminarMediciones, generarLectura, obtenerMediciones, suscribirMediciones } from '../data/medicionesSimuladas'
 import { cargarAlertas } from '../data/storeAlertas'
-import { COLORES_SENSOR, TIPOS_MEDICION, UNIDADES, type ColorSensor, type TipoMedicion } from '../domain/tipos'
+import { COLORES_SENSOR, TIPOS_MEDICION, UNIDADES, type ColorSensor, type Medicion, type TipoMedicion } from '../domain/tipos'
 import { ETIQUETAS_COLOR_SENSOR, ETIQUETAS_MEDICION, ETIQUETAS_MEDICION_CORTA, VAR_COLOR_SENSOR } from '../data/catalogo'
 import ConfirmacionEnLinea from '../components/ConfirmacionEnLinea'
 import Historial from './Historial'
 
 interface Props {
-  /** Panel activo dentro de la sección Sensores (D40). */
-  panel?: 'historial'
-  /** Cultivo preseleccionado en el panel de historial. */
+  /** Cultivo preseleccionado en el historial (desde «Ver historial» del cultivo). */
   cultivoIdHistorial?: string
-  /** Cambia de panel: la sección escribe el estado en la URL. */
-  onCambiarPanel: (panel?: 'historial', cultivoId?: string) => void
 }
 
 function horaLegible(iso: string): string {
@@ -55,20 +51,32 @@ function horaCorta(iso: string): string {
 }
 
 /** Última lectura del sensor (la más reciente de cualquier tipo). */
-function ultimaLectura(sensorId: string): { medidaEn: string } | undefined {
+function ultimaLectura(sensorId: string): Medicion | undefined {
   const serie = obtenerMediciones(sensorId)
-  let ultima: { medidaEn: string } | undefined
+  let ultima: Medicion | undefined
   for (const medicion of serie) if (!ultima || medicion.medidaEn > ultima.medidaEn) ultima = medicion
   return ultima
 }
 
-export default function Sensores({ panel, cultivoIdHistorial, onCambiarPanel }: Props) {
+/** Última lectura de cada tipo de medición del sensor. */
+function ultimasPorTipo(sensorId: string): Partial<Record<TipoMedicion, Medicion>> {
+  const ultimas: Partial<Record<TipoMedicion, Medicion>> = {}
+  for (const medicion of obtenerMediciones(sensorId)) {
+    const previa = ultimas[medicion.tipo]
+    if (!previa || medicion.medidaEn > previa.medidaEn) ultimas[medicion.tipo] = medicion
+  }
+  return ultimas
+}
+
+export default function Sensores({ cultivoIdHistorial }: Props) {
   const [sensorActivoId, setSensorActivoId] = useState<string | null>(null)
   const [tipoActivo, setTipoActivo] = useState<TipoMedicion>('temperatura')
   const [errorColor, setErrorColor] = useState('')
 
-  // El historial es una pestaña de esta sección, no una sección aparte.
-  const enHistorial = panel === 'historial'
+  // Al venir de «Ver historial» de un cultivo, la vista baja hasta el historial.
+  useEffect(() => {
+    if (cultivoIdHistorial) document.getElementById('historial-mediciones')?.scrollIntoView({ block: 'start' })
+  }, [cultivoIdHistorial])
 
   useSyncExternalStore(suscribirSensores, obtenerSensores)
   useSyncExternalStore(suscribirCultivos, () => obtenerCultivo(sensorActivoId ?? ''))
@@ -110,297 +118,237 @@ export default function Sensores({ panel, cultivoIdHistorial, onCambiarPanel }: 
         .map((m) => ({ medidaEn: m.medidaEn, hora: horaCorta(m.medidaEn), valor: m.valor }))
     : []
 
-  const serieSensor = sensorActivo ? obtenerMediciones(sensorActivo.id) : []
+  const ultimasDelActivo: Partial<Record<TipoMedicion, Medicion>> = sensorActivo
+    ? ultimasPorTipo(sensorActivo.id)
+    : {}
 
   return (
     <section data-testid="vista-sensores" className="vista-sensores">
-      {/* El historial no es una sección de la navegación: es una pestaña
-          dentro de Sensores (D40). El estado vive en la URL. */}
-      <div className="pestanas-seccion" role="tablist" aria-label="Paneles de sensores">
-        <button
-          type="button"
-          role="tab"
-          id="pestana-sensores"
-          className="pestana-seccion"
-          data-testid="pestana-sensores"
-          aria-selected={!enHistorial}
-          aria-controls="panel-sensores"
-          onClick={() => onCambiarPanel(undefined)}
-        >
-          Sensores
-        </button>
-        <button
-          type="button"
-          role="tab"
-          id="pestana-historial"
-          className="pestana-seccion"
-          data-testid="pestana-historial"
-          aria-selected={enHistorial}
-          aria-controls="panel-historial"
-          onClick={() => onCambiarPanel('historial')}
-        >
-          Historial
-        </button>
-      </div>
+      <div className="panel-sensores" data-testid="panel-sensores">
+        <h3>Sensores</h3>
 
-      {enHistorial ? (
-        <div
-          id="panel-historial"
-          role="tabpanel"
-          aria-labelledby="pestana-historial"
-          className="panel-sensores"
-          data-testid="panel-historial"
-        >
-          <Historial cultivoIdInicial={cultivoIdHistorial} />
-        </div>
-      ) : (
-        <div
-          id="panel-sensores"
-          role="tabpanel"
-          aria-labelledby="pestana-sensores"
-          className="panel-sensores"
-          data-testid="panel-sensores"
-        >
-          <h3>Sensores</h3>
-
-          {sensores.length === 0 ? (
-            <p data-testid="sin-sensores-panel" className="estado-vacio">
-              Aún no hay sensores: crea uno en el detalle de un cultivo y aparecerá aquí con sus
-              mediciones.
-            </p>
-          ) : (
-            <ul data-testid="lista-sensores-panel" className="lista-sensores-panel">
-              {sensores.map((sensor) => {
-                const ultima = ultimaLectura(sensor.id)
-                return (
-                  <li key={sensor.id} className="tarjeta-sensor" data-testid="tarjeta-sensor">
-                    <div className="datos-sensor">
-                      <div className="fila-datos-sensor">
-                        <strong className="nombre-sensor-panel">{sensor.nombre}</strong>
-                        {/* D31: la hora de la última lectura, arriba a la derecha. */}
-                        <span className="ultima-lectura-sensor">
-                          {ultima ? (
-                            <>
-                              Últ. lectura:{' '}
-                              <time dateTime={ultima.medidaEn}>{horaLegible(ultima.medidaEn)}</time>
-                            </>
-                          ) : (
-                            'Sin lecturas todavía'
-                          )}
-                        </span>
-                      </div>
-                      <span className="vinculos-sensor">
-                        {sensor.cultivoIds.length === 0
-                          ? 'Sin cultivos vinculados'
-                          : sensor.cultivoIds
-                              .map((id) => obtenerCultivo(id)?.nombre ?? 'Cultivo eliminado')
-                              .join(' · ')}
+        {sensores.length === 0 ? (
+          <p data-testid="sin-sensores-panel" className="estado-vacio">
+            Aún no hay sensores: crea uno en el detalle de un cultivo y aparecerá aquí con sus
+            mediciones.
+          </p>
+        ) : (
+          <ul data-testid="lista-sensores-panel" className="lista-sensores-panel">
+            {sensores.map((sensor) => {
+              const ultima = ultimaLectura(sensor.id)
+              const abierto = sensorActivoId === sensor.id
+              return (
+                <li key={sensor.id} className="tarjeta-sensor" data-testid="tarjeta-sensor">
+                  <div className="datos-sensor">
+                    <div className="fila-datos-sensor">
+                      <strong className="nombre-sensor-panel">{sensor.nombre}</strong>
+                      {/* D31: la hora de la última lectura, arriba a la derecha. */}
+                      <span className="ultima-lectura-sensor">
+                        {ultima ? (
+                          <>
+                            Últ. lectura:{' '}
+                            <time dateTime={ultima.medidaEn}>{horaLegible(ultima.medidaEn)}</time>
+                          </>
+                        ) : (
+                          'Sin lecturas todavía'
+                        )}
                       </span>
                     </div>
+                    <span className="vinculos-sensor">
+                      {sensor.cultivoIds.length === 0
+                        ? 'Sin cultivos vinculados'
+                        : sensor.cultivoIds
+                            .map((id) => obtenerCultivo(id)?.nombre ?? 'Cultivo eliminado')
+                            .join(' · ')}
+                    </span>
+                  </div>
 
-                    <div
-                      className="paleta-colores"
-                      role="group"
-                      aria-label={`Color de la línea de ${sensor.nombre}`}
+                  <div
+                    className="paleta-colores"
+                    role="group"
+                    aria-label={`Color de la línea de ${sensor.nombre}`}
+                  >
+                    {COLORES_SENSOR.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className="muestra-color"
+                        style={{ background: VAR_COLOR_SENSOR[color] }}
+                        data-color={color}
+                        data-testid={`color-${color}`}
+                        aria-label={`${ETIQUETAS_COLOR_SENSOR[color]} — color de ${sensor.nombre}`}
+                        aria-pressed={sensor.colorLinea === color}
+                        title={ETIQUETAS_COLOR_SENSOR[color]}
+                        onClick={() => void cambiarColor(sensor.id, color)}
+                      />
+                    ))}
+                    {/* D35: el color activo se nombra, no solo se insinúa. */}
+                    <span className="nombre-color-sensor">{ETIQUETAS_COLOR_SENSOR[sensor.colorLinea]}</span>
+                  </div>
+
+                  <div className="acciones acciones-tarjeta">
+                    <button
+                      type="button"
+                      onClick={() => setSensorActivoId(abierto ? null : sensor.id)}
+                      aria-expanded={abierto}
                     >
-                      {COLORES_SENSOR.map((color) => (
-                        <button
-                          key={color}
-                          type="button"
-                          className="muestra-color"
-                          style={{ background: VAR_COLOR_SENSOR[color] }}
-                          data-color={color}
-                          data-testid={`color-${color}`}
-                          aria-label={`${ETIQUETAS_COLOR_SENSOR[color]} — color de ${sensor.nombre}`}
-                          aria-pressed={sensor.colorLinea === color}
-                          title={ETIQUETAS_COLOR_SENSOR[color]}
-                          onClick={() => void cambiarColor(sensor.id, color)}
-                        />
-                      ))}
-                      {/* D35: el color activo se nombra, no solo se insinúa. */}
-                      <span className="nombre-color-sensor">{ETIQUETAS_COLOR_SENSOR[sensor.colorLinea]}</span>
-                    </div>
+                      {abierto ? 'Ocultar mediciones' : 'Ver mediciones'}
+                    </button>
+                    <ConfirmacionEnLinea
+                      etiqueta="Eliminar"
+                      pregunta={`¿Eliminar «${sensor.nombre}»?`}
+                      className="btn-peligro"
+                      testId="eliminar-sensor"
+                      onConfirmar={() => void eliminar(sensor.id)}
+                    />
+                  </div>
 
-                    <div className="acciones acciones-tarjeta">
+                  {/* D51: el detalle se despliega justo debajo de SU tarjeta. */}
+                  {sensorActivo && sensorActivo.id === sensor.id && (
+                    <article className="detalle-sensor" data-testid="detalle-sensor">
+                      <header>
+                        <h4>{sensorActivo.nombre}</h4>
+                        <span
+                          className="chip-color"
+                          style={{ background: VAR_COLOR_SENSOR[sensorActivo.colorLinea] }}
+                          aria-hidden="true"
+                        />
+                        <span className="etiqueta">{ETIQUETAS_COLOR_SENSOR[sensorActivo.colorLinea]}</span>
+                      </header>
+
+                      <h5>Evolución</h5>
+                      <div className="pestanas-widget" role="group" aria-label="Tipo de medición a mostrar">
+                        {TIPOS_MEDICION.map((tipo) => (
+                          <button
+                            key={tipo}
+                            type="button"
+                            aria-pressed={tipo === tipoActivo}
+                            onClick={() => setTipoActivo(tipo)}
+                          >
+                            {ETIQUETAS_MEDICION_CORTA[tipo]}
+                          </button>
+                        ))}
+                      </div>
+
+                      {puntosSensor.length === 0 ? (
+                        <p className="estado-vacio" data-testid="sin-lecturas-sensor">
+                          Sin lecturas todavía para “{ETIQUETAS_MEDICION[tipoActivo]}”: genera una lectura para
+                          ver la curva.
+                        </p>
+                      ) : (
+                        <div className="grafico-lineas grafico-sensor">
+                          <ResponsiveContainer width="100%" height="100%">
+                            {/* D31: eje Y alineado con el título + relleno degradado. */}
+                            <ComposedChart data={puntosSensor} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+                              <defs>
+                                <linearGradient id="relleno-sensor-0" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor={VAR_COLOR_SENSOR[sensorActivo.colorLinea]} stopOpacity={0.22} />
+                                  <stop offset="95%" stopColor={VAR_COLOR_SENSOR[sensorActivo.colorLinea]} stopOpacity={0.02} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid stroke="var(--borde)" strokeDasharray="3 3" vertical={false} />
+                              {/* D41: la clave del eje es el instante completo, no la hora
+                                  formateada (misma razón que en el tablero). */}
+                              <XAxis
+                                dataKey="medidaEn"
+                                tickFormatter={(valor: string) => horaCorta(valor)}
+                                stroke="var(--texto-tenue)"
+                                tickLine={false}
+                                axisLine={false}
+                                fontSize={12}
+                              />
+                              <YAxis stroke="var(--texto-tenue)" tickLine={false} axisLine={false} fontSize={12} width={44} />
+                              <Tooltip
+                                /* D41: la etiqueta del tooltip es el instante; se muestra
+                                    como hora legible, no como marca de tiempo cruda. */
+                                labelFormatter={(valor) => horaCorta(String(valor))}
+                                contentStyle={{
+                                  background: 'var(--superficie)',
+                                  border: '1px solid var(--borde)',
+                                  borderRadius: 8,
+                                  color: 'var(--texto)',
+                                  fontFamily: 'var(--fuente-texto)',
+                                }}
+                                formatter={(valor) => [`${valor} ${UNIDADES[tipoActivo]}`, ETIQUETAS_MEDICION[tipoActivo]]}
+                              />
+                              <Area
+                                type="monotone"
+                                dataKey="valor"
+                                /* D41: el relleno no va al tooltip (si no, el sensor
+                                   aparecía dos veces). */
+                                tooltipType="none"
+                                stroke="none"
+                                fill="url(#relleno-sensor-0)"
+                                isAnimationActive={false}
+                              />
+                              <Line
+                                type="monotone"
+                                dataKey="valor"
+                                stroke={VAR_COLOR_SENSOR[sensorActivo.colorLinea]}
+                                strokeWidth={2}
+                                dot={false}
+                                isAnimationActive={false}
+                              />
+                            </ComposedChart>
+                          </ResponsiveContainer>
+                        </div>
+                      )}
+
+                      <h5>Última lectura de cada tipo</h5>
+                      {TIPOS_MEDICION.map((tipo) => {
+                        const medicion = ultimasDelActivo[tipo]
+                        return (
+                          <p key={tipo} data-testid={`ultima-lectura-${tipo}`}>
+                            {ETIQUETAS_MEDICION[tipo]}:{' '}
+                            {medicion ? (
+                              <>
+                                {medicion.valor} {medicion.unidad} ·{' '}
+                                <time dateTime={medicion.medidaEn}>{horaLegible(medicion.medidaEn)}</time>
+                              </>
+                            ) : (
+                              'sin lecturas todavía'
+                            )}
+                          </p>
+                        )
+                      })}
+
                       <button
                         type="button"
-                        onClick={() => setSensorActivoId(sensor.id)}
-                        aria-expanded={sensorActivoId === sensor.id}
-                      >
-                        Ver mediciones
-                      </button>
-                      <ConfirmacionEnLinea
-                        etiqueta="Eliminar"
-                        pregunta={`¿Eliminar «${sensor.nombre}»?`}
-                        className="btn-peligro"
-                        testId="eliminar-sensor"
-                        onConfirmar={() => void eliminar(sensor.id)}
-                      />
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-
-          {errorColor && (
-            <p role="alert" data-testid="error-color">
-              {errorColor}
-            </p>
-          )}
-
-          {sensorActivo && (
-            <article className="detalle-sensor" data-testid="detalle-sensor">
-              <header className="fila-entre">
-                <div>
-                  <h4>{sensorActivo.nombre}</h4>
-                  <span
-                    className="chip-color"
-                    style={{ background: VAR_COLOR_SENSOR[sensorActivo.colorLinea] }}
-                    aria-hidden="true"
-                  />
-                  <span className="etiqueta">{ETIQUETAS_COLOR_SENSOR[sensorActivo.colorLinea]}</span>
-                </div>
-                <button type="button" onClick={() => setSensorActivoId(null)}>
-                  Volver a la lista
-                </button>
-              </header>
-
-              <h5>Evolución</h5>
-              <div className="pestanas-widget" role="group" aria-label="Tipo de medición a mostrar">
-                {TIPOS_MEDICION.map((tipo) => (
-                  <button
-                    key={tipo}
-                    type="button"
-                    aria-pressed={tipo === tipoActivo}
-                    onClick={() => setTipoActivo(tipo)}
-                  >
-                    {ETIQUETAS_MEDICION_CORTA[tipo]}
-                  </button>
-                ))}
-              </div>
-
-              {puntosSensor.length === 0 ? (
-                <p className="estado-vacio" data-testid="sin-lecturas-sensor">
-                  Sin lecturas todavía para “{ETIQUETAS_MEDICION[tipoActivo]}”: genera una lectura para
-                  ver la curva.
-                </p>
-              ) : (
-                <div className="grafico-lineas grafico-sensor">
-                  <ResponsiveContainer width="100%" height="100%">
-                    {/* D31: eje Y alineado con el título + relleno degradado. */}
-                    <ComposedChart data={puntosSensor} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
-                      <defs>
-                        <linearGradient id="relleno-sensor-0" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={VAR_COLOR_SENSOR[sensorActivo.colorLinea]} stopOpacity={0.22} />
-                          <stop offset="95%" stopColor={VAR_COLOR_SENSOR[sensorActivo.colorLinea]} stopOpacity={0.02} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid stroke="var(--borde)" strokeDasharray="3 3" vertical={false} />
-                      {/* D41: la clave del eje es el instante completo, no la hora
-                          formateada (misma razón que en el tablero). */}
-                      <XAxis
-                        dataKey="medidaEn"
-                        tickFormatter={(valor: string) => horaCorta(valor)}
-                        stroke="var(--texto-tenue)"
-                        tickLine={false}
-                        axisLine={false}
-                        fontSize={12}
-                      />
-                      <YAxis stroke="var(--texto-tenue)" tickLine={false} axisLine={false} fontSize={12} width={44} />
-                      <Tooltip
-                        /* D41: la etiqueta del tooltip es el instante; se muestra
-                            como hora legible, no como marca de tiempo cruda. */
-                        labelFormatter={(valor) => horaCorta(String(valor))}
-                        contentStyle={{
-                          background: 'var(--superficie)',
-                          border: '1px solid var(--borde)',
-                          borderRadius: 8,
-                          color: 'var(--texto)',
-                          fontFamily: 'var(--fuente-texto)',
+                        className="btn-primario"
+                        data-testid="simular-lectura-sensor"
+                        onClick={() => {
+                          void (async () => {
+                            await generarLectura(sensorActivo.id)
+                            await cargarAlertas()
+                          })()
                         }}
-                        formatter={(valor) => [`${valor} ${UNIDADES[tipoActivo]}`, ETIQUETAS_MEDICION[tipoActivo]]}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="valor"
-                        /* D41: el relleno no va al tooltip (si no, el sensor
-                           aparecía dos veces). */
-                        tooltipType="none"
-                        stroke="none"
-                        fill="url(#relleno-sensor-0)"
-                        isAnimationActive={false}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="valor"
-                        stroke={VAR_COLOR_SENSOR[sensorActivo.colorLinea]}
-                        strokeWidth={2}
-                        dot={false}
-                        isAnimationActive={false}
-                      />
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
+                      >
+                        Generar lectura simulada
+                      </button>
 
-              <h5>Mediciones individuales</h5>
-              <button
-                type="button"
-                className="btn-primario"
-                data-testid="simular-lectura-sensor"
-                onClick={() => {
-                  void (async () => {
-                    await generarLectura(sensorActivo.id)
-                    await cargarAlertas()
-                  })()
-                }}
-              >
-                Generar lectura simulada
-              </button>
-
-              <table className="tabla-umbrales" data-testid="tabla-mediciones-sensor">
-                <thead>
-                  <tr>
-                    <th scope="col">Medición</th>
-                    <th scope="col">Valor</th>
-                    <th scope="col">Hora</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {serieSensor.length === 0 ? (
-                    <tr>
-                      <td colSpan={3}>
-                        <span className="sin-datos">Sin lecturas registradas todavía.</span>
-                      </td>
-                    </tr>
-                  ) : (
-                    [...serieSensor]
-                      .reverse()
-                      .slice(0, 20)
-                      .map((medicion, indice) => (
-                        <tr key={`${medicion.medidaEn}-${medicion.tipo}-${indice}`}>
-                          <td>{ETIQUETAS_MEDICION[medicion.tipo]}</td>
-                          <td>
-                            {medicion.valor} {medicion.unidad}
-                          </td>
-                          <td>
-                            <time dateTime={medicion.medidaEn}>{horaLegible(medicion.medidaEn)}</time>
-                          </td>
-                        </tr>
-                      ))
+                      <p className="aviso">
+                        El color de la línea se guarda en el sensor y se aplica también al tablero principal.
+                        Las lecturas simuladas se generan cada 5 minutos mientras la sesión está abierta.
+                      </p>
+                    </article>
                   )}
-                </tbody>
-              </table>
+                </li>
+              )
+            })}
+          </ul>
+        )}
 
-              <p className="aviso">
-                El color de la línea se guarda en el sensor y se aplica también al tablero principal.
-                Las lecturas simuladas se generan cada 5 minutos mientras la sesión está abierta.
-              </p>
-            </article>
-          )}
-        </div>
-      )}
+        {errorColor && (
+          <p role="alert" data-testid="error-color">
+            {errorColor}
+          </p>
+        )}
+      </div>
+
+      {/* D51: el historial va debajo de la lista de sensores, siempre visible. */}
+      <div id="historial-mediciones" className="historial-sensores" data-testid="seccion-historial">
+        <Historial cultivoIdInicial={cultivoIdHistorial} />
+      </div>
     </section>
   )
 }

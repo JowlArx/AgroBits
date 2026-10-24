@@ -54,3 +54,52 @@ test('sensor dispara lectura automática con formato R-08, unidades R-09 y persi
 
   await eliminarCultivo(page, nombre)
 })
+
+test('D51: «Ver mediciones» despliega el detalle bajo su tarjeta con la última lectura de cada tipo', async ({ page }) => {
+  const nombre = `Huerto D51 ${sello()}`
+  const nombreSensor = `Sensor D51 ${sello()}`
+  await iniciarSesion(page, cuentaA)
+
+  try {
+    await crearCultivo(page, nombre)
+    await abrirDetalle(page, nombre)
+    await crearSensor(page, nombreSensor)
+    await esperarLectura(page, 'temperatura')
+
+    await page.getByTestId('nav-sensores').click()
+    const tarjeta = page.getByTestId('tarjeta-sensor').filter({ hasText: nombreSensor })
+    await tarjeta.getByRole('button', { name: 'Ver mediciones' }).click()
+
+    // El detalle vive dentro de la tarjeta de ESE sensor, no al final de la lista.
+    const detalle = tarjeta.getByTestId('detalle-sensor')
+    await expect(detalle).toBeVisible()
+    await expect(tarjeta.getByRole('button', { name: 'Ocultar mediciones' })).toBeVisible()
+
+    // La última lectura de cada tipo, en texto plano (sin tabla de mediciones).
+    const unidadPorTipo: Record<string, string> = {
+      temperatura: '°C',
+      humedad_suelo: '% vol',
+      humedad_ambiental: '% HR',
+      luminosidad: 'lux',
+    }
+    for (const [tipo, unidad] of Object.entries(unidadPorTipo)) {
+      await expect(detalle.getByTestId(`ultima-lectura-${tipo}`)).toContainText(unidad)
+    }
+    await expect(detalle.getByRole('table')).toHaveCount(0)
+
+    // Ocultar cierra el detalle y devuelve el botón a «Ver mediciones».
+    await tarjeta.getByRole('button', { name: 'Ocultar mediciones' }).click()
+    await expect(detalle).toHaveCount(0)
+    await expect(tarjeta.getByRole('button', { name: 'Ver mediciones' })).toBeVisible()
+  } finally {
+    // Limpieza: sensor (con sus lecturas) y cultivo, aunque el test falle.
+    await page.getByTestId('nav-sensores').click()
+    const tarjetaLimpieza = page.getByTestId('tarjeta-sensor').filter({ hasText: nombreSensor })
+    if ((await tarjetaLimpieza.count()) > 0) {
+      await tarjetaLimpieza.getByRole('button', { name: 'Eliminar' }).click()
+      await tarjetaLimpieza.getByRole('button', { name: 'Sí', exact: true }).click()
+      await expect(tarjetaLimpieza).toHaveCount(0, { timeout: 30_000 })
+    }
+    await eliminarCultivo(page, nombre)
+  }
+})

@@ -198,7 +198,7 @@ export default function Historial({
     const entradas = payload as EntradaTooltip[]
     const diaActivo = puntos[Number(activeIndex)]?.dia
     return (
-      <div style={{ background: 'var(--superficie)', border: '1px solid var(--borde)', borderRadius: 6, padding: '0.5rem 0.7rem', fontSize: 12 }}>
+      <div className="tooltip-historial" style={{ background: 'var(--superficie)', border: '1px solid var(--borde)', borderRadius: 6, padding: '0.5rem 0.7rem', fontSize: 12 }}>
         <div style={{ fontWeight: 600, marginBottom: 4 }}>
           {entradas[0]?.payload?.dia ?? diaActivo ?? label ?? ''}
         </div>
@@ -291,8 +291,9 @@ export default function Historial({
               <XAxis dataKey="dia" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               {/* `shared={false}`: el tooltip describe solo la barra bajo el
-                  cursor, no todas las series del día. */}
-              <Tooltip content={renderTooltip} shared={false} />
+                  cursor, no todas las series del día. `isAnimationActive={false}`
+                  (D51): no se desliza entre barras; el fade va en su contenido. */}
+              <Tooltip content={renderTooltip} shared={false} isAnimationActive={false} />
               {series.map((s) => (
                 <Bar key={s.nombre} dataKey={s.nombre} fill={s.color} name={s.nombre} />
               ))}

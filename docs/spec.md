@@ -7,6 +7,8 @@ v2 — Redactada tras la sesión de clarificación del 16/10/2026 (decisiones D1
 
 v3 — **Enmienda aprobada por el humano el 19/10/2026** (decisión D27): R-01 ampliado con confirmación de contraseña y con teléfono y localidad obligatorios (catálogo provincia×ciudad), para registrar el entorno de trabajo de los sensores como base de la futura capa analítica.
 
+v5 — **Enmienda aprobada por el humano el 24/10/2026** (decisión D51): R-06 añade el AC4. El detalle de un sensor («Ver mediciones») se despliega justo debajo de su tarjeta y muestra la última lectura de cada tipo de medición en texto plano; el historial de mediciones pasa a un bloque debajo de la lista de sensores.
+
 Nota sobre fases: según la decisión D6, el proyecto avanza en dos fases (Fase 1: interfaz con datos simulados y auth provisional; Fase 2: backend, base de datos y auth real). Salvo indicación, los criterios de aceptación se verifican en la fase en la que el requisito queda implementado. Los criterios marcados como **[F2]** no pueden verificarse en la Fase 1, y su equivalente provisional en Fase 1 no se acepta como validación definitiva.
 
 ## 1. Problema
@@ -76,6 +78,7 @@ Cada cultivo define un par [mín, máx] por tipo de medición (decisión D3: val
   - AC1: el usuario puede crear un sensor con nombre y verlo listado.
   - AC2: el usuario puede asociar un sensor propio a un cultivo propio y la asociación se refleja en la visualización de mediciones.
   - AC3: el modelo de datos permite múltiples asociaciones sensor↔cultivo (N–N) aunque la interfaz del MVP asocie el sensor a un cultivo (decisión D5).
+  - AC4: al pulsar «Ver mediciones» de un sensor, su detalle se despliega justo debajo de su tarjeta. Solo un sensor puede estar desplegado a la vez. El detalle muestra la gráfica de evolución y la última lectura de cada tipo de medición en texto plano; las lecturas anteriores se consultan en el historial de mediciones, debajo de la lista de sensores.
 - **R-07** El sistema debe impedir que un sensor se asocie a un cultivo perteneciente a otro usuario.
   - AC1: la operación de asociación sobre un cultivo ajeno es rechazada (prueba negativa de autorización). **[F2]**
 
