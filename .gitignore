@@ -15,7 +15,7 @@ web/test-results/
 web/playwright-report/
 
 # Artefactos de herramientas de asistencia (ajenas al proyecto)
-web/.taste-skill/
+.taste-skill/
 
 # Dependencia del MCP de la herramienta en la raíz del repo (el proyecto usa web/package.json)
 /package.json
