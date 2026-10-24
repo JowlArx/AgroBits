@@ -165,7 +165,7 @@ export default function Alertas() {
   return (
     <section>
       <header className="fila-entre">
-        <h2>Alertas</h2>
+        <h3>Alertas</h3>
         <p className="contador-alertas" data-testid="contador-alertas">
           <strong className={activas.length > 0 ? 'contador-activas' : undefined}>
             {activas.length} {activas.length === 1 ? 'activa' : 'activas'}

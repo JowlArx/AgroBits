@@ -48,6 +48,23 @@ h3 {
   margin-top: var(--espacio-5);
 }
 
+/* D40 — El topbar de la vista aporta el h2; dentro de una vista los
+   subniveles (detalle de un sensor, rótulo de un bloque) bajan a h4/h5
+   con la escala tipográfica del sistema. */
+h4 {
+  font-family: var(--fuente-titulo);
+  font-size: var(--t-md);
+  font-weight: 700;
+  margin: 0 0 var(--espacio-2);
+}
+
+h5 {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--texto-tenue);
+  margin: 0 0 var(--espacio-1);
+}
+
 /* D35 — Micro-movimiento: un solo patrón (exponencial suave) y solo donde
    responde a una acción. `prefers-reduced-motion` lo desactiva abajo.
    D40: esta regla es la única fuente de la transición; la regla `button` de
@@ -1717,6 +1734,52 @@ button.boton-google:hover {
 }
 
 /* Vista de sensores */
+
+/* Pestañas de panel dentro de Sensores (Sensores / Historial): la misma
+   lengua visual que los botones de sección — la activa en verde, con peso
+   700 y el subrayado de 2 px (D40). */
+.pestanas-seccion {
+  display: flex;
+  gap: var(--espacio-1);
+  margin-bottom: var(--espacio-4);
+  border-bottom: 1px solid var(--borde);
+  /* En un ancho corto las pestañas se desplazan en vez de desbordar. */
+  overflow-x: auto;
+}
+
+.pestana-seccion {
+  border-color: transparent;
+  border-bottom-width: 2px;
+  border-radius: 0;
+  /* El subrayado de la pestaña se apoya en la regla del contenedor. */
+  margin-bottom: -1px;
+  background: transparent;
+  color: var(--texto-tenue);
+  font-size: var(--t-sm);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.pestana-seccion:hover {
+  color: var(--texto);
+  border-bottom-color: var(--borde-input);
+}
+
+.pestana-seccion[aria-selected='true'] {
+  color: var(--marca);
+  font-weight: 700;
+  border-bottom-color: var(--marca);
+}
+
+.panel-sensores {
+  min-width: 0;
+}
+
+/* El rótulo del panel va pegado a las pestañas (sin el margen del h3). */
+.panel-sensores > h3 {
+  margin-top: 0;
+}
+
 .lista-sensores-panel {
   list-style: none;
   margin: 0;
@@ -2257,7 +2320,7 @@ button.boton-google:hover {
 }
 /* Historial de mediciones (T-H5). */
 .historial { display: flex; flex-direction: column; gap: 1rem; }
-.historial-cabecera h2 { margin: 0; }
+.historial-cabecera h3 { margin: 0; }
 .historial-descripcion { margin: 0.25rem 0 0; opacity: 0.75; font-size: 0.9rem; }
 .historial-filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
 .historial-filtros label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; }

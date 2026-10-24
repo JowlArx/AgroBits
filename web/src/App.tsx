@@ -5,7 +5,6 @@ import DetalleCultivo from './pages/DetalleCultivo'
 import Alertas from './pages/Alertas'
 import Autenticacion from './pages/Autenticacion'
 import Cuenta from './pages/Cuenta'
-import Historial from './pages/Historial'
 import Sensores from './pages/Sensores'
 import PanelLateral from './components/PanelLateral'
 import Tablero from './components/Tablero'
@@ -25,24 +24,31 @@ type Vista =
   | { tipo: 'editar'; id: string }
   | { tipo: 'detalle'; id: string }
   | { tipo: 'alertas' }
-  | { tipo: 'sensores' }
   | { tipo: 'cuenta' }
-  | { tipo: 'historial'; cultivoId?: string }
+  | { tipo: 'sensores'; panel?: 'historial'; cultivoId?: string }
 
 /**
  * D40 — Traduce la URL a la vista. `cultivos` es la vista por defecto y no
  * deja rastro en la URL (la dirección queda limpia).
  */
-function vistaDesdeParams(vista: string | null, id: string | null): Vista {
+function vistaDesdeParams(
+  vista: string | null,
+  id: string | null,
+  panel: string | null,
+  cultivo: string | null,
+): Vista {
   switch (vista) {
     case 'alertas':
       return { tipo: 'alertas' }
     case 'sensores':
-      return { tipo: 'sensores' }
+      // El historial vive dentro de la sección Sensores (pestaña).
+      return {
+        tipo: 'sensores',
+        panel: panel === 'historial' ? 'historial' : undefined,
+        cultivoId: cultivo ?? undefined,
+      }
     case 'cuenta':
       return { tipo: 'cuenta' }
-    case 'historial':
-      return { tipo: 'historial', cultivoId: id ?? undefined }
     case 'nuevo':
       return { tipo: 'nuevo' }
     case 'editar':
@@ -66,11 +72,9 @@ function tituloVista(vista: Vista): string {
     case 'alertas':
       return 'Alertas'
     case 'sensores':
-      return 'Sensores'
+      return vista.panel === 'historial' ? 'Historial de mediciones' : 'Sensores'
     case 'cuenta':
       return 'Mi cuenta'
-    case 'historial':
-      return 'Historial de mediciones'
     default:
       return 'Cultivos'
   }
@@ -86,7 +90,9 @@ function resumenTopbar(vista: Vista, nCultivos: number, nSensores: number, nAler
     case 'alertas':
       return `${nAlertas} ${nAlertas === 1 ? 'alerta activa' : 'alertas activas'} en el momento`
     case 'sensores':
-      return `${nSensores} ${nSensores === 1 ? 'sensor registrado' : 'sensores registrados'}`
+      return vista.panel === 'historial'
+        ? 'Resumen diario de lecturas y exportación a Excel'
+        : `${nSensores} ${nSensores === 1 ? 'sensor registrado' : 'sensores registrados'}`
     case 'detalle':
       return 'Sensores y últimas mediciones del cultivo'
     case 'nuevo':
@@ -132,13 +138,6 @@ const iconoSensor = (
   </svg>
 )
 
-const iconoHistorial = (
-  <svg className="icono-nav" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
-    <path d="M2.5 3.5h11M2.5 7h11M2.5 10.5h7" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    <path d="M11 10.5l1.5 1.5 2.5-3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-)
-
 const iconoCuenta = (
   <svg className="icono-nav" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
     <circle cx="8" cy="5.5" r="2.8" fill="none" stroke="currentColor" strokeWidth="1.4" />
@@ -150,12 +149,10 @@ const iconoCuenta = (
 function MenuCuenta({
   onCerrar,
   onCuenta,
-  onHistorial,
   onSalir,
 }: {
   onCerrar: () => void
   onCuenta: () => void
-  onHistorial: () => void
   onSalir: () => void
 }) {
   return (
@@ -165,9 +162,6 @@ function MenuCuenta({
       <div className="menu-usuario" role="menu">
         <button type="button" role="menuitem" data-testid="nav-cuenta" onClick={onCuenta}>
           Mi cuenta
-        </button>
-        <button type="button" role="menuitem" data-testid="nav-historial-menu" onClick={onHistorial}>
-          Historial
         </button>
         <button type="button" role="menuitem" data-testid="cerrar-sesion" onClick={onSalir}>
           Cerrar sesión
@@ -181,19 +175,42 @@ export default function App() {
   // D40: la vista vive en la URL (`?vista=alertas`, `?vista=detalle&id=…`).
   // Cada navegación entra en el historial → el «atrás» del navegador (y el
   // del móvil) vuelve a la sección anterior, y cada vista es enlazable.
-  const [params, escribirParamsUrl] = useParamsUrl<{ vista: string | null; id: string | null }>({
+  const [params, escribirParamsUrl] = useParamsUrl<{
+    vista: string | null
+    id: string | null
+    panel: string | null
+    cultivo: string | null
+  }>({
     vista: 'cultivos',
     id: null,
+    panel: null,
+    cultivo: null,
   })
   const vista = useMemo<Vista>(
-    () => vistaDesdeParams(params.vista, params.id),
-    [params.vista, params.id],
+    () => vistaDesdeParams(params.vista, params.id, params.panel, params.cultivo),
+    [params.vista, params.id, params.panel, params.cultivo],
   )
   const irA = useCallback(
     (nueva: Vista) => {
+      if (nueva.tipo === 'lista') {
+        escribirParamsUrl({ vista: null, id: null, panel: null, cultivo: null }, 'push')
+        return
+      }
+      if (nueva.tipo === 'sensores') {
+        escribirParamsUrl(
+          {
+            vista: 'sensores',
+            id: null,
+            panel: nueva.panel ?? null,
+            cultivo: nueva.cultivoId ?? null,
+          },
+          'push',
+        )
+        return
+      }
       const id = 'id' in nueva ? nueva.id : null
       escribirParamsUrl(
-        nueva.tipo === 'lista' ? { vista: null, id: null } : { vista: nueva.tipo, id },
+        { vista: nueva.tipo, id, panel: null, cultivo: null },
         'push',
       )
     },
@@ -305,20 +322,6 @@ export default function App() {
         {iconoSensor}
         {compacto ? <span className="etiqueta-seccion">Sensores</span> : 'Sensores'}
       </button>
-      <button
-        type="button"
-        className={compacto ? 'boton-seccion boton-seccion-compacto' : 'boton-seccion'}
-        data-testid="nav-historial"
-        aria-label="Historial"
-        aria-current={vista.tipo === 'historial' ? 'page' : undefined}
-        onClick={() => {
-          setMenuAbierto(false)
-          irA({ tipo: 'historial' })
-        }}
-      >
-        {iconoHistorial}
-        {compacto ? <span className="etiqueta-seccion">Historial</span> : 'Historial'}
-      </button>
     </>
   )
 
@@ -386,10 +389,6 @@ export default function App() {
                       setMenuAbierto(false)
                       irA({ tipo: 'cuenta' })
                     }}
-                    onHistorial={() => {
-                      setMenuAbierto(false)
-                      irA({ tipo: 'historial' })
-                    }}
                     onSalir={() => {
                       setMenuAbierto(false)
                       void cerrarSesion()
@@ -436,10 +435,6 @@ export default function App() {
                     setMenuAbierto(false)
                     irA({ tipo: 'cuenta' })
                   }}
-                  onHistorial={() => {
-                    setMenuAbierto(false)
-                    irA({ tipo: 'historial' })
-                  }}
                   onSalir={() => {
                     setMenuAbierto(false)
                     void cerrarSesion()
@@ -476,11 +471,21 @@ export default function App() {
               <DetalleCultivo
                 cultivoId={vista.id}
                 onVolver={() => irA({ tipo: 'lista' })}
-                onVerHistorial={(id: string) => irA({ tipo: 'historial', cultivoId: id })}
+                onVerHistorial={(id: string) =>
+                  irA({ tipo: 'sensores', panel: 'historial', cultivoId: id })
+                }
               />
             )}
             {vista.tipo === 'alertas' && <Alertas />}
-            {vista.tipo === 'sensores' && <Sensores />}
+            {vista.tipo === 'sensores' && (
+              <Sensores
+                panel={vista.panel}
+                cultivoIdHistorial={vista.cultivoId}
+                onCambiarPanel={(panel, cultivoId) =>
+                  irA({ tipo: 'sensores', panel, cultivoId })
+                }
+              />
+            )}
             {vista.tipo === 'cuenta' && (
               <Cuenta
                 email={sesion.usuario.email}
@@ -490,9 +495,6 @@ export default function App() {
                 alertasActivas={alertasActivas}
                 onVerCultivo={(id) => irA({ tipo: 'detalle', id })}
               />
-            )}
-            {vista.tipo === 'historial' && (
-              <Historial cultivoIdInicial={vista.cultivoId} />
             )}
           </main>
           {vista.tipo === 'lista' && <PanelLateral onVerAlertas={() => irA({ tipo: 'alertas' })} />}

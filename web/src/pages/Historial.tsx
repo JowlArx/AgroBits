@@ -202,7 +202,8 @@ export default function Historial({
   return (
     <section className="historial">
       <header className="historial-cabecera">
-        <h2>Historial de mediciones</h2>
+        {/* El topbar ya pone el título de la vista (D40): aquí va un h3. */}
+        <h3>Historial de mediciones</h3>
         <p className="historial-descripcion">
           Resumen diario (media, mínimo y máximo) y exportación a Excel de las lecturas registradas.
         </p>
