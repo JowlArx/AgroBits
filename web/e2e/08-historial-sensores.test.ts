@@ -81,6 +81,10 @@ test('D51: el historial dibuja las barras y el tooltip da media, mín y máx de 
     // Con datos, la exportación a Excel está habilitada.
     await expect(page.getByRole('button', { name: 'Exportar a Excel' })).toBeEnabled()
 
+    // D51: el historial va debajo de la lista de sensores; sin este scroll las
+    // barras quedan fuera del viewport y el ratón no llega a ellas.
+    await page.getByTestId('seccion-historial').scrollIntoViewIfNeeded()
+
     // El tooltip de la barra da la media y el rango (mín/máx) de esa serie.
     // Se apunta a la barra más alta con el ratón (hover por coordenadas: las
     // barras pequeñas quedan bajo el eje y el eje intercepta el puntero). Se

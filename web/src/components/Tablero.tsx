@@ -8,7 +8,6 @@
 
 import { useSyncExternalStore, useState } from 'react'
 import {
-  Area,
   CartesianGrid,
   ComposedChart,
   Legend,
@@ -68,35 +67,6 @@ function sensorDeUltimaLectura(sensores: readonly Sensor[]): string | null {
   return mejor
 }
 
-/** Iconos SVG en línea de las tarjetas KPI (currentColor, sin assets). */
-const iconoHoja = (
-  <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
-    <path d="M2.5 13.5C2.5 8 6 3.5 13.5 2.5c1 7.5-3.5 11-9 11z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-    <path d="M3 13c3-4 6-6.5 8.5-8" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-  </svg>
-)
-
-const iconoSensor = (
-  <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
-    <circle cx="8" cy="11" r="1.6" fill="currentColor" />
-    <path d="M4.8 8.2a4.5 4.5 0 0 1 6.4 0" fill="none" stroke="currentColor" strokeWidth="1.4" />
-    <path d="M2.6 5.9a7.6 7.6 0 0 1 10.8 0" fill="none" stroke="currentColor" strokeWidth="1.4" />
-  </svg>
-)
-
-const iconoCampana = (
-  <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
-    <path d="M8 2a4 4 0 0 0-4 4v2.5L3 11h10l-1-2.5V6a4 4 0 0 0-4-4z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-    <path d="M6.5 13a1.5 1.5 0 0 0 3 0" fill="none" stroke="currentColor" strokeWidth="1.4" />
-  </svg>
-)
-
-const iconoPulso = (
-  <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
-    <path d="M1.5 8.5h3l1.5-4 2.5 7 1.75-3h4.25" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-)
-
 interface PuntoGrafico {
   medidaEn: string
   hora: string
@@ -150,16 +120,14 @@ function serieDe(
   return { puntos, series }
 }
 
-function TarjetaKpi({ etiqueta, valor, nota, alerta, icono }: {
+function TarjetaKpi({ etiqueta, valor, nota, alerta }: {
   etiqueta: string
   valor: number
   nota: string
   alerta?: boolean
-  icono: React.ReactNode
 }) {
   return (
     <li className={alerta ? 'tarjeta-kpi kpi-alerta' : 'tarjeta-kpi'}>
-      <span className="kpi-icono" aria-hidden="true">{icono}</span>
       <span className="kpi-etiqueta">{etiqueta}</span>
       <strong className="kpi-valor">{valor}</strong>
       <span className="kpi-nota">{nota}</span>
@@ -207,16 +175,15 @@ export default function Tablero() {
   return (
     <section className="tablero" aria-label="Resumen del panel">
       <ul className="fila-kpis">
-        <TarjetaKpi etiqueta="Cultivos" valor={cultivos.length} nota="registrados" icono={iconoHoja} />
-        <TarjetaKpi etiqueta="Sensores" valor={sensores.length} nota="conectados" icono={iconoSensor} />
+        <TarjetaKpi etiqueta="Cultivos" valor={cultivos.length} nota="registrados" />
+        <TarjetaKpi etiqueta="Sensores" valor={sensores.length} nota="conectados" />
         <TarjetaKpi
           etiqueta="Alertas activas"
           valor={activas}
           nota={activas > 0 ? 'requieren atención' : 'todo en rango'}
           alerta={activas > 0}
-          icono={iconoCampana}
         />
-        <TarjetaKpi etiqueta="Lecturas" valor={lecturas} nota="registradas" icono={iconoPulso} />
+        <TarjetaKpi etiqueta="Lecturas" valor={lecturas} nota="registradas" />
       </ul>
 
       <div className="fila-widgets">
@@ -250,17 +217,10 @@ export default function Tablero() {
               {/* D40: el alto lo pone el CSS (`.grafico-lineas`), no un punto de
                   corte medido en JavaScript: dos fuentes para lo mismo. */}
               <ResponsiveContainer width="100%" height="100%">
-                {/* D31/D33: ComposedChart con relleno degradado bajo cada
-                    línea; margen izquierdo 0 porque el eje Y mide 44 px. */}
+                {/* D31/D33: margen izquierdo 0 porque el eje Y mide 44 px. Sin
+                    relleno: con varias series, los tintes se superponían y
+                    oscurecían una franja (DESIGN.md, «La regla del relleno plano»). */}
                 <ComposedChart data={puntos} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
-                  <defs>
-                    {series.map((serie, indice) => (
-                      <linearGradient key={serie.nombre} id={`relleno-tablero-${indice}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={serie.color} stopOpacity={0.22} />
-                        <stop offset="95%" stopColor={serie.color} stopOpacity={0.02} />
-                      </linearGradient>
-                    ))}
-                  </defs>
                   <CartesianGrid stroke="var(--borde)" strokeDasharray="3 3" vertical={false} />
                   {/* D41: la clave del eje es el instante completo, no la hora
                       formateada: dos lecturas del mismo segundo producían
@@ -289,22 +249,6 @@ export default function Tablero() {
                     formatter={(valor) => [`${valor} ${UNIDADES[tipoActivo]}`, ETIQUETAS_MEDICION[tipoActivo]]}
                   />
                   {series.length > 1 && <Legend wrapperStyle={{ fontSize: 12 }} />}
-                  {series.map((serie, indice) => (
-                    <Area
-                      key={`${serie.nombre}-area`}
-                      type="monotone"
-                      dataKey={serie.nombre}
-                      /* D41: el relleno es decoración de la línea: sin esto,
-                         Recharts lo añade también a la leyenda y al tooltip, y
-                         cada sensor aparecía dos veces (una con el color de la
-                         línea y otra con el degradado pálido). */
-                      legendType="none"
-                      tooltipType="none"
-                      stroke="none"
-                      fill={`url(#relleno-tablero-${indice})`}
-                      isAnimationActive={false}
-                    />
-                  ))}
                   {series.map((serie) => (
                     <Line
                       key={serie.nombre}

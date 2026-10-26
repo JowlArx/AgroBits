@@ -223,7 +223,11 @@ Tres duraciones y dos curvas, definidas en `web/src/tokens.css`:
 - **Esquinas suaves y contenidas:** controles con 8px (`--radio-sm`), tarjetas y superficies con 10px (`--radio`), píldoras y círculos con 999px. Nada de esquinas vivas y nada de esquinas totalmente redondeadas en bloques de texto.
 - **Bordes finos:** un píxel de `--borde` separa superficies; los controles de formulario usan `--borde-input` para que su contorno se lea aunque no tengan contenido.
 - **Iconografía:** SVG en línea dibujados con `currentColor` y el mismo grosor de trazo (1.4–1.6); nunca tipografía de iconos, nunca emoji. Los iconos de sección son abstractos (hoja, campana, sensor) y los de cultivo, específicos (tomate, lechuga, albahaca, pimiento, brotes).
-- **Gráficos con relleno degradado** bajo la línea y eje Y con margen fijo de 44px, para que las curvas no «salten» de margen al cambiar de escala.
+- **Gráficos sin degradado.** Un gráfico de una sola serie puede llevar un relleno plano del color de la serie al 12% bajo la línea; con varias series no lleva relleno. El eje Y tiene un margen fijo de 44px, para que las curvas no «salten» de margen al cambiar de escala.
+
+### Named Rules
+
+**La regla del relleno plano.** Un relleno es un tono, nunca un degradado, y nunca se superpone a otro: si hay varias series, la superficie se queda sin relleno y cada línea se lee sola.
 
 ## Components
 
@@ -246,7 +250,12 @@ Tres duraciones y dos curvas, definidas en `web/src/tokens.css`:
 - **Background:** superficie blanca sobre papel, con borde de 1px.
 - **Shadow Strategy:** ninguna; solo las superficies flotantes llevan sombra.
 - **Internal Padding:** 16px en tarjetas de contenido, 12px en tarjetas de KPI.
-- **Regla estructural:** el icono cuelga a la izquierda y **todo el texto de la tarjeta comparte la misma arista vertical** (título, valor y nota alineados); una tarjeta que crece no estira a sus vecinas.
+- **Regla estructural:** **todo el texto de la tarjeta comparte la misma arista vertical** (título, valor y nota alineados); una tarjeta que crece no estira a sus vecinas.
+- **Tarjetas KPI:** sin icono. Etiqueta arriba, cifra en la voz sans (`--fuente-texto`, con cifras tabulares) y nota debajo, todo en una arista. El icono en círculo tintado quedó retirado (antes D31/D36): decoración que no aporta dato.
+
+### Estado vacío
+
+Un bloque de superficie blanca sobre el papel, sin contorno discontinuo. Dice qué falta y, si hay algo que hacer, qué hacer. Se separa del papel por tono, no por línea.
 
 ### Inputs / Fields
 

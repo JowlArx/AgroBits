@@ -461,9 +461,9 @@ legend {
   gap: var(--espacio-3);
 }
 
-/* Estados vacíos: invitación a actuar, no decoración */
+/* Estados vacíos: un bloque de tono, sin contorno discontinuo (DESIGN.md) */
 .estado-vacio {
-  border: 1px dashed var(--borde-input);
+  background: var(--superficie);
   border-radius: var(--radio);
   padding: var(--espacio-4);
   color: var(--texto-tenue);
@@ -1240,10 +1240,10 @@ button.boton-google:hover {
   border: 1px solid var(--borde);
   border-radius: var(--radio);
   padding: var(--espacio-3);
-  /* D36: el icono cuelga a la izquierda y TODO el texto (título, valor y
-     nota) comparte la misma arista vertical: nada queda desalineado. */
+  /* D36: todo el texto (etiqueta, valor y nota) comparte una sola arista
+     vertical. Sin icono: la etiqueta basta (DESIGN.md, «Tarjetas KPI»). */
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto auto;
   column-gap: var(--espacio-2);
   row-gap: var(--espacio-1);
@@ -1251,23 +1251,8 @@ button.boton-google:hover {
   min-width: 0;
 }
 
-/* D31: cabecera del KPI con icono (SVG en línea, currentColor). */
-.kpi-icono {
-  grid-column: 1;
-  grid-row: 1;
-  align-self: center;
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 1.6rem;
-  height: 1.6rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--marca) 12%, var(--superficie));
-  color: var(--marca);
-}
-
 .kpi-etiqueta {
-  grid-column: 2;
+  grid-column: 1;
   grid-row: 1;
   align-self: center;
   font-size: 0.85rem;
@@ -1278,16 +1263,17 @@ button.boton-google:hover {
 }
 
 .kpi-valor {
-  grid-column: 2;
+  grid-column: 1;
   grid-row: 2;
-  font-family: var(--fuente-titulo);
+  /* DESIGN.md, «La regla del cuaderno»: una cifra es dato, va en la voz sans. */
+  font-family: var(--fuente-texto);
   font-size: 1.5rem;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
 
 .kpi-nota {
-  grid-column: 2;
+  grid-column: 1;
   grid-row: 3;
   font-size: 0.8rem;
   color: var(--texto-tenue);
@@ -2294,34 +2280,9 @@ button.boton-google:hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  /* D36: en móvil el texto sigue alineado a la izquierda, como en escritorio. */
   .tarjeta-kpi {
-    aspect-ratio: 1;
-    /* D36: en móvil el bloque se centra entero (icono encima del texto). */
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto auto auto;
-    place-content: center;
-    text-align: center;
-  }
-
-  .kpi-icono {
-    grid-column: 1;
-    grid-row: 1;
-    justify-self: center;
-  }
-
-  .kpi-etiqueta {
-    grid-column: 1;
-    grid-row: 2;
-  }
-
-  .kpi-valor {
-    grid-column: 1;
-    grid-row: 3;
-  }
-
-  .kpi-nota {
-    grid-column: 1;
-    grid-row: 4;
+    align-content: start;
   }
 }
 

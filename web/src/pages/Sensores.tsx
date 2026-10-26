@@ -238,14 +238,8 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
                       ) : (
                         <div className="grafico-lineas grafico-sensor">
                           <ResponsiveContainer width="100%" height="100%">
-                            {/* D31: eje Y alineado con el título + relleno degradado. */}
+                            {/* D31: eje Y alineado con el título + relleno plano (DESIGN.md). */}
                             <ComposedChart data={puntosSensor} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
-                              <defs>
-                                <linearGradient id="relleno-sensor-0" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor={VAR_COLOR_SENSOR[sensorActivo.colorLinea]} stopOpacity={0.22} />
-                                  <stop offset="95%" stopColor={VAR_COLOR_SENSOR[sensorActivo.colorLinea]} stopOpacity={0.02} />
-                                </linearGradient>
-                              </defs>
                               <CartesianGrid stroke="var(--borde)" strokeDasharray="3 3" vertical={false} />
                               {/* D41: la clave del eje es el instante completo, no la hora
                                   formateada (misma razón que en el tablero). */}
@@ -278,7 +272,8 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
                                    aparecía dos veces). */
                                 tooltipType="none"
                                 stroke="none"
-                                fill="url(#relleno-sensor-0)"
+                                fill={VAR_COLOR_SENSOR[sensorActivo.colorLinea]}
+                                fillOpacity={0.12}
                                 isAnimationActive={false}
                               />
                               <Line
