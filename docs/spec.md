@@ -133,7 +133,7 @@ Estos elementos no deben aparecer en tareas del MVP salvo aprobación explícita
 
 ## 8. Preguntas abiertas (restantes tras la clarificación)
 
-- Retención de `measurements`: ¿durante cuánto tiempo se conservan las mediciones y cuándo se agregan o archivan? (Posponible a Fase 2; no bloquea el modelo de datos porque `measured_at` queda indexado desde el inicio.) *Frecuencia del simulador ya decidida: 1 lectura cada 5 minutos por sensor (D15).*
+- Retención de `measurements`: **decidida el 26/10/2026** (ver MEMORY, D54): crudas 30 días; resumen diario (`mediciones_diarias`) sin límite. *Frecuencia del simulador ya decidida: 1 lectura cada 5 minutos por sensor (D15).*
 - ¿Qué cultivos incluye el catálogo inicial y con qué fuentes se justifican sus umbrales? (Se debe documentar que son referencias orientativas.)
 - ¿Qué localidades incluye la semilla del catálogo provincia×ciudad del registro (D27) y con qué fuente se justifican? (Semilla inicial: provincias argentinas + localidades de referencia; ampliable por migraciones. Riesgo asumido: si la localidad de un usuario no está en la semilla, no podrá registrarse.)
 - ¿Se mantienen "otros perfiles de usuario" además de huerta doméstica y pequeño cultivo, o se elimina de los usuarios objetivo?

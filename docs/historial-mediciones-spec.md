@@ -42,7 +42,7 @@ El usuario puede descargar un archivo `.xlsx` con todos los datos crudos del ran
 
 ### R-H4 — Retención y agregación (BD)
 
-Las mediciones crudas se conservan 30 días; los agregados diarios se conservan indefinidamente.
+Las mediciones crudas se conservan 30 días; los agregados diarios se conservan indefinidamente. **Aprobado por JowlArx el 26/10/2026**; el resto de este documento sigue como borrador.
 
 - **AC1:** Existe tabla `mediciones_diarias` con `(sensor_id, tipo, dia, valor_medio, valor_min, valor_max, n)` y RLS por dueño del sensor.
 - **AC2:** Job diario agrega las mediciones del día anterior en `mediciones_diarias`.

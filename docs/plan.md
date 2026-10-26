@@ -50,7 +50,7 @@ Reglas de dominio (en `domain/`, puras y unitarias):
 - Validación de umbrales: `min < max` por tipo (R-05).
 - Evaluación de alerta: `valor < min || valor > max` ⇒ fuera de rango (R-13).
 
-Pendiente hasta Fase 2 (no bloquea el diseño): frecuencia de retención/agregación de `measurements`.
+Retención de `measurements` decidida el 26/10/2026 (MEMORY, D54): crudas 30 días; resumen diario sin límite.
 
 ## 4. Estrategia de seguridad
 
@@ -103,7 +103,7 @@ M5. Post-MVP: historial, ESP32, compartir sensores (fuera de alcance actual)
 | Límites del tier gratuito | Medio | Frecuencia de 5 min/sensor (D15) y revisión mensual de consumo |
 | Lock-in de Supabase | Medio-bajo | Postgres estándar con exportación; la UI solo depende de una capa de datos intercambiable |
 | Complejidad de aprender RLS + stack a la vez | Medio | Alternativa (requiere aprobación): API propia mínima — pero contradice D8 |
-| Crecimiento de `measurements` | Medio | Definir retención en Fase 2 antes de datos reales prolongados |
+| Crecimiento de `measurements` | Medio | Retención decidida el 26/10/2026 (MEMORY, D54) |
 | Cambios de UI posteriores a invertir en backend | Bajo | Secuencia M3 → revisión humana → M4 minimiza el retrabajo |
 
 ## 8. Criterios de aprobación de este plan
