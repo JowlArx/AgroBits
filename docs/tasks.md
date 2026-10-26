@@ -1,6 +1,6 @@
 # AgroBits — Tareas
 
-Estado: **desglose M2 propuesto el 16/10/2026 — pendiente de aprobación humana.**
+Estado: **desglose M2 aprobado el 17/10/2026 (ver MEMORY.md).**
 Generado a partir de `docs/plan.md` (aprobado, M1) y trazado a `docs/spec.md` v2 (aprobado, M0).
 
 Reglas:

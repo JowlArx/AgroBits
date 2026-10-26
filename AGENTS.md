@@ -8,16 +8,20 @@ El proyecto se desarrollará mediante Spec-Driven Development (SDD), con supervi
 
 ## 2. Estado actual
 
-El proyecto se está iniciando desde cero.
-
-Todavía no hay una arquitectura técnica aprobada ni una implementación autorizada.
+El proyecto está en implementación y validación. Los hitos M0–M5 están aprobados. El estado detallado, las decisiones y las pendientes están en MEMORY.md y en docs/.
 
 ## 3. Stack y estructura
 
 - Sistema de desarrollo: Windows y gitBash.
 - Herramienta de agentes: OpenCode.
 - Control de versiones: Git.
-- Tecnologías de aplicación, base de datos y firmware: pendientes de evaluación y aprobación.
+- Aplicación web: Vite, React y TypeScript (D12).
+- Base de datos y autenticación: Supabase (Postgres con RLS, Auth y API PostgREST) (D13).
+- Gráficos: Recharts (D29).
+- Pruebas: Playwright (D21) y Vitest (según docs/plan.md).
+- Hosting y despliegue: Vercel, plan Hobby (D23).
+- Tipografía: Fraunces y Atkinson Hyperlegible vía Google Fonts (D20).
+- Firmware (ESP32): pendiente; fuera del MVP (D1).
 - Documentación del proyecto: carpeta `docs/`.
 
 No asumir tecnologías o versiones que no hayan sido aprobadas explícitamente.
@@ -102,4 +106,4 @@ Antes de dar una tarea por terminada:
 
 ## 10. Regla de inicio
 
-Durante la fase de preparación, trabajar únicamente sobre el entorno y la documentación inicial. No generar código de la aplicación, firmware ni integraciones funcionales hasta que se aprueben las especificaciones y el plan correspondiente.
+Antes de implementar una funcionalidad, sus requisitos y criterios de aceptación deben estar aprobados en docs/spec.md, y su plan y tareas en docs/plan.md y docs/tasks.md. El firmware y las integraciones con sensores siguen fuera de alcance hasta su aprobación (ESP32: post-MVP).
