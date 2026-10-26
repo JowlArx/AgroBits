@@ -1679,26 +1679,10 @@ button.boton-google:hover {
   }
 }
 
-/* Movimiento: entrada de la cabecera y de cada vista, y respuesta al puntero */
+/* Movimiento: sin entrada de vista (D53); solo respuesta al puntero y a los estados */
 
-.cabecera-panel,
-.vista-entrada {
-  animation: entrar-bloque var(--duracion-lenta) var(--ease-salida) both;
-}
-
-.vista-entrada > section + section {
+.vista-contenido > section + section {
   margin-top: var(--espacio-5);
-}
-
-@keyframes entrar-bloque {
-  from {
-    opacity: 0;
-    transform: translateY(var(--desplazamiento-entrada));
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
 }
 
 .tarjeta-kpi,
@@ -1739,11 +1723,6 @@ button.boton-google:hover {
      ganaba a `button:active`). */
   .boton-seccion-compacto:active {
     transform: none;
-  }
-
-  .cabecera-panel,
-  .vista-entrada {
-    animation: none;
   }
 
   .tarjeta-kpi:hover,

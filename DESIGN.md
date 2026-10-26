@@ -200,23 +200,23 @@ El sistema es **plano por defecto**: las superficies se apoyan en el papel con u
 
 ## Motion
 
-Tres duraciones y dos curvas, definidas en `web/src/tokens.css`:
+Dos duraciones y dos curvas, definidas en `web/src/tokens.css`:
 
-- `--duracion-rapida` (120ms): respuesta a la pulsación.
+- `--duracion-rapida` (120ms): respuesta a la pulsación y aparición de tooltips.
 - `--duracion-normal` (200ms): elevación de tarjetas y cambios de borde.
-- `--duracion-lenta` (320ms): entrada de la cabecera y de cada vista, con `--desplazamiento-entrada` (12px).
-- `--ease-salida` (`cubic-bezier(0.2, 0.8, 0.2, 1)`): entradas y respuesta al puntero.
+- `--ease-salida` (`cubic-bezier(0.2, 0.8, 0.2, 1)`): respuesta al puntero.
 - `--ease-estado` (`cubic-bezier(0.45, 0, 0.55, 1)`): cambios de estado.
 
 `--transicion` (140ms) se mantiene para los controles existentes.
 
-- **Entrada:** al cambiar de vista, la cabecera y el contenido suben 12px y aparecen en 320ms.
+- **Sin entrada de vista:** al cambiar de sección el contenido aparece de inmediato; no sube ni se desvanece. En una herramienta de uso repetido, la animación de entrada retrasa lo que la persona busca.
 - **Puntero:** las tarjetas de cultivo y los KPI se elevan 2px al pasar el ratón y se reducen a 98% al pulsar.
 - **Botones:** al pulsar se reducen a 98%; ya no se desplazan 1px.
+- **Tooltips:** aparecen con un fundido corto, sin desplazamiento.
 
 ### Named Rules
 
-**La regla del movimiento con función.** El movimiento explica un cambio de vista, de estado o de puntero; nunca decora. Con `prefers-reduced-motion: reduce` las duraciones pasan a 0,01ms (los cambios de estado son instantáneos), desaparecen la entrada y la elevación al pasar el puntero, y los botones no se escalan.
+**La regla del movimiento con función.** El movimiento responde a una acción del usuario o confirma un estado; nunca decora ni anima la llegada a una vista. Con `prefers-reduced-motion: reduce` las duraciones pasan a 0,01ms (los cambios de estado son instantáneos), desaparece la elevación al pasar el puntero, y los botones no se escalan.
 
 ## Shapes
 
@@ -224,6 +224,7 @@ Tres duraciones y dos curvas, definidas en `web/src/tokens.css`:
 - **Bordes finos:** un píxel de `--borde` separa superficies; los controles de formulario usan `--borde-input` para que su contorno se lea aunque no tengan contenido.
 - **Iconografía:** SVG en línea dibujados con `currentColor` y el mismo grosor de trazo (1.4–1.6); nunca tipografía de iconos, nunca emoji. Los iconos de sección son abstractos (hoja, campana, sensor) y los de cultivo, específicos (tomate, lechuga, albahaca, pimiento, brotes).
 - **Gráficos sin degradado.** Un gráfico de una sola serie puede llevar un relleno plano del color de la serie al 12% bajo la línea; con varias series no lleva relleno. El eje Y tiene un margen fijo de 44px, para que las curvas no «salten» de margen al cambiar de escala.
+- **Líneas rectas entre lecturas.** Cada lectura se une con un segmento recto. Una curva suave inventa valores entre dos mediciones que no existen. (Prueba en curso: pendiente de validación visual.)
 
 ### Named Rules
 

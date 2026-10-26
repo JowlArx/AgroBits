@@ -252,7 +252,7 @@ export default function Tablero() {
                   {series.map((serie) => (
                     <Line
                       key={serie.nombre}
-                      type="monotone"
+                      type="linear"
                       dataKey={serie.nombre}
                       /* D45: une los huecos de una ventana sin lectura. */
                       connectNulls

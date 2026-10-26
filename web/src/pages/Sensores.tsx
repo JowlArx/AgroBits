@@ -266,7 +266,7 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
                                 formatter={(valor) => [`${valor} ${UNIDADES[tipoActivo]}`, ETIQUETAS_MEDICION[tipoActivo]]}
                               />
                               <Area
-                                type="monotone"
+                                type="linear"
                                 dataKey="valor"
                                 /* D41: el relleno no va al tooltip (si no, el sensor
                                    aparecía dos veces). */
@@ -277,7 +277,7 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
                                 isAnimationActive={false}
                               />
                               <Line
-                                type="monotone"
+                                type="linear"
                                 dataKey="valor"
                                 stroke={VAR_COLOR_SENSOR[sensorActivo.colorLinea]}
                                 strokeWidth={2}

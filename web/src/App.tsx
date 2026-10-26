@@ -433,7 +433,7 @@ export default function App() {
 
         <div className={vista.tipo === 'lista' ? 'cuerpo con-panel' : 'cuerpo'}>
           <main id="contenido">
-            <div key={vista.tipo} className="vista-entrada">
+            <div className="vista-contenido">
               {vista.tipo === 'lista' && (
                 <>
                   <Tablero />
