@@ -61,7 +61,7 @@ El resultado para el usuario: no un panel de números, sino «tu cultivo está f
 - Stack (ya determinado por el código existente): Vite + React + TypeScript, Supabase (Postgres + Auth + RLS + API generada), Recharts, hosting en Vercel; Vitest + Testing Library para unit, Playwright para E2E.
 - Seguridad: autorización por fila con `user_id` + RLS en todas las tablas de negocio; ninguna regla de acceso público indiscriminado; las claves solo viven en `web/.env.local` (gitignored) y en las variables de entorno de Vercel, nunca en el repositorio.
 - Coste: ~0 €/mes (Supabase free tier, Vercel Hobby).
-- Fuera de alcance: notificaciones externas, historial y retención de mediciones, sensores compartidos, suscripciones, riego automático, app móvil.
+- Fuera de alcance: notificaciones externas, sensores compartidos, suscripciones, riego automático, app móvil.
 - Próximo bloque decidido: **hardware y firmware ESP32** (el generador simulado queda como sustituto mientras no exista sensor). El protocolo de comunicación sigue sin definirse.
 - Hechos de producto explícitamente sin decidir: fuentes que justifiquen los umbrales del catálogo; fuentes y ampliación de la semilla de `localidades`; formato concreto de handoff entre roles de agente; protocolo ESP32.
 

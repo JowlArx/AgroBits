@@ -123,7 +123,7 @@ Cada cultivo define un par [mín, máx] por tipo de medición (decisión D3: val
 
 ## 7. Fuera de alcance inicial (decisión D1 y D5, aprobadas)
 
-- Historial y gráficas de mediciones (post-MVP; exige política de retención).
+- Historial y gráficas de mediciones: incorporado en Fase 2 (política de retención en MEMORY, D54).
 - Hardware y firmware ESP32 (post-MVP, tras validar con simulación).
 - Compartir sensores entre usuarios (post-MVP; el modelo de datos ya lo soporta).
 - Notificaciones externas (email, push) — solo alertas dentro de la aplicación.
