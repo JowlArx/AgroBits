@@ -10,7 +10,7 @@
 | Humedad relativa | FAO (manual técnico) y extensión universitaria | Pendiente |
 | pH del suelo | Extensión universitaria (Universidad de Florida, IFAS) | Pendiente |
 | Humedad del suelo | FAO-56 (riego), según tipo de suelo | Pendiente |
-| Luminosidad | Pendiente de decidir (lux o DLI) | Pendiente |
+| Luminosidad | lux medido (BH1750) + DLI estimado (1 µmol/m²/s ≈ 54 lx); validación local pendiente | Implementado en la app el 27/10/2026 |
 | Validación local | INTA o agrónomo | Pendiente |
 
 ## Procedencia de los datos de temperatura
@@ -76,3 +76,52 @@ Los valores actuales se parecen al óptimo de EcoCrop, pero no tienen cita. Hay 
 - Varias especies comparten registro (zapallitos y calabacín; zapallo anco y plomo; acelga y remolacha). La base no distingue esas variedades.
 - Los frutales se describen por clima de crecimiento. La base no contempla heladas ni floración; hay que revisarlos con fuente local.
 - Los valores son de un modelo climático global. Un cultivo en invernadero o con riego puede tener rangos distintos.
+
+## pH y luz natural (FAO EcoCrop, misma base y método que la tabla de temperatura)
+
+pH: `PHOPMN`–`PHOPMX` (óptimo) y `PHMIN`–`PHMAX` (absoluto). La luz de EcoCrop es una categoría descriptiva de demanda de sol, no un umbral de sensor; se copia en texto tal cual.
+
+| Cultivo | pH óptimo | pH absoluto | Luz natural (EcoCrop) | EcoPortCode |
+|---|---|---|---|---|
+| Lechuga | 6–7 | 4.2–7.5 | cielos despejados | 1313 |
+| Acelga | 6–7 | 5.5–7.5 | muy brillante – sombra ligera | 514 |
+| Remolacha | 6–7 | 5.5–7.5 | muy brillante – sombra ligera | 514 |
+| Espinaca | 6–7.5 | 5.3–8.3 | muy brillante – cielos despejados | 1997 |
+| Rúcula | 7–8 | 6–8.5 | muy brillante – cielos despejados | 5794 |
+| Radicheta | 6–7.5 | 4.5–8.3 | muy brillante – cielos despejados | 694 |
+| Achicoria | 6.5–7.8 | 5.3–8.5 | cielos despejados | 693 |
+| Perejil | 6–7.5 | 5.3–8.3 | cielos despejados – cielos nublados | 1661 |
+| Cebolla de verdeo | 6.6–7.4 | 5.5–8.5 | cielos despejados | 365 |
+| Cilantro | 5.5–7.5 | 4–8 | cielos despejados | 784 |
+| Tomate | 5.5–6.8 | 5–7.5 | cielos despejados | 1379 |
+| Pimiento | 5.5–6.8 | 4.5–7 | muy brillante | 618 |
+| Zapallito de tronco | 5.5–6.8 | 4.5–8.3 | muy brillante | 821 |
+| Calabacín | 5.5–6.8 | 4.5–8.3 | muy brillante | 821 |
+| Zapallo anco / Coquena | 5.5–7.5 | 5–8.5 | muy brillante | 819 |
+| Zapallo plomo | 5.5–7.5 | 5–8.5 | muy brillante | 819 |
+| Zapallo cabutiá | 5.5–7.5 | 4.5–8.3 | cielos despejados | 820 |
+| Berenjena | 5.5–6.8 | 4.3–8.5 | muy brillante | 1965 |
+| Zanahoria | 5.8–6.8 | 4.2–8.7 | cielos despejados – cielos nublados | 871 |
+| Cebolla | 6–7 | 4.3–8.3 | cielos despejados – muy brillante | 364 |
+| Ajo | 6–6.6 | 5–8.5 | cielos despejados | 367 |
+| Rábano | 6–7 | 4.3–8.3 | cielos despejados | 1839 |
+| Frutilla | 6–6.8 | 4.5–8.2 | muy brillante – cielos despejados | 1112 |
+| Orégano | 5.5–7 | 4.5–8.7 | muy brillante | 2369 |
+| Romero | 6–7.5 | 4.5–8.7 | muy brillante | 9326 |
+| Tomillo | 5.5–6.5 | 4.5–8 | muy brillante | 2441 |
+| Albahaca | 6–7 | 4.3–8.2 | muy brillante | 1547 |
+| Menta | sin registro confiable | — | — | — |
+| Ciruelo | 5.5–6.1 | 4.5–7.4 | muy brillante | 16203 |
+| Duraznero | 5.5–6.3 | 4.5–7.5 | muy brillante | 1796 |
+| Higuera | 6–7 | 4.3–8.6 | muy brillante – sombra ligera | 1071 |
+| Manzano | 6–7 | 4.5–8 | muy brillante – cielos despejados | 1407 |
+| Naranjo (cítricos) | 5–6 | 4–8.3 | muy brillante | 720 |
+| Limonero (cítricos) | 6.5–7 | 5.5–8 | muy brillante | 714 |
+
+Nota: el pH del suelo real depende de la extracción de la muestra (sólido saturado). Estos rangos son de referencia, no medibles con el sensor propuesto directamente en tierra.
+
+## DLI estimado
+
+- El valor medido sigue siendo lux (BH1750). La app calcula el **DLI estimado** del día (mol/m²/día) con 1 µmol/m²/s ≈ 54 lx y muestra el valor en el tooltip del historial para luminosidad.
+- Límites confirmados con la hoja de datos del BH1750: satura en 65.535 lx; su respuesta sigue la visión humana, así que la conversión es una aproximación de sol y no vale bajo LED.
+- El LDR queda descartado para DLI (no lineal ni calibrado); solo sirve como indicador día/noche.
