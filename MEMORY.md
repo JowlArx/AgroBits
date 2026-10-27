@@ -106,12 +106,13 @@ Higiene del proyecto (17/10/2026):
 - **D55 — Decisiones de alcance (27/10/2026, aprobadas por JowlArx):** (a) se mantiene la semilla actual de localidades; el proyecto toma General Pico como base; (b) se mantienen los «otros perfiles de usuario»; (c) se aprueba la especificación del historial (`docs/historial-mediciones-spec.md`).
 - **D56 — Fuentes del catálogo de cultivos (27/10/2026, aprobada por JowlArx):** temperatura y lluvia, FAO EcoCrop (GAEZ v4); humedad relativa, FAO y extensión universitaria; pH, extensión universitaria; humedad del suelo, FAO-56; validación local, INTA o agrónomo. Borrador de temperatura en `docs/catalogo-cultivos-fuentes.md`.
 - **D57 — Luz y pH (27/10/2026):** (a) DLI estimado aprobado por JowlArx: implementado en `web/src/domain/luz.ts` y mostrado en el tooltip del historial (series de luminosidad), con lux seguido siendo el valor medido. Conversión 1 µmol/m²/s ≈ 54 lx, aproximación de sol; el BH1750 satura en 65.535 lx y el LDR queda descartado para DLI. Verificado con Vitest (3/3 en el módulo; 187 en total), `tsc --noEmit` y Playwright e2e 08 (4/4). (b) pH: sin medición en el MVP; se extrajeron los rangos de pH de FAO EcoCrop (`docs/catalogo-cultivos-fuentes.md`). Sensor propuesto: postergado por decisión de JowlArx el 27/10/2026; se continúa sin sensor de pH.
+- **D58 — Rangos de grupo aportados por JowlArx (27/10/2026):** HR, humedad de suelo (% de capacidad de campo), DLI y temperaturas óptimas por grupo, registrados en `docs/catalogo-cultivos-fuentes.md`. Confirmación bibliográfica pendiente; los grupos 2 y 4 habrá que partirlos por cultivo. Aprobado que la app calcule el umbral de humedad del suelo con `p` y `Zr` (FAO-56) y el tipo de suelo declarado; la banda de grupo vale como respaldo.
 - Revisión visual de D51–D53 aprobada por JowlArx el 26/10/2026.
 - Revisión visual de D31, D35, D48 y D49 aprobada por JowlArx el 26/10/2026.
 
 ## Decisiones pendientes
 
-- Catálogo de cultivos: temperatura extraída (`docs/catalogo-cultivos-fuentes.md`); faltan humedad relativa, pH, humedad del suelo y luz, y la validación local.
+- Catálogo de cultivos: temperatura y humedad del suelo extraídas (FAO), pH de EcoCrop, HR y DLI por grupos aportados por JowlArx (D58). Falta validación local y la carga en la base.
 - Formato concreto de handoff entre agentes especializados (D11).
 - Protocolo de comunicación del ESP32 (post-MVP).
 ## Próximo objetivo

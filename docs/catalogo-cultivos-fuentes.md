@@ -7,9 +7,9 @@
 | Variable | Fuente | Estado |
 |---|---|---|
 | Temperatura y lluvia | FAO EcoCrop, vía portal GAEZ v4 (https://gaez.fao.org/pages/ecocrop) | Extraída (esta tabla) |
-| Humedad relativa | FAO (manual técnico) y extensión universitaria | Pendiente |
+| Humedad relativa | Aportada por JowlArx (rangos de grupo; D58) | Registrada; confirmación bibliográfica pendiente |
 | pH del suelo | Extensión universitaria (Universidad de Florida, IFAS) | Pendiente |
-| Humedad del suelo | FAO-56 (Tablas 19 y 22) | Extraída (esta document) |
+| Humedad del suelo | FAO-56 (Tablas 19 y 22) | Extraída (esta document); banda de grupo aportada por JowlArx (D58) |
 | Luminosidad | lux medido (BH1750) + DLI estimado (1 µmol/m²/s ≈ 54 lx); validación local pendiente | Implementado en la app el 27/10/2026 |
 | Validación local | INTA o agrónomo | Pendiente |
 
@@ -168,6 +168,32 @@ PAW de la tabla 19 (agua disponible, mm por metro de suelo), tal como aparece en
 Ejemplo trabajado (tomate en suelo limo, del ejemplo 36 de FAO-56): TAW = 170 × 0.8 = 136 mm; RAW = 0.40 × 136 = 54 mm; con θ_CC = 0.32 y Zr = 0.8, θ_alerta ≈ 0.25 m³/m³ (25 % vol).
 
 Ajustes del capítulo 8: con ETc alta el p baja 10–25 %, y con ETc baja sube hasta +20 %; en arenas el p sube 5–10 % y en arcillas baja 5–10 %.
+
+## Rangos de grupo aportados por JowlArx (27/10/2026)
+
+Fuente directa: valores aportados por JowlArx. Son rango por grupo: la confirmación bibliográfica por cultivo queda pendiente.
+
+Regla de resolución aprobada (JowlArx, «Si»): la app calcula el umbral de humedad del suelo con `p` y `Zr` (FAO-56) y el tipo de suelo declarado por el usuario. Cuando el usuario no declara suelo, se usa la banda de grupo de esta sección.
+
+| Grupo | Temp. óptima °C | HR % | Humedad de suelo (% de Capacidad de Campo) | DLI mol/m²/día |
+|---|---|---|---|---|
+| 1. Hoja (lechuga, acelga, espinaca, rúcula, radicheta, achicoria, perejil, cebolla de verdeo, cilantro) | 15–22 | 60–70 | 70–80 | 14–20 |
+| 2. Fruto (tomate, pimiento, zapallito, calabacín, zapallos, berenjena) | 20–30 día / 15–18 noche | 50–65 | 60–75 | 22–30+ |
+| 3. Raíz, tallo y bulbo (zanahoria, remolacha, cebolla, ajo, rábano) | 15–22 | 50–65 | 55–70 | 15–22 |
+| 4. Frutilla y aromáticas (frutilla, orégano, romero, tomillo, albahaca, menta) | 18–25 | 40–75 | 50–80 | 18–25 |
+| 5. Frutales (ciruelo, duraznero, higuera, manzano) | 15–28 (ciclo activo) | 50–70 | 60–75 | 22–35 |
+
+Notas técnicas tal como las aportó JowlArx:
+- Hoja: sobre 28 °C afecta la calidad de la hoja (espigado). Humedades extremas prolongadas favorecen mildiu. Riegos frecuentes y superficiales.
+- Fruto: sensible a heladas; por debajo de 12 °C se detiene el crecimiento. HR baja durante polinización y maduración (botrytis). Altibajos hídricos en tomate: pudrición apical (pecho negro).
+- Raíz/bulbo: suelo húmedo sin encharcar. Suspender el riego cerca de la cosecha de cebolla y ajo para el curado.
+- Frutilla/aromáticas: grupo mixto — frutilla y menta exigen humedad alta, romero y tomillo prefieren aire seco y suelo bien drenado.
+- Frutales: necesitan acumulado de horas de frío (menores a 7 °C) para romper la dormancia. El exceso de HR en primavera favorece torque y monilia. Riego profundo.
+
+Observaciones de integración:
+- Los grupos 2 y 4 tienen necesidades internamente contradictorias (mentas/frutilla contra romero/tomillo); habrá que partir los grupos por cultivo.
+- Los DLI por grupo reemplazan a los umbrales de lux al pasar el catálogo a DLI.
+- El «% de Capacidad de Campo» se traduce a % volumétrico con la formula del capítulo FAO-56 de este documento.
 
 ## DLI estimado
 
