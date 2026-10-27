@@ -17,6 +17,7 @@ import type { Medicion } from '../domain/tipos'
 import type { TipoMedicion } from '../domain/tipos'
 import { TIPOS_MEDICION } from '../domain/tipos'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
+import { dliEstimado } from '../domain/luz'
 
 function useCultivos() {
   return useSyncExternalStore(suscribirCultivos, obtenerCultivos, obtenerCultivos)
@@ -107,7 +108,7 @@ export default function Historial({
     }
   }, [sensoresObjetivo, desde, hasta, tipo])
 
-  const { puntos, series, detalles } = useMemo(() => {
+  const { puntos, series, detalles, dliPorDiaSerie } = useMemo(() => {
     const colores = ['#2563eb', '#16a34a', '#dc2626', '#0d9488', '#ea580c', '#0891b2']
     const cubiertas = new Set(agregados.map((a) => `${a.sensorId}|${a.tipo}|${a.dia}`))
     const todos: AgregadoDiario[] = [...agregados]
@@ -144,6 +145,21 @@ export default function Historial({
     }
     const series = [...seriesMap.values()]
 
+    // DLI estimado (solo luminosidad) por día y serie, desde lecturas crudas
+    // en memoria. Un día con pocas lecturas da un DLI parcial (subestimado).
+    const luzPorDiaSerie = new Map<string, { value: number }[]>()
+    for (const m of rawMediciones) {
+      if (m.tipo !== 'luminosidad') continue
+      const nombre = seriesMap.get(`${m.sensorId}|${m.tipo}`)?.nombre
+      if (!nombre) continue
+      const clave = `${m.medidaEn.slice(0, 10)}|${nombre}`
+      const g = luzPorDiaSerie.get(clave) ?? []
+      g.push({ value: m.valor })
+      luzPorDiaSerie.set(clave, g)
+    }
+    const dliPorDiaSerie = new Map<string, number>()
+    for (const [clave, lecturas] of luzPorDiaSerie) dliPorDiaSerie.set(clave, dliEstimado(lecturas))
+
     const porDia = new Map<string, FilaBarra>()
     const detalles = new Map<string, { media: number; min: number; max: number; n: number }>()
     for (const a of todos) {
@@ -155,7 +171,7 @@ export default function Historial({
       detalles.set(`${a.dia}|${serie.nombre}`, { media: a.valorMedio, min: a.valorMin, max: a.valorMax, n: a.n })
     }
     const puntos = [...porDia.values()].sort((a, b) => String(a.dia).localeCompare(String(b.dia)))
-    return { puntos, series, detalles }
+    return { puntos, series, detalles, dliPorDiaSerie }
   }, [agregados, rawMediciones, sensores, tipo])
 
   const exportar = useCallback(async () => {
@@ -210,6 +226,9 @@ export default function Historial({
             <div key={nombre} style={{ color: entry.color, marginBottom: 2 }}>
               {nombre}: media {(entry.value ?? 0).toFixed(1)}
               {det ? ` · mín ${det.min.toFixed(1)} · máx ${det.max.toFixed(1)} (n=${det.n})` : ''}
+              {dliPorDiaSerie.has(`${dia}|${nombre}`)
+                ? ` · DLI ${dliPorDiaSerie.get(`${dia}|${nombre}`)!.toFixed(1)} mol/m²/día`
+                : ''}
             </div>
           )
         })}
