@@ -109,10 +109,11 @@ Higiene del proyecto (17/10/2026):
 - **D58 — Rangos de grupo aportados por JowlArx (27/10/2026):** HR, humedad de suelo (% de capacidad de campo), DLI y temperaturas óptimas por grupo, registrados en `docs/catalogo-cultivos-fuentes.md`. Confirmación bibliográfica pendiente; los grupos 2 y 4 habrá que partirlos por cultivo. Aprobado que la app calcule el umbral de humedad del suelo con `p` y `Zr` (FAO-56) y el tipo de suelo declarado; la banda de grupo vale como respaldo.
 - Revisión visual de D51–D53 aprobada por JowlArx el 26/10/2026.
 - Revisión visual de D31, D35, D48 y D49 aprobada por JowlArx el 26/10/2026.
+- **D59 — Carga del catálogo de cultivos (27/10/2026, aprobada y aplicada por JowlArx):** `supabase/migrations/20261027000001_catalogo_semilla.sql`: tabla `crop_type_perfil` con 33 cultivos (p, Zr, banda en % de CC, DLI de referencia y fuente); 58 filas nuevas de temperatura y HR en el catálogo (29 cultivos nuevos); reemplazo de la temperatura de los 4 cultivos existentes por los valores de EcoCrop, activado («Actívalo ahora»). Cítricos: HR 50–70, suelo 65–80 % de CC y DLI 25–35+ (JowlArx). Lectura pública para anon y authenticated, igual que el catálogo. Verificado en la base: 33 perfiles, temperatura actualizada y política confirmada.
 
 ## Decisiones pendientes
 
-- Catálogo de cultivos: temperatura y humedad del suelo extraídas (FAO), pH de EcoCrop, HR y DLI por grupos aportados por JowlArx (D58). Partición de los grupos 2 y 4 aprobada por JowlArx. Falta migración de semilla, migración de lux a DLI, validación local (celdas [propuesto]) y R-11.
+- Catálogo de cultivos: semilla cargada (D59). Pendiente: subir los umbrales de humedad del suelo calculados con `p`/`Zr` más el suelo del usuario a la app, migrar lux a DLI en base y simulador, validar los valores [propuesto] con INTA o agrónomo, y alinear R-11.
 - Formato concreto de handoff entre agentes especializados (D11).
 - Protocolo de comunicación del ESP32 (post-MVP).
 ## Próximo objetivo
