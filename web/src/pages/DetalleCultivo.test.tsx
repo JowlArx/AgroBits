@@ -145,7 +145,7 @@ describe('matriz de mediciones: banda y estado (R-09, R-H4)', () => {
     await crearCultivoConDetalle('Huerto DLI fuera')
 
     await waitFor(() => expect(screen.getByTestId('estado-dli_ayer').textContent).toBe('fuera'))
-    expect(screen.getByTestId('valor-dli_ayer').textContent).toBe('45.0 mol/m²/día')
+    expect(screen.getByTestId('valor-dli_ayer').textContent).toBe('45,0 mol/m²/día')
     vi.restoreAllMocks()
   })
 })

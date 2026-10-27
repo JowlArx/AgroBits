@@ -20,6 +20,7 @@ import { obtenerCultivo, suscribirCultivos, obtenerCultivos } from '../data/stor
 import { TIPOS_MEDICION, UNIDADES } from '../domain/tipos'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
 import { exigirProveedor } from '../data/datos/proveedorDatos'
+import { numero } from '../domain/formato'
 
 interface Props {
   cultivoId: string
@@ -176,7 +177,7 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
 
   return (
     <section>
-      <header className="fila-entre">
+      <header className="barra-cultivo">
         <div>
           {/* El nombre del cultivo ya lo muestra el título del panel superior. */}
           <span className="etiqueta">{cultivo.tipoCultivo}</span>
@@ -225,7 +226,7 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
                 <td data-testid={`valor-${tipo}`} data-label="Valor">
                   {medicion ? (
                     <>
-                      {medicion.valor} {medicion.unidad}
+                      {numero(medicion.valor, Number.isInteger(medicion.valor) ? 0 : 1)} {medicion.unidad}
                     </>
                   ) : (
                     <span className="sin-datos">sin datos</span>
@@ -249,7 +250,7 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
               {dliAyer === null ? (
                 <span className="sin-datos">sin datos</span>
               ) : (
-                `${dliAyer.toFixed(1)} mol/m²/día`
+                `${numero(dliAyer, 1)} mol/m²/día`
               )}
             </td>
             <td data-testid="hora-dli_ayer" data-label="Hora" />

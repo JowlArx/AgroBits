@@ -30,6 +30,7 @@ import { eliminarMediciones, generarLectura, obtenerMediciones, suscribirMedicio
 import { cargarAlertas } from '../data/storeAlertas'
 import { COLORES_SENSOR, TIPOS_MEDICION, UNIDADES, type ColorSensor, type Medicion, type TipoMedicion } from '../domain/tipos'
 import { dliEstimado } from '../domain/luz'
+import { numero } from '../domain/formato'
 import { ETIQUETAS_COLOR_SENSOR, ETIQUETAS_MEDICION, ETIQUETAS_MEDICION_CORTA, VAR_COLOR_SENSOR } from '../data/catalogo'
 import ConfirmacionEnLinea from '../components/ConfirmacionEnLinea'
 import Historial from './Historial'
@@ -308,7 +309,7 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
                             {ETIQUETAS_MEDICION[tipo]}:{' '}
                             {medicion ? (
                               <>
-                                {medicion.valor} {medicion.unidad} ·{' '}
+                                {numero(medicion.valor, Number.isInteger(medicion.valor) ? 0 : 1)} {medicion.unidad} ·{' '}
                                 <time dateTime={medicion.medidaEn}>{horaLegible(medicion.medidaEn)}</time>
                               </>
                             ) : (
@@ -320,7 +321,7 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
 
                       <p data-testid="dli-sensor">
                         DLI estimado (hoy UTC):{' '}
-                        {dliActivo === null ? '— (sin lecturas hoy)' : `${dliActivo.toFixed(1)} mol/m²/día`}
+                        {dliActivo === null ? '— (sin lecturas hoy)' : `${numero(dliActivo, 1)} mol/m²/día`}
                       </p>
 
                       <button

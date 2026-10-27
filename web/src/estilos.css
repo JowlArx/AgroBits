@@ -1314,8 +1314,24 @@ button.boton-google:hover {
   list-style: none;
   margin: 0 0 var(--espacio-4);
   padding: 0;
+  display: grid;
+  gap: var(--espacio-4);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  align-items: start;
+}
+
+/* La tarjeta no estira hasta el final de la pantalla con un solo sensor:
+   fija el ancho útil y deja la fila respirar (D64). */
+.lista-sensores-cultivo > li {
+  max-width: 30rem;
+}
+
+/* Cabecera de cultivo: barra de herramientas agrupada a la izquierda. */
+.barra-cultivo {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
   gap: var(--espacio-2);
 }
 

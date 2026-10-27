@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import App from './App'
 import { reiniciarCultivos } from './data/storeCultivos'
@@ -201,6 +201,45 @@ describe('desplegable de sensores del tablero (D36)', () => {
 
     expect(boton.getAttribute('aria-expanded')).toBe('false')
     expect(screen.queryAllByRole('option')).toHaveLength(0)
+  })
+})
+
+// Chip de alertas: solo aparece con alertas activas. Se simula una alerta activa
+// sobre el almacén real (el resto de pruebas no la ve: el flag vuelve a false).
+const alertaSimulada = vi.hoisted(() => ({
+  activa: false,
+  alerta: {
+    id: 'alerta-chip-test',
+    cultivoId: 'cultivo-chip-test',
+    tipo: 'luminosidad' as const,
+    valor: 3,
+    estado: 'activa' as const,
+    creadaEn: '2026-10-27T10:00:00.000Z',
+  },
+}))
+
+vi.mock('./data/storeAlertas', async (importOriginal) => {
+  const original = await importOriginal<typeof import('./data/storeAlertas')>()
+  return {
+    ...original,
+    alertasOrdenadas: () => (alertaSimulada.activa ? [alertaSimulada.alerta] : original.alertasOrdenadas()),
+  }
+})
+
+describe('chip de alertas (D40)', () => {
+  afterEach(() => {
+    alertaSimulada.activa = false
+  })
+
+  it('con alertas activas, el chip abre la vista de alertas', async () => {
+    alertaSimulada.activa = true
+    render(<App />)
+    await screen.findByTestId('vacio')
+
+    fireEvent.click(screen.getByTestId('chip-alertas'))
+
+    expect(window.location.search).toBe('?vista=alertas')
+    expect(screen.getByTestId('rango-ciclo')).toBeTruthy()
   })
 })
 

@@ -3,6 +3,7 @@ import { alertasOrdenadas, obtenerAlertas, suscribirAlertas, type Alerta } from 
 import { obtenerCultivo } from '../data/storeCultivos'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
 import { UNIDADES } from '../domain/tipos'
+import { numero } from '../domain/formato'
 import { useParamsUrl } from '../hooks/useParamsUrl'
 
 function horaLegible(iso: string): string {
@@ -23,7 +24,7 @@ function filaAlerta(alerta: Alerta) {
         </span>
       </div>
       <p className="alerta-valor" data-testid="alerta-valor">
-        {alerta.valor} {UNIDADES[alerta.tipo]}
+        {numero(alerta.valor, Number.isInteger(alerta.valor) ? 0 : 1)} {UNIDADES[alerta.tipo]}
       </p>
       <p className="alerta-contexto" data-testid={`detalle-${alerta.id}`}>
         <span data-testid="alerta-cultivo">{cultivo ? cultivo.nombre : 'Cultivo eliminado'}</span>

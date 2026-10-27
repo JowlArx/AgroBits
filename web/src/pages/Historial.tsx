@@ -18,6 +18,7 @@ import type { TipoMedicion } from '../domain/tipos'
 import { TIPOS_MEDICION } from '../domain/tipos'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
 import { dliEstimado } from '../domain/luz'
+import { numero } from '../domain/formato'
 
 function useCultivos() {
   return useSyncExternalStore(suscribirCultivos, obtenerCultivos, obtenerCultivos)
@@ -224,10 +225,10 @@ export default function Historial({
           const det = detalles.get(`${dia}|${nombre}`)
           return (
             <div key={nombre} style={{ color: entry.color, marginBottom: 2 }}>
-              {nombre}: media {(entry.value ?? 0).toFixed(1)}
-              {det ? ` · mín ${det.min.toFixed(1)} · máx ${det.max.toFixed(1)} (n=${det.n})` : ''}
+              {nombre}: media {numero(entry.value ?? 0, 1)}
+              {det ? ` · mín ${numero(det.min, 1)} · máx ${numero(det.max, 1)} (n=${det.n})` : ''}
               {dliPorDiaSerie.has(`${dia}|${nombre}`)
-                ? ` · DLI ${dliPorDiaSerie.get(`${dia}|${nombre}`)!.toFixed(1)} mol/m²/día`
+                ? ` · DLI ${numero(dliPorDiaSerie.get(`${dia}|${nombre}`)!, 1)} mol/m²/día`
                 : ''}
             </div>
           )
