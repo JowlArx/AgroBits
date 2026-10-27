@@ -195,7 +195,7 @@ Observaciones de integración:
 - Los DLI por grupo reemplazan a los umbrales de lux al pasar el catálogo a DLI.
 - El «% de Capacidad de Campo» se traduce a % volumétrico con la formula del capítulo FAO-56 de este documento.
 
-## Partición de los grupos 2 y 4 (propuesta del agente, pendiente de aprobación)
+## Partición de los grupos 2 y 4 (aprobada por JowlArx el 27/10/2026)
 
 Marcas: **[EcoCrop]** temperatura óptima dinica por especie; **[FAO-56]** p y Zr; **[grupo]** igual al rango de grupo de JowlArx por falta de fuente; **[propuesto]** derivado por el agente de las notas del grupo, para validar con INTA o un agrónomo.
 
