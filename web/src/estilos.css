@@ -611,6 +611,73 @@ legend {
   font-weight: 700;
 }
 
+/* Matriz de mediciones (DetalleCultivo): columnas, cifras y pastillas de estado. */
+.tabla-mediciones th:nth-child(1),
+.tabla-mediciones td:nth-child(1) {
+  width: 36%;
+}
+
+.tabla-mediciones th:nth-child(2),
+.tabla-mediciones td:nth-child(2) {
+  width: 16%;
+}
+
+.tabla-mediciones th:nth-child(3),
+.tabla-mediciones td:nth-child(3) {
+  width: 18%;
+}
+
+.tabla-mediciones th:nth-child(4),
+.tabla-mediciones td:nth-child(4) {
+  width: 18%;
+  text-align: right;
+}
+
+.tabla-mediciones th:nth-child(5),
+.tabla-mediciones td:nth-child(5) {
+  width: 12%;
+}
+
+.tabla-mediciones td[data-label='Valor'] {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.tabla-mediciones td[data-label='Hora'],
+.tabla-mediciones td[data-label='Banda'] {
+  color: var(--texto-tenue);
+  font-size: 13px;
+}
+
+.tabla-mediciones .pastilla {
+  display: inline-block;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.tabla-mediciones .estado-dentro {
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+.tabla-mediciones .estado-fuera {
+  background: var(--senal-suave);
+  color: var(--senal);
+  font-weight: 600;
+}
+
+.tabla-mediciones .estado-sin-datos {
+  color: var(--texto-tenue);
+}
+
+/* Fila de DLI: un escalón de tono, sin sombra ni borde nuevo. */
+.tabla-mediciones .fila-dli td {
+  background: var(--superficie);
+}
+
 /* Móvil: cada medición es un bloque apilado (sin scroll horizontal). */
 @media (max-width: 47.99rem) {
   .tabla-umbrales thead {
@@ -656,7 +723,52 @@ legend {
   }
 }
 
+/* Móvil: cada medición es un bloque de 2 columnas: Medición a ancho completo,
+   luego Valor | Hora y Banda | Estado. Se anulan los anchos de escritorio. */
+@media (max-width: 47.99rem) {
+  .tabla-mediciones tr {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .tabla-mediciones td:nth-child(1),
+  .tabla-mediciones td:nth-child(2),
+  .tabla-mediciones td:nth-child(3),
+  .tabla-mediciones td:nth-child(4),
+  .tabla-mediciones td:nth-child(5) {
+    width: auto;
+  }
+
+  .tabla-mediciones td[data-label='Valor'] {
+    font-size: 17px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .tabla-mediciones td[data-label='Hora'],
+  .tabla-mediciones td[data-label='Banda'] {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .tabla-mediciones td[data-label='Banda'] {
+    text-align: left;
+  }
+
+  .tabla-mediciones td[data-label]::before {
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
+
 /* Etiquetas (chips) ------------------------------------------------------- */
+
+/* El chip de alertas del panel es un enlace a la vista de alertas: se
+   presenta como botón sin perder el aspecto de chip. */
+button.chip-alertas {
+  font-family: inherit;
+  cursor: pointer;
+}
 
 .etiqueta {
   display: inline-block;
@@ -695,6 +807,18 @@ legend {
   height: 0.4rem;
   border-radius: 999px;
   background: var(--marca);
+}
+
+/* Aviso compacto (p. ej. simulador): tono de señal suave, texto de 13 px. */
+.aviso.aviso-compacto {
+  font-size: 13px;
+  background: var(--senal-suave);
+  border-color: var(--borde);
+  padding: var(--espacio-2) var(--espacio-3) var(--espacio-2) var(--espacio-5);
+}
+
+.aviso.aviso-compacto::before {
+  top: calc(var(--espacio-2) + 0.45em);
 }
 
 /* Detalle en dos columnas (dt/dd) de las alertas -------------------------- */

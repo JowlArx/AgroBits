@@ -278,4 +278,30 @@ describe('registro y asociación de sensores (T-18/T-23, R-06)', () => {
     )
     expect(obtenerSensores()[0].cultivoIds).toHaveLength(1)
   })
+
+  it('los formularios de sensor se pliegan con un solo botón cuando el cultivo ya tiene sensores', async () => {
+    render(<App />)
+    await crearCultivoConDetalle('Huerto plegable')
+    crearSensor('Sensor plegado')
+    await waitFor(() => expect(screen.queryByTestId('nombre-sensor')).toBeNull())
+
+    const boton = screen.getByRole('button', { name: '＋ Asociar sensor' })
+    expect(boton.getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(boton)
+    expect(screen.getByTestId('nombre-sensor')).toBeTruthy()
+  })
+})
+
+describe('orden de la vista de detalle (hitos de jerarquía)', () => {
+  it('el nombre del cultivo solo aparece en el título del panel, y la matriz va antes que los sensores', async () => {
+    render(<App />)
+    await crearCultivoConDetalle('Huerto jerarquia')
+
+    // El título del panel superior muestra el nombre; la vista no lo repite.
+    expect(screen.getAllByRole('heading', { name: 'Huerto jerarquia' })).toHaveLength(1)
+
+    const mediciones = screen.getByRole('heading', { level: 2, name: 'Mediciones' })
+    const sensores = screen.getByRole('heading', { level: 3, name: 'Sensores' })
+    expect(mediciones.compareDocumentPosition(sensores) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
 })

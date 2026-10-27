@@ -343,9 +343,14 @@ export default function App() {
                 {sensores.length} {sensores.length === 1 ? 'sensor' : 'sensores'}
               </span>
               {alertasActivas > 0 && (
-                <span className="chip-estado chip-alertas" data-testid="chip-alertas">
+                <button
+                  type="button"
+                  className="chip-estado chip-alertas"
+                  data-testid="chip-alertas"
+                  onClick={() => irA({ tipo: 'alertas' })}
+                >
                   {alertasActivas} {alertasActivas === 1 ? 'alerta' : 'alertas'}
-                </span>
+                </button>
               )}
             </div>
             {!esMovil && (
