@@ -239,6 +239,11 @@ export class DatosFalsos implements ProveedorDatos {
   /** Email de la cuenta, para comprobar la confirmación. */
   emailCuenta = 'pruebas@agrobits.test'
 
+  consultarDliDeAyer(): Promise<number | null> {
+    // Doble sin lecturas de luz: el DLI de ayer no está disponible.
+    return Promise.resolve(null)
+  }
+
   async cargarSolicitudEliminacion(): Promise<{ programadaPara: string } | null> {
     return this.solicitud ? { ...this.solicitud } : null
   }

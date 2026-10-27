@@ -68,6 +68,10 @@ export interface ProveedorDatos {
   // Alertas (R-13/R-14): T-25 evalúa en la BD (trigger); el cliente solo lee.
   cargarAlertas(): Promise<Alerta[]>
 
+  // DLI de ayer (UTC, R-H4): media entre sensores con lecturas de luz ayer;
+  // `null` si no hay datos. Calculo en el proveedor, no en la store.
+  consultarDliDeAyer(): Promise<number | null>
+
   // Catálogo de localidades (registro, D27): legible SIN sesión (el registro
   // es anónimo; RLS de `localidades` lo permite).
   cargarLocalidades(): Promise<Localidad[]>

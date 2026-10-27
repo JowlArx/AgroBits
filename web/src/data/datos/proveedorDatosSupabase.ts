@@ -24,6 +24,7 @@ import type {
 import type { Sensor } from '../storeSensores'
 import type { Alerta } from '../storeAlertas'
 import { CATALOGO_CULTIVOS } from '../catalogo'
+import { dliEstimado } from '../../domain/luz'
 
 interface FilaUmbral {
   tipo: TipoMedicion
@@ -528,6 +529,50 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
   }
 
   // — Eliminación de la cuenta (D46) ——————————————————————————————
+
+  // — DLI de ayer (R-H4) ——————————————————————————————————————
+
+  /**
+   * DLI medio de AYER (UTC). El DLI se calcula POR sensor (dliEstimado) y se
+   * devuelve el PROMEDIO entre los sensores que tienen lecturas de luminosidad
+   * ayer. `null` si no hay sensores, no hay lecturas o la consulta falla.
+   */
+  async consultarDliDeAyer(): Promise<number | null> {
+    try {
+      const sensores = await this.cargarSensores()
+      if (sensores.length === 0) return null
+
+      const hoy = new Date()
+      const inicioHoy = Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), hoy.getUTCDate())
+      const inicioAyer = inicioHoy - 24 * 60 * 60_000
+      const { data, error } = await this.cliente
+        .from('measurements')
+        .select('sensor_id, value')
+        .in('sensor_id', sensores.map((s) => s.id))
+        .eq('tipo', 'luminosidad')
+        .gte('measured_at', new Date(inicioAyer).toISOString())
+        .lt('measured_at', new Date(inicioHoy).toISOString())
+        .limit(5000)
+      if (error) {
+        console.error('consultarDliDeAyer:', error)
+        return null
+      }
+
+      const lecturasPorSensor = new Map<string, { value: number }[]>()
+      for (const fila of (data ?? []) as { sensor_id: string; value: number }[]) {
+        const lista = lecturasPorSensor.get(fila.sensor_id) ?? []
+        lista.push({ value: fila.value })
+        lecturasPorSensor.set(fila.sensor_id, lista)
+      }
+      if (lecturasPorSensor.size === 0) return null
+
+      const dlis = [...lecturasPorSensor.values()].map((lecturas) => dliEstimado(lecturas))
+      return dlis.reduce((total, dli) => total + dli, 0) / dlis.length
+    } catch (error) {
+      console.error('consultarDliDeAyer:', error)
+      return null
+    }
+  }
 
   async cargarSolicitudEliminacion(): Promise<SolicitudEliminacion | null> {
     const { data, error } = await this.cliente

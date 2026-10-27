@@ -60,6 +60,16 @@ class CadenaFalsa {
     this.cargas.push(valores)
     return this
   }
+  gte(columna: string, valor: unknown) {
+    this.operaciones.push(`gte ${columna}`)
+    this.cargas.push(valor)
+    return this
+  }
+  lt(columna: string, valor: unknown) {
+    this.operaciones.push(`lt ${columna}`)
+    this.cargas.push(valor)
+    return this
+  }
   order(columna: string) {
     this.operaciones.push(`order ${columna}`)
     return this
@@ -311,6 +321,57 @@ describe('ProveedorDatosSupabase — sensores', () => {
 
     expect(resultado.ok).toBe(true)
     if (resultado.ok) expect(resultado.valor).toEqual({ id: 's9', nombre: 'Sensor A', cultivoIds: [], colorLinea: 'verde' })
+  })
+})
+
+describe('ProveedorDatosSupabase — DLI de ayer (R-H4)', () => {
+  it('consultarDliDeAyer promedia el DLI por sensor (valores calculados a mano)', async () => {
+    // s1: 2 lecturas de 30.000 lx → 2 × (30000/54) × 300 / 1e6 = 0,333333
+    // s2: 1 lectura de 54.000 lx  → (54000/54) × 300 / 1e6          = 0,300000
+    // Promedio entre sensores: (0,333333 + 0,300000) / 2 = 0,316667
+    const capturas: Captura[] = []
+    const proveedor = new ProveedorDatosSupabase(
+      clienteFalso((captura) => {
+        capturas.push(captura)
+        if (captura.tabla === 'sensors') {
+          return { data: [{ id: 's1', name: 'A', sensor_crop: [] }, { id: 's2', name: 'B', sensor_crop: [] }], error: null }
+        }
+        return {
+          data: [
+            { sensor_id: 's1', value: 30_000 },
+            { sensor_id: 's1', value: 30_000 },
+            { sensor_id: 's2', value: 54_000 },
+          ],
+          error: null,
+        }
+      }),
+    )
+
+    const dli = await proveedor.consultarDliDeAyer()
+
+    expect(dli).toBeCloseTo(0.316667, 5)
+    const consulta = capturas.find((c) => c.tabla === 'measurements')
+    expect(consulta?.operaciones).toEqual([
+      'select sensor_id, value',
+      'in sensor_id',
+      'eq tipo',
+      'gte measured_at',
+      'lt measured_at',
+      'limit 5000',
+    ])
+    expect(consulta?.cargas[1]).toBe('luminosidad')
+  })
+
+  it('consultarDliDeAyer devuelve null si no hay lecturas de luz ayer', async () => {
+    const proveedor = new ProveedorDatosSupabase(
+      clienteFalso((captura) =>
+        captura.tabla === 'sensors'
+          ? { data: [{ id: 's1', name: 'A', sensor_crop: [] }], error: null }
+          : { data: [], error: null },
+      ),
+    )
+
+    await expect(proveedor.consultarDliDeAyer()).resolves.toBeNull()
   })
 })
 

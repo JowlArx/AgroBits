@@ -1,12 +1,12 @@
 // Tablero principal (adaptación de AgroBits al layout del diseño de Figma
-// «Snow Dashboard», node 98469:145265): fila de 4 tarjetas KPI, widget de
+// «Snow Dashboard», node 98469:145265): fila de 5 tarjetas KPI, widget de
 // evolución de lecturas (líneas, con pestañas por tipo de medición) y widget
 // de última lectura por tipo (barras horizontales, como «Traffic by
 // Website»). Es SOLO presentación: todos los valores se derivan de los
 // stores existentes sin tocarlos. El ámbar (--senal) sigue reservado a las
 // alertas activas (D20), por eso las barras son neutras.
 
-import { useSyncExternalStore, useState } from 'react'
+import { useEffect, useSyncExternalStore, useState } from 'react'
 import {
   CartesianGrid,
   ComposedChart,
@@ -22,8 +22,8 @@ import { obtenerSensores, suscribirSensores, type Sensor } from '../data/storeSe
 import { obtenerAlertas, suscribirAlertas } from '../data/storeAlertas'
 import { obtenerMediciones, suscribirMediciones, ultimasPorTipo } from '../data/medicionesSimuladas'
 import { ETIQUETAS_MEDICION, ETIQUETAS_MEDICION_CORTA, VAR_COLOR_SENSOR } from '../data/catalogo'
-import { TIPOS_MEDICION, UNIDADES, type Medicion, type TipoMedicion } from '../domain/tipos'
-import { dliEstimado } from '../domain/luz'
+import { TIPOS_MEDICION, UNIDADES, type TipoMedicion } from '../domain/tipos'
+import { exigirProveedor } from '../data/datos/proveedorDatos'
 import { useParamsUrl } from '../hooks/useParamsUrl'
 import SelectorDesplegable from './SelectorDesplegable'
 
@@ -66,14 +66,6 @@ function sensorDeUltimaLectura(sensores: readonly Sensor[]): string | null {
     }
   }
   return mejor
-}
-
-/** DLI estimado de hoy (UTC) con las lecturas de luminosidad dadas; null si no hay ninguna. */
-function dliDeHoy(mediciones: readonly Medicion[]): number | null {
-  const hoy = new Date()
-  const inicioDia = Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), hoy.getUTCDate())
-  const delDia = mediciones.filter((m) => m.tipo === 'luminosidad' && Date.parse(m.medidaEn) >= inicioDia)
-  return delDia.length === 0 ? null : dliEstimado(delDia.map((m) => ({ value: m.valor })))
 }
 
 interface PuntoGrafico {
@@ -131,7 +123,7 @@ function serieDe(
 
 function TarjetaKpi({ etiqueta, valor, nota, alerta }: {
   etiqueta: string
-  valor: number
+  valor: number | string
   nota: string
   alerta?: boolean
 }) {
@@ -180,8 +172,23 @@ export default function Tablero() {
   // D35: el gráfico se acompaña de su lectura en texto (en móvil el tooltip
   // es difícil de acertar con el dedo).
   const ultimaDelTipo = ultimasPorTipo(sensores.map((s) => s.id))[tipoActivo]
-  // DLI de hoy (UTC) sobre las lecturas de luminosidad de todos los sensores.
-  const dliHoy = dliDeHoy(sensores.flatMap((s) => obtenerMediciones(s.id)))
+  // DLI de ayer (UTC): lo calcula el proveedor (R-H4) y se recarga al cambiar
+  // las lecturas. `null` mientras no llega o si no hay lecturas de luz ayer.
+  const [dliAyer, setDliAyer] = useState<number | null>(null)
+  useEffect(() => {
+    let vigente = true
+    exigirProveedor()
+      .consultarDliDeAyer()
+      .then((valor) => {
+        if (vigente) setDliAyer(valor)
+      })
+      .catch(() => {
+        if (vigente) setDliAyer(null)
+      })
+    return () => {
+      vigente = false
+    }
+  }, [lecturas])
 
   return (
     <section className="tablero" aria-label="Resumen del panel">
@@ -195,6 +202,11 @@ export default function Tablero() {
           alerta={activas > 0}
         />
         <TarjetaKpi etiqueta="Lecturas" valor={lecturas} nota="registradas" />
+        <TarjetaKpi
+          etiqueta="DLI de ayer"
+          valor={dliAyer === null ? '—' : dliAyer.toFixed(1)}
+          nota={dliAyer === null ? 'sin lecturas de luz ayer' : 'mol/m²/día'}
+        />
       </ul>
 
       <div className="fila-widgets">
@@ -332,21 +344,6 @@ export default function Tablero() {
               })}
             </ul>
           )}
-        </article>
-
-        <article className="widget">
-          <header className="cabecera-widget">
-            <h3>DLI estimado (hoy UTC)</h3>
-          </header>
-          <p className="resumen-grafico" data-testid="dli-tablero">
-            {dliHoy === null ? (
-              <span className="sin-datos">— (sin lecturas hoy)</span>
-            ) : (
-              <>
-                <strong>{dliHoy.toFixed(1)}</strong> mol/m²/día
-              </>
-            )}
-          </p>
         </article>
       </div>
     </section>
