@@ -29,6 +29,7 @@ import { obtenerCultivo, suscribirCultivos } from '../data/storeCultivos'
 import { eliminarMediciones, generarLectura, obtenerMediciones, suscribirMediciones } from '../data/medicionesSimuladas'
 import { cargarAlertas } from '../data/storeAlertas'
 import { COLORES_SENSOR, TIPOS_MEDICION, UNIDADES, type ColorSensor, type Medicion, type TipoMedicion } from '../domain/tipos'
+import { dliEstimado } from '../domain/luz'
 import { ETIQUETAS_COLOR_SENSOR, ETIQUETAS_MEDICION, ETIQUETAS_MEDICION_CORTA, VAR_COLOR_SENSOR } from '../data/catalogo'
 import ConfirmacionEnLinea from '../components/ConfirmacionEnLinea'
 import Historial from './Historial'
@@ -66,6 +67,14 @@ function ultimasPorTipo(sensorId: string): Partial<Record<TipoMedicion, Medicion
     if (!previa || medicion.medidaEn > previa.medidaEn) ultimas[medicion.tipo] = medicion
   }
   return ultimas
+}
+
+/** DLI estimado de hoy (UTC) con las lecturas de luminosidad dadas; null si no hay ninguna. */
+function dliDeHoy(mediciones: readonly Medicion[]): number | null {
+  const hoy = new Date()
+  const inicioDia = Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), hoy.getUTCDate())
+  const delDia = mediciones.filter((m) => m.tipo === 'luminosidad' && Date.parse(m.medidaEn) >= inicioDia)
+  return delDia.length === 0 ? null : dliEstimado(delDia.map((m) => ({ value: m.valor })))
 }
 
 export default function Sensores({ cultivoIdHistorial }: Props) {
@@ -121,6 +130,8 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
   const ultimasDelActivo: Partial<Record<TipoMedicion, Medicion>> = sensorActivo
     ? ultimasPorTipo(sensorActivo.id)
     : {}
+
+  const dliActivo = sensorActivo ? dliDeHoy(obtenerMediciones(sensorActivo.id)) : null
 
   return (
     <section data-testid="vista-sensores" className="vista-sensores">
@@ -306,6 +317,11 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
                           </p>
                         )
                       })}
+
+                      <p data-testid="dli-sensor">
+                        DLI estimado (hoy UTC):{' '}
+                        {dliActivo === null ? '— (sin lecturas hoy)' : `${dliActivo.toFixed(1)} mol/m²/día`}
+                      </p>
 
                       <button
                         type="button"

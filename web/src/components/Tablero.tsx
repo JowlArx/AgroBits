@@ -22,7 +22,8 @@ import { obtenerSensores, suscribirSensores, type Sensor } from '../data/storeSe
 import { obtenerAlertas, suscribirAlertas } from '../data/storeAlertas'
 import { obtenerMediciones, suscribirMediciones, ultimasPorTipo } from '../data/medicionesSimuladas'
 import { ETIQUETAS_MEDICION, ETIQUETAS_MEDICION_CORTA, VAR_COLOR_SENSOR } from '../data/catalogo'
-import { TIPOS_MEDICION, UNIDADES, type TipoMedicion } from '../domain/tipos'
+import { TIPOS_MEDICION, UNIDADES, type Medicion, type TipoMedicion } from '../domain/tipos'
+import { dliEstimado } from '../domain/luz'
 import { useParamsUrl } from '../hooks/useParamsUrl'
 import SelectorDesplegable from './SelectorDesplegable'
 
@@ -65,6 +66,14 @@ function sensorDeUltimaLectura(sensores: readonly Sensor[]): string | null {
     }
   }
   return mejor
+}
+
+/** DLI estimado de hoy (UTC) con las lecturas de luminosidad dadas; null si no hay ninguna. */
+function dliDeHoy(mediciones: readonly Medicion[]): number | null {
+  const hoy = new Date()
+  const inicioDia = Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), hoy.getUTCDate())
+  const delDia = mediciones.filter((m) => m.tipo === 'luminosidad' && Date.parse(m.medidaEn) >= inicioDia)
+  return delDia.length === 0 ? null : dliEstimado(delDia.map((m) => ({ value: m.valor })))
 }
 
 interface PuntoGrafico {
@@ -171,6 +180,8 @@ export default function Tablero() {
   // D35: el gráfico se acompaña de su lectura en texto (en móvil el tooltip
   // es difícil de acertar con el dedo).
   const ultimaDelTipo = ultimasPorTipo(sensores.map((s) => s.id))[tipoActivo]
+  // DLI de hoy (UTC) sobre las lecturas de luminosidad de todos los sensores.
+  const dliHoy = dliDeHoy(sensores.flatMap((s) => obtenerMediciones(s.id)))
 
   return (
     <section className="tablero" aria-label="Resumen del panel">
@@ -321,6 +332,21 @@ export default function Tablero() {
               })}
             </ul>
           )}
+        </article>
+
+        <article className="widget">
+          <header className="cabecera-widget">
+            <h3>DLI estimado (hoy UTC)</h3>
+          </header>
+          <p className="resumen-grafico" data-testid="dli-tablero">
+            {dliHoy === null ? (
+              <span className="sin-datos">— (sin lecturas hoy)</span>
+            ) : (
+              <>
+                <strong>{dliHoy.toFixed(1)}</strong> mol/m²/día
+              </>
+            )}
+          </p>
         </article>
       </div>
     </section>
