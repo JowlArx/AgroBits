@@ -195,6 +195,36 @@ Observaciones de integración:
 - Los DLI por grupo reemplazan a los umbrales de lux al pasar el catálogo a DLI.
 - El «% de Capacidad de Campo» se traduce a % volumétrico con la formula del capítulo FAO-56 de este documento.
 
+## Partición de los grupos 2 y 4 (propuesta del agente, pendiente de aprobación)
+
+Marcas: **[EcoCrop]** temperatura óptima dinica por especie; **[FAO-56]** p y Zr; **[grupo]** igual al rango de grupo de JowlArx por falta de fuente; **[propuesto]** derivado por el agente de las notas del grupo, para validar con INTA o un agrónomo.
+
+### Grupo 2 — Fruto
+
+| Cultivo | Temp. día °C | Temp. noche °C | HR % | Suelo banda (% CC) | FAO-56 p / Zr (m) | DLI |
+|---|---|---|---|---|---|---|
+| Tomate | 20–27 [EcoCrop] | 15–18 [grupo] | 50–65 [grupo] | 60–75 [grupo] | 0.40 / 0.7–1.5 [FAO-56] | 22–30+ [grupo] |
+| Pimiento | 17–30 [EcoCrop] | 15–18 [grupo] | 50–65 [grupo] | 60–75 [grupo] | 0.30 / 0.5–1.0 [FAO-56] | 22–30+ [grupo] |
+| Berenjena | 20–35 [EcoCrop] | 15–18 [grupo] | 50–65 [grupo] | 60–75 [grupo] | 0.45 / 0.7–1.2 [FAO-56] | 22–30+ [grupo] |
+| Zapallito y calabacín | 17–30 [EcoCrop, C. pepo] | 15–18 [grupo] | 50–65 [grupo] | 60–75 [grupo] | 0.50 / 0.6–1.0 [FAO-56] | 22–30+ [grupo] |
+| Zapallo anco y plomo | 20–30 [EcoCrop, C. maxima] | 15–18 [grupo] | 50–65 [grupo] | 60–75 [grupo] | 0.35 / 1.0–1.5 [FAO-56] | 22–30+ [grupo] |
+| Zapallo cabutiá | 20–30 [EcoCrop, C. moschata] | 15–18 [grupo] | 50–65 [grupo] | 60–75 [grupo] | 0.35 / 1.0–1.5 [FAO-56, aproximado] | 22–30+ [grupo] |
+
+Diferencia real del grupo: los zapallos soportan más sequía (p bajo y raíz profunda) que el pimiento (p 0.30, raíz media). HR, noche y DLI quedan igual al grupo porque no encontré fuente por cultivo.
+
+### Grupo 4 — Frutilla y aromáticas
+
+| Cultivo | Temp. día °C | HR % | Suelo (% CC) | FAO-56 p / Zr (m) | DLI |
+|---|---|---|---|---|---|
+| Frutilla | 11–24 [EcoCrop] | 60–75 [propuesto] | 70–80 [propuesto] | 0.20 / 0.2–0.3 [FAO-56] | 18–25 [grupo] |
+| Menta | sin registro [EcoCrop] | 60–75 [propuesto] | 70–80 [propuesto] | 0.40 / 0.4–0.8 [FAO-56] | 14–20 [propuesto: tolera semisombra] |
+| Albahaca | 18–27 [EcoCrop] | 50–65 [propuesto] | 60–70 [propuesto] | sin dato [FAO-56] | 18–25 [grupo] |
+| Orégano | 17–28 [EcoCrop] | 40–55 [propuesto] | 50–60 [propuesto] | sin dato [FAO-56] | 20–25 [propuesto: sol pleno] |
+| Romero | 18–30 [EcoCrop] | 40–55 [propuesto] | 50–60 [propuesto: suelo bien drenado] | sin dato [FAO-56] | 20–25 [propuesto] |
+| Tomillo | 16–25 [EcoCrop] | 40–55 [propuesto] | 50–60 [propuesto] | sin dato [FAO-56] | 20–25 [propuesto] |
+
+La partición separa a las leñosas mediterráneas (aire seco, suelos drenados, riego espaciado) de frutilla y menta (humedad alta constante), según las notas del grupo.
+
 ## DLI estimado
 
 - El valor medido sigue siendo lux (BH1750). La app calcula el **DLI estimado** del día (mol/m²/día) con 1 µmol/m²/s ≈ 54 lx y muestra el valor en el tooltip del historial para luminosidad.

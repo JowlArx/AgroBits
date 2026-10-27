@@ -112,7 +112,7 @@ Higiene del proyecto (17/10/2026):
 
 ## Decisiones pendientes
 
-- Catálogo de cultivos: temperatura y humedad del suelo extraídas (FAO), pH de EcoCrop, HR y DLI por grupos aportados por JowlArx (D58). Falta validación local y la carga en la base.
+- Catálogo de cultivos: temperatura y humedad del suelo extraídas (FAO), pH de EcoCrop, HR y DLI por grupos aportados por JowlArx (D58). Partición de los grupos 2 y 4 propuesta y pendiente de aprobación. Falta migración de semilla, migración de lux a DLI, validación local y R-11.
 - Formato concreto de handoff entre agentes especializados (D11).
 - Protocolo de comunicación del ESP32 (post-MVP).
 ## Próximo objetivo
