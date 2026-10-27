@@ -535,11 +535,13 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
   /**
    * DLI medio de AYER (UTC). El DLI se calcula POR sensor (dliEstimado) y se
    * devuelve el PROMEDIO entre los sensores que tienen lecturas de luminosidad
-   * ayer. `null` si no hay sensores, no hay lecturas o la consulta falla.
+   * ayer. Con `cropId`, solo los sensores enlazados a ese cultivo (sensor_crop).
+   * `null` si no hay sensores, no hay lecturas o la consulta falla.
    */
-  async consultarDliDeAyer(): Promise<number | null> {
+  async consultarDliDeAyer(cropId?: string): Promise<number | null> {
     try {
-      const sensores = await this.cargarSensores()
+      const todos = await this.cargarSensores()
+      const sensores = cropId ? todos.filter((s) => s.cultivoIds.includes(cropId)) : todos
       if (sensores.length === 0) return null
 
       const hoy = new Date()

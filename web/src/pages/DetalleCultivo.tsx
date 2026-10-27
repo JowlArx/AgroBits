@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import {
   generarLectura,
   obtenerMediciones,
@@ -19,6 +19,7 @@ import { exigirProgramador } from '../data/programadorLecturas'
 import { obtenerCultivo, suscribirCultivos, obtenerCultivos } from '../data/storeCultivos'
 import { TIPOS_MEDICION } from '../domain/tipos'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
+import { exigirProveedor } from '../data/datos/proveedorDatos'
 
 interface Props {
   cultivoId: string
@@ -51,6 +52,24 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
   // D35: asociar un sensor que ya es de la cuenta (el contrapresto de
   // «desasociar»: sin esto, desasociar era irreversible desde la interfaz).
   const [sensorParaAsociar, setSensorParaAsociar] = useState('')
+  // DLI de ayer (UTC) de ESTE cultivo: lo calcula el proveedor (R-H4) con los
+  // sensores enlazados al cultivo. `null` (se muestra «—») si no hay lecturas
+  // de luz ayer o aún no ha llegado la respuesta.
+  const [dliAyer, setDliAyer] = useState<number | null>(null)
+  useEffect(() => {
+    let vigente = true
+    exigirProveedor()
+      .consultarDliDeAyer(cultivoId)
+      .then((valor) => {
+        if (vigente) setDliAyer(valor)
+      })
+      .catch(() => {
+        if (vigente) setDliAyer(null)
+      })
+    return () => {
+      vigente = false
+    }
+  }, [cultivoId])
 
   const cultivo = obtenerCultivo(cultivoId)
   if (!cultivo) {
@@ -129,6 +148,10 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
           </button>
         )}
       </header>
+
+      <p data-testid="dli-ayer">
+        DLI de ayer: {dliAyer === null ? '—' : `${dliAyer.toFixed(1)} mol/m²/día`}
+      </p>
 
       <h3>Sensores</h3>
       {sensores.length === 0 ? (

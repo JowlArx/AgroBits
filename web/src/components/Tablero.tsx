@@ -6,7 +6,7 @@
 // stores existentes sin tocarlos. El ámbar (--senal) sigue reservado a las
 // alertas activas (D20), por eso las barras son neutras.
 
-import { useEffect, useSyncExternalStore, useState } from 'react'
+import { useSyncExternalStore, useState } from 'react'
 import {
   CartesianGrid,
   ComposedChart,
@@ -23,7 +23,6 @@ import { obtenerAlertas, suscribirAlertas } from '../data/storeAlertas'
 import { obtenerMediciones, suscribirMediciones, ultimasPorTipo } from '../data/medicionesSimuladas'
 import { ETIQUETAS_MEDICION, ETIQUETAS_MEDICION_CORTA, VAR_COLOR_SENSOR } from '../data/catalogo'
 import { TIPOS_MEDICION, UNIDADES, type TipoMedicion } from '../domain/tipos'
-import { exigirProveedor } from '../data/datos/proveedorDatos'
 import { useParamsUrl } from '../hooks/useParamsUrl'
 import SelectorDesplegable from './SelectorDesplegable'
 
@@ -172,24 +171,6 @@ export default function Tablero() {
   // D35: el gráfico se acompaña de su lectura en texto (en móvil el tooltip
   // es difícil de acertar con el dedo).
   const ultimaDelTipo = ultimasPorTipo(sensores.map((s) => s.id))[tipoActivo]
-  // DLI de ayer (UTC): lo calcula el proveedor (R-H4) y se recarga al cambiar
-  // las lecturas. `null` mientras no llega o si no hay lecturas de luz ayer.
-  const [dliAyer, setDliAyer] = useState<number | null>(null)
-  useEffect(() => {
-    let vigente = true
-    exigirProveedor()
-      .consultarDliDeAyer()
-      .then((valor) => {
-        if (vigente) setDliAyer(valor)
-      })
-      .catch(() => {
-        if (vigente) setDliAyer(null)
-      })
-    return () => {
-      vigente = false
-    }
-  }, [lecturas])
-
   return (
     <section className="tablero" aria-label="Resumen del panel">
       <ul className="fila-kpis">
@@ -202,11 +183,6 @@ export default function Tablero() {
           alerta={activas > 0}
         />
         <TarjetaKpi etiqueta="Lecturas" valor={lecturas} nota="registradas" />
-        <TarjetaKpi
-          etiqueta="DLI de ayer"
-          valor={dliAyer === null ? '—' : dliAyer.toFixed(1)}
-          nota={dliAyer === null ? 'sin lecturas de luz ayer' : 'mol/m²/día'}
-        />
       </ul>
 
       <div className="fila-widgets">
