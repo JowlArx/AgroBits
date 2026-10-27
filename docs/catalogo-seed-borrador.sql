@@ -1,5 +1,6 @@
 -- ============================================================================
--- BORRADOR — requiere aprobación humana; no aplicado.
+-- MIGRACIÓN DEL CATÁLOGO — APROBADA POR JowlArx Y APLICADA EL 27/10/2026.
+-- La copia aplicable es supabase/migrations/20261027000001_catalogo_semilla.sql.
 -- Semilla del catálogo de cultivos (docs/catalogo-cultivos-fuentes.md, 27/10/2026).
 --
 -- Fuentes:
@@ -10,11 +11,11 @@
 --   G1..G5   = grupo de la tabla de rangos de grupo.
 --
 -- Marca "-- NO VALIDADO" = valor derivado de [propuesto]; pendiente de INTA o
--- agrónomo. Ninguna fila de esta migración se aplica sin aprobación humana.
+-- agrónomo. Aplicada con la aprobación humana del día.
 --
 -- Alcance: 33 cultivos de la tabla de temperatura (sin Menta). 4 ya cargados
 -- (Tomate, Lechuga, Albahaca, Pimiento) y 29 nuevos.
--- No se ejecuta contra la base. No se usa Supabase CLI en este borrador.
+-- Se aplicó vía SQL directo sobre el proyecto de producción el 27/10/2026.
 -- ============================================================================
 
 
@@ -51,16 +52,15 @@ create table if not exists public.crop_type_perfil (
   constraint crop_type_perfil_dli check (dli_min is null or dli_max is null or dli_min <= dli_max)
 );
 
--- RLS: PENDIENTE DE CONFIRMAR ANTES DE APLICAR. El catálogo carga sin sesión
--- (lo verifica el e2e 06). Si crop_type_catalog habilita lectura a anon,
--- replicar esa política acá (to anon, authenticated); si no, mantener esta.
+-- RLS: el catálogo carga sin sesión (e2e 06), igual que crop_type_catalog:
+-- lectura pública para anon y authenticated.
 alter table public.crop_type_perfil enable row level security;
 
-drop policy if exists crop_type_perfil_select_autenticados on public.crop_type_perfil;
-create policy crop_type_perfil_select_autenticados
+drop policy if exists crop_type_perfil_select on public.crop_type_perfil;
+create policy crop_type_perfil_select
   on public.crop_type_perfil
   for select
-  to authenticated
+  to anon, authenticated
   using (true);
 
 
@@ -126,8 +126,7 @@ insert into public.crop_type_catalog (crop_type, tipo, default_min, default_max)
   ('Romero', 'humedad_ambiental', 40, 55), -- NO VALIDADO
   ('Tomillo', 'temperatura', 16, 25),
   ('Tomillo', 'humedad_ambiental', 40, 55), -- NO VALIDADO
-  -- Grupo 5 — Frutales (HR 50–70). Cítricos no listados en la tabla de grupos:
-  -- asignados a G5 por asimilación (sin fuente propia). Revisar con INTA.
+  -- Grupo 5 — Frutales (HR 50–70; cítricos con HR 50–70 según JowlArx).
   ('Ciruelo', 'temperatura', 18, 33),
   ('Ciruelo', 'humedad_ambiental', 50, 70),
   ('Duraznero', 'temperatura', 20, 33),
@@ -191,9 +190,9 @@ values
   ('Duraznero',          0.50, 1.0, 2.0, 60, 75, 22, 35, 'EcoCrop 1796; T22 «Apricots, peaches, stone fruit»; G5'),
   ('Higuera',            null, null, null, 60, 75, 22, 35, 'EcoCrop 1071; sin dato T22; G5'),
   ('Manzano',            0.50, 1.0, 2.0, 60, 75, 22, 35, 'EcoCrop 1407; T22 «Apples, cherries, pears»; G5'),
-  -- Cítricos: asimilados a G5 (no listados en la tabla de grupos). Revisar con INTA.
-  ('Naranjo (cítricos)', 0.50, 0.8, 1.5, 60, 75, 22, 35, 'EcoCrop 720; T22 «Citrus»; G5 por asimilación'),
-  ('Limonero (cítricos)', 0.50, 0.8, 1.5, 60, 75, 22, 35, 'EcoCrop 714; T22 «Citrus»; G5 por asimilación')
+  -- Cítricos: valores de JowlArx (27/10/2026): HR 50–70; suelo 65–80 %CC; DLI 25–35+.
+  ('Naranjo (cítricos)', 0.50, 0.8, 1.5, 65, 80, 25, 35, 'EcoCrop 720; T22 «Citrus»; JowlArx'),
+  ('Limonero (cítricos)', 0.50, 0.8, 1.5, 65, 80, 25, 35, 'EcoCrop 714; T22 «Citrus»; JowlArx')
 on conflict (crop_type) do update set
   p = excluded.p,
   zr_min_m = excluded.zr_min_m,
@@ -210,18 +209,17 @@ on conflict (crop_type) do update set
 
 
 -- ----------------------------------------------------------------------------
--- 4. Reemplazo de temperatura de los 4 cultivos existentes (BLOQUEADO)
+-- 4. Reemplazo de temperatura de los 4 cultivos existentes
 -- ----------------------------------------------------------------------------
--- NO ACTIVAR sin aprobación explícita de JowlArx. Cambia valores ya en uso.
--- Valores EcoCrop propuestos (TOPMN–TOPMX):
---   Tomate 20–27 (actual 15–28); Lechuga 12–21 (actual 10–22);
---   Albahaca 18–27 (actual 18–30); Pimiento 17–30 (actual 16–30).
---
--- update public.crop_type_catalog set default_min = 20, default_max = 27
---   where crop_type = 'Tomate' and tipo = 'temperatura';
--- update public.crop_type_catalog set default_min = 12, default_max = 21
---   where crop_type = 'Lechuga' and tipo = 'temperatura';
--- update public.crop_type_catalog set default_min = 18, default_max = 27
---   where crop_type = 'Albahaca' and tipo = 'temperatura';
--- update public.crop_type_catalog set default_min = 17, default_max = 30
---   where crop_type = 'Pimiento' and tipo = 'temperatura';
+-- Aprobado por JowlArx el 27/10/2026 («Actívalo ahora»). Valores EcoCrop:
+--   Tomate 20–27 (antes 15–28); Lechuga 12–21 (antes 10–22);
+--   Albahaca 18–27 (antes 18–30); Pimiento 17–30 (antes 16–30).
+
+update public.crop_type_catalog set default_min = 20, default_max = 27
+  where crop_type = 'Tomate' and tipo = 'temperatura';
+update public.crop_type_catalog set default_min = 12, default_max = 21
+  where crop_type = 'Lechuga' and tipo = 'temperatura';
+update public.crop_type_catalog set default_min = 18, default_max = 27
+  where crop_type = 'Albahaca' and tipo = 'temperatura';
+update public.crop_type_catalog set default_min = 17, default_max = 30
+  where crop_type = 'Pimiento' and tipo = 'temperatura';

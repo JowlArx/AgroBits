@@ -225,6 +225,15 @@ Diferencia real del grupo: los zapallos soportan más sequía (p bajo y raíz pr
 
 La partición separa a las leñosas mediterráneas (aire seco, suelos drenados, riego espaciado) de frutilla y menta (humedad alta constante), según las notas del grupo.
 
+### Cítricos (valores de JowlArx, 27/10/2026)
+
+| Parámetro | Rango | Notas |
+|---|---|---|
+| Temperatura óptima | 20–30 °C | La vegetación se detiene por debajo de 12–13 °C. Heladas de −2 a −3 °C dañan follaje, brotes y madera |
+| HR | 50–70 % | HR mayor a 75–80 % dispara hongos (goma/Phytophthora, sarna, botritis). HR menor a 40 % con viento cálido en floración y cuajado provoca caída de flores y frutos |
+| Humedad de suelo | 65–80 % de CC | Humedad constante en el perfil (40–60 cm de raíz). Muy baja tolerancia al encharcamiento. El déficit fuerte detiene el llenado de fruta |
+| DLI | 25–35+ mol/m²/día | Sol pleno para floración, acumulación de azúcares y coloración de la cáscara |
+
 ## DLI estimado
 
 - El valor medido sigue siendo lux (BH1750). La app calcula el **DLI estimado** del día (mol/m²/día) con 1 µmol/m²/s ≈ 54 lx y muestra el valor en el tooltip del historial para luminosidad.
