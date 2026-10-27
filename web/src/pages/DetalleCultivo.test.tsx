@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import App from '../App'
+import { exigirProveedor } from '../data/datos/proveedorDatos'
 import { reiniciarCultivos, obtenerCultivos } from '../data/storeCultivos'
 import {
   asociarSensor,
@@ -120,6 +121,32 @@ describe('vista de mediciones del cultivo (T-14/T-23, R-09)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Volver' }))
 
     expect(screen.getByText('Mis cultivos')).toBeTruthy()
+  })
+})
+
+describe('matriz de mediciones: banda y estado (R-09, R-H4)', () => {
+  it('sin lecturas: estado «sin datos» con banda, «—» en luminosidad y banda DLI del perfil', async () => {
+    vi.spyOn(exigirProveedor(), 'consultarBandaDli').mockResolvedValue({ min: 12, max: 30 })
+    render(<App />)
+    await crearCultivoConDetalle('Huerto matriz')
+
+    expect(screen.getByTestId('estado-temperatura').textContent).toBe('sin datos')
+    expect(screen.getByTestId('banda-temperatura').textContent).toMatch(/\d+–\d+ °C/)
+    expect(screen.getByTestId('estado-luminosidad').textContent).toBe('—')
+    expect(screen.getByTestId('banda-luminosidad').textContent).toBe('')
+    await waitFor(() => expect(screen.getByTestId('banda-dli_ayer').textContent).toBe('12–30 mol/m²/día'))
+    vi.restoreAllMocks()
+  })
+
+  it('DLI de ayer: estado «fuera» cuando el valor sale de la banda del perfil', async () => {
+    vi.spyOn(exigirProveedor(), 'consultarBandaDli').mockResolvedValue({ min: 12, max: 30 })
+    vi.spyOn(exigirProveedor(), 'consultarDliDeAyer').mockResolvedValue(45)
+    render(<App />)
+    await crearCultivoConDetalle('Huerto DLI fuera')
+
+    await waitFor(() => expect(screen.getByTestId('estado-dli_ayer').textContent).toBe('fuera'))
+    expect(screen.getByTestId('valor-dli_ayer').textContent).toBe('45.0 mol/m²/día')
+    vi.restoreAllMocks()
   })
 })
 

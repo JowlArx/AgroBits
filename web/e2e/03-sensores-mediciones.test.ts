@@ -103,3 +103,37 @@ test('D51: «Ver mediciones» despliega el detalle bajo su tarjeta con la últim
     await eliminarCultivo(page, nombre)
   }
 })
+
+test.describe('en móvil (390×844)', () => {
+  test.use({ viewport: { width: 390, height: 844 } })
+
+  test('la matriz de mediciones no desborda la página en 390 px', async ({ page }) => {
+    const nombre = `Huerto movil ${sello()}`
+    const nombreSensor = `Sensor movil ${sello()}`
+    await iniciarSesion(page, cuentaA)
+
+    try {
+      await crearCultivo(page, nombre)
+      await abrirDetalle(page, nombre)
+      await crearSensor(page, nombreSensor)
+      await esperarLectura(page, 'temperatura')
+
+      await expect(page.getByTestId('tabla-mediciones')).toBeVisible()
+      await expect(page.getByTestId('estado-dli_ayer')).toBeVisible()
+
+      const desborda = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+      )
+      expect(desborda).toBe(false)
+    } finally {
+      await page.getByTestId('nav-sensores').click()
+      const tarjetaLimpieza = page.getByTestId('tarjeta-sensor').filter({ hasText: nombreSensor })
+      if ((await tarjetaLimpieza.count()) > 0) {
+        await tarjetaLimpieza.getByRole('button', { name: 'Eliminar' }).click()
+        await tarjetaLimpieza.getByRole('button', { name: 'Sí', exact: true }).click()
+        await expect(tarjetaLimpieza).toHaveCount(0, { timeout: 30_000 })
+      }
+      await eliminarCultivo(page, nombre)
+    }
+  })
+})

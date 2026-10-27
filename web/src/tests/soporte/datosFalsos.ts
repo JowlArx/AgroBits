@@ -244,6 +244,11 @@ export class DatosFalsos implements ProveedorDatos {
     return Promise.resolve(null)
   }
 
+  consultarBandaDli(_cropType: string): Promise<{ min: number; max: number } | null> {
+    // Doble sin perfil de tipo de cultivo: no hay banda DLI.
+    return Promise.resolve(null)
+  }
+
   async cargarSolicitudEliminacion(): Promise<{ programadaPara: string } | null> {
     return this.solicitud ? { ...this.solicitud } : null
   }

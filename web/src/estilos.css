@@ -605,6 +605,57 @@ legend {
   border-bottom: none;
 }
 
+/* Estado «fuera» de banda: token de señal, igual que las alertas (DESIGN.md). */
+.estado-fuera {
+  color: var(--senal);
+  font-weight: 700;
+}
+
+/* Móvil: cada medición es un bloque apilado (sin scroll horizontal). */
+@media (max-width: 47.99rem) {
+  .tabla-umbrales thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .tabla-umbrales,
+  .tabla-umbrales tbody,
+  .tabla-umbrales tr,
+  .tabla-umbrales td {
+    display: block;
+    width: 100%;
+  }
+
+  .tabla-umbrales tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--espacio-2);
+    padding: var(--espacio-2) 0;
+    border-bottom: 1px solid var(--borde);
+  }
+
+  .tabla-umbrales td {
+    padding: 0;
+    border-bottom: none;
+  }
+
+  .tabla-umbrales tr td:first-child {
+    grid-column: 1 / -1;
+    font-weight: 700;
+  }
+
+  .tabla-umbrales td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--texto-tenue);
+  }
+}
+
 /* Etiquetas (chips) ------------------------------------------------------- */
 
 .etiqueta {

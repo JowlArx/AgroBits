@@ -576,6 +576,27 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
     }
   }
 
+  /** Banda DLI del tipo de cultivo (perfil público). `null` sin fila o si falla. */
+  async consultarBandaDli(cropType: string): Promise<{ min: number; max: number } | null> {
+    try {
+      const { data, error } = await this.cliente
+        .from('crop_type_perfil')
+        .select('dli_min, dli_max')
+        .eq('crop_type', cropType)
+        .maybeSingle()
+      if (error) {
+        console.error('consultarBandaDli:', error)
+        return null
+      }
+      const fila = data as { dli_min: number | null; dli_max: number | null } | null
+      if (!fila || fila.dli_min === null || fila.dli_max === null) return null
+      return { min: fila.dli_min, max: fila.dli_max }
+    } catch (error) {
+      console.error('consultarBandaDli:', error)
+      return null
+    }
+  }
+
   async cargarSolicitudEliminacion(): Promise<SolicitudEliminacion | null> {
     const { data, error } = await this.cliente
       .from('solicitudes_eliminacion')

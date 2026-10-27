@@ -73,6 +73,10 @@ export interface ProveedorDatos {
   // `null` si no hay datos. Calculo en el proveedor, no en la store.
   consultarDliDeAyer(cropId?: string): Promise<number | null>
 
+  // Banda DLI (mol/m²/día) del tipo de cultivo, desde el perfil público
+  // `crop_type_perfil` (RLS de lectura pública). `null` si no hay fila.
+  consultarBandaDli(cropType: string): Promise<{ min: number; max: number } | null>
+
   // Catálogo de localidades (registro, D27): legible SIN sesión (el registro
   // es anónimo; RLS de `localidades` lo permite).
   cargarLocalidades(): Promise<Localidad[]>

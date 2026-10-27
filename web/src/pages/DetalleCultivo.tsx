@@ -17,7 +17,7 @@ import { cargarAlertas } from '../data/storeAlertas'
 import ConfirmacionEnLinea from '../components/ConfirmacionEnLinea'
 import { exigirProgramador } from '../data/programadorLecturas'
 import { obtenerCultivo, suscribirCultivos, obtenerCultivos } from '../data/storeCultivos'
-import { TIPOS_MEDICION } from '../domain/tipos'
+import { TIPOS_MEDICION, UNIDADES } from '../domain/tipos'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
 import { exigirProveedor } from '../data/datos/proveedorDatos'
 
@@ -27,9 +27,21 @@ interface Props {
   onVerHistorial?: (cultivoId: string) => void
 }
 
+interface Banda {
+  min: number
+  max: number
+}
+
 function horaLegible(iso: string): string {
   const fecha = new Date(iso)
   return Number.isNaN(fecha.getTime()) ? iso : fecha.toLocaleString('es-ES')
+}
+
+/** Estado de una medición frente a su banda: sin banda → «—»; sin valor → «sin datos». */
+function estadoDe(valor: number | undefined, banda: Banda | null): 'dentro' | 'fuera' | 'sin datos' | '—' {
+  if (!banda) return '—'
+  if (valor === undefined) return 'sin datos'
+  return valor >= banda.min && valor <= banda.max ? 'dentro' : 'fuera'
 }
 
 export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: Props) {
@@ -70,6 +82,25 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
       vigente = false
     }
   }, [cultivoId])
+
+  // Banda DLI del tipo de cultivo (perfil público `crop_type_perfil`).
+  const tipoCultivo = obtenerCultivo(cultivoId)?.tipoCultivo
+  const [bandaDli, setBandaDli] = useState<Banda | null>(null)
+  useEffect(() => {
+    if (!tipoCultivo) return
+    let vigente = true
+    exigirProveedor()
+      .consultarBandaDli(tipoCultivo)
+      .then((banda) => {
+        if (vigente) setBandaDli(banda)
+      })
+      .catch(() => {
+        if (vigente) setBandaDli(null)
+      })
+    return () => {
+      vigente = false
+    }
+  }, [tipoCultivo])
 
   const cultivo = obtenerCultivo(cultivoId)
   if (!cultivo) {
@@ -148,10 +179,6 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
           </button>
         )}
       </header>
-
-      <p data-testid="dli-ayer">
-        DLI de ayer: {dliAyer === null ? '—' : `${dliAyer.toFixed(1)} mol/m²/día`}
-      </p>
 
       <h3>Sensores</h3>
       {sensores.length === 0 ? (
@@ -256,15 +283,20 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
             <th scope="col">Medición</th>
             <th scope="col">Valor</th>
             <th scope="col">Hora</th>
+            <th scope="col">Banda</th>
+            <th scope="col">Estado</th>
           </tr>
         </thead>
         <tbody>
           {TIPOS_MEDICION.map((tipo) => {
             const medicion = ultimas[tipo]
+            // La luminosidad no tiene banda propia: se evalúa por DLI (R-H4).
+            const banda: Banda | null = tipo === 'luminosidad' ? null : cultivo.umbrales[tipo]
+            const estado = estadoDe(medicion?.valor, banda)
             return (
               <tr key={tipo} data-testid={`fila-${tipo}`}>
                 <td>{ETIQUETAS_MEDICION[tipo]}</td>
-                <td data-testid={`valor-${tipo}`}>
+                <td data-testid={`valor-${tipo}`} data-label="Valor">
                   {medicion ? (
                     <>
                       {medicion.valor} {medicion.unidad}
@@ -273,12 +305,43 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
                     <span className="sin-datos">sin datos</span>
                   )}
                 </td>
-                <td data-testid={`hora-${tipo}`}>
+                <td data-testid={`hora-${tipo}`} data-label="Hora">
                   {medicion ? <time dateTime={medicion.medidaEn}>{horaLegible(medicion.medidaEn)}</time> : '—'}
+                </td>
+                <td data-testid={`banda-${tipo}`} data-label="Banda">
+                  {banda ? `${banda.min}–${banda.max} ${UNIDADES[tipo]}` : ''}
+                </td>
+                <td
+                  data-testid={`estado-${tipo}`}
+                  data-label="Estado"
+                  className={estado === 'fuera' ? 'estado-fuera' : undefined}
+                >
+                  {estado}
                 </td>
               </tr>
             )
           })}
+          <tr data-testid="fila-dli_ayer">
+            <td>DLI de ayer</td>
+            <td data-testid="valor-dli_ayer" data-label="Valor">
+              {dliAyer === null ? (
+                <span className="sin-datos">sin datos</span>
+              ) : (
+                `${dliAyer.toFixed(1)} mol/m²/día`
+              )}
+            </td>
+            <td data-testid="hora-dli_ayer" data-label="Hora" />
+            <td data-testid="banda-dli_ayer" data-label="Banda">
+              {bandaDli ? `${bandaDli.min}–${bandaDli.max} mol/m²/día` : ''}
+            </td>
+            <td
+              data-testid="estado-dli_ayer"
+              data-label="Estado"
+              className={estadoDe(dliAyer ?? undefined, bandaDli) === 'fuera' ? 'estado-fuera' : undefined}
+            >
+              {estadoDe(dliAyer ?? undefined, bandaDli)}
+            </td>
+          </tr>
         </tbody>
       </table>
 

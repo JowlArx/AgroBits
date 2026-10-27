@@ -82,6 +82,10 @@ class CadenaFalsa {
     this.operaciones.push('single')
     return this
   }
+  maybeSingle() {
+    this.operaciones.push('maybeSingle')
+    return this
+  }
 
   captura(): Captura {
     return { tabla: this.tabla, operaciones: [...this.operaciones], cargas: [...this.cargas] }
@@ -372,6 +376,27 @@ describe('ProveedorDatosSupabase — DLI de ayer (R-H4)', () => {
     )
 
     await expect(proveedor.consultarDliDeAyer()).resolves.toBeNull()
+  })
+
+  it('consultarBandaDli lee la banda del perfil público del tipo de cultivo', async () => {
+    const capturas: Captura[] = []
+    const proveedor = new ProveedorDatosSupabase(
+      clienteFalso((captura) => {
+        capturas.push(captura)
+        return { data: { dli_min: 12, dli_max: 30 }, error: null }
+      }),
+    )
+
+    await expect(proveedor.consultarBandaDli('tomate')).resolves.toEqual({ min: 12, max: 30 })
+    const consulta = capturas.find((c) => c.tabla === 'crop_type_perfil')
+    expect(consulta?.operaciones).toEqual(['select dli_min, dli_max', 'eq crop_type', 'maybeSingle'])
+    expect(consulta?.cargas[0]).toBe('tomate')
+  })
+
+  it('consultarBandaDli devuelve null si el tipo de cultivo no tiene perfil', async () => {
+    const proveedor = new ProveedorDatosSupabase(clienteFalso(() => ({ data: null, error: null })))
+
+    await expect(proveedor.consultarBandaDli('exotico')).resolves.toBeNull()
   })
 })
 
