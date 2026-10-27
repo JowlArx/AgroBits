@@ -104,12 +104,13 @@ Higiene del proyecto (17/10/2026):
 - **D53b — Líneas rectas entre lecturas (aprobada).** Las curvas del Tablero y del detalle de sensor pasan de `monotone` a `linear` para no inventar valores entre lecturas. Estado: aprobada por JowlArx el 26/10/2026; se mantiene type="linear" en web/src (Tablero.tsx, Sensores.tsx). Commit: 23dbe96 (incluido en D53).
 - **D54 — Retención de mediciones (26/10/2026, aprobada por JowlArx: «Apruebo»):** las lecturas crudas (`measurements`) se conservan 30 días (job `purgar-mediciones-crudas`, diario 03:30 UTC); el resumen diario (`mediciones_diarias`) se conserva sin límite. Verificado en la base el 26/10/2026: los resúmenes del 20 al 24/10 coinciden con las crudas (mismo número de muestras); el 25/10 no hubo lecturas (esperado, confirmado por JowlArx); el resumen del 26/10 se genera el 27/10 a las 03:15 UTC. Documentado en `docs/historial-mediciones-spec.md` (R-H4).
 - **D55 — Decisiones de alcance (27/10/2026, aprobadas por JowlArx):** (a) se mantiene la semilla actual de localidades; el proyecto toma General Pico como base; (b) se mantienen los «otros perfiles de usuario»; (c) se aprueba la especificación del historial (`docs/historial-mediciones-spec.md`).
+- **D56 — Fuentes del catálogo de cultivos (27/10/2026, aprobada por JowlArx):** temperatura y lluvia, FAO EcoCrop (GAEZ v4); humedad relativa, FAO y extensión universitaria; pH, extensión universitaria; humedad del suelo, FAO-56; validación local, INTA o agrónomo. Borrador de temperatura en `docs/catalogo-cultivos-fuentes.md`.
 - Revisión visual de D51–D53 aprobada por JowlArx el 26/10/2026.
 - Revisión visual de D31, D35, D48 y D49 aprobada por JowlArx el 26/10/2026.
 
 ## Decisiones pendientes
 
-- Contenido y fuentes del catálogo inicial de cultivos.
+- Catálogo de cultivos: temperatura extraída (`docs/catalogo-cultivos-fuentes.md`); faltan humedad relativa, pH, humedad del suelo y luz, y la validación local.
 - Formato concreto de handoff entre agentes especializados (D11).
 - Protocolo de comunicación del ESP32 (post-MVP).
 ## Próximo objetivo
