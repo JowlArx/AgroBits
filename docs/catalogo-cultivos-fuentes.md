@@ -9,7 +9,7 @@
 | Temperatura y lluvia | FAO EcoCrop, vía portal GAEZ v4 (https://gaez.fao.org/pages/ecocrop) | Extraída (esta tabla) |
 | Humedad relativa | Aportada por JowlArx (rangos de grupo; D58) | Registrada; confirmación bibliográfica pendiente |
 | pH del suelo | Extensión universitaria (Universidad de Florida, IFAS) | Pendiente |
-| Humedad del suelo | FAO-56 (Tablas 19 y 22) | Extraída (esta document); banda de grupo aportada por JowlArx (D58) |
+| Humedad del suelo | FAO-56 (Tablas 19 y 22) | Extraída (de este documento); banda de grupo aportada por JowlArx (D58) |
 | Luminosidad | lux medido (BH1750) + DLI estimado (1 µmol/m²/s ≈ 54 lx); validación local pendiente | Implementado en la app el 27/10/2026 |
 | Validación local | INTA o agrónomo | Pendiente |
 
@@ -124,7 +124,7 @@ Nota: el pH del suelo real depende de la extracción de la muestra (sólido satu
 
 Fuente: FAO Irrigation and Drainage Paper 56, Tabla 22 (p y Zr) y Tabla 19 (agua disponible por textura), extraídas de https://www.fao.org/4/X0490E/x0490e0e.htm el 27/10/2026.
 
-El umbral de alerta dependè del tipo de suelo de cada usuario. No se fija un % volumétrico único: se almacenan `p` y `Zr`, y la app calcula `TAW = PAW × Zr`, `RAW = p × TAW`, y `θ_alerta = θ_CC − RAW / (1000 × Zr)`.
+El umbral de alerta depende del tipo de suelo de cada usuario. No se fija un % volumétrico único: se almacenan `p` y `Zr`, y la app calcula `TAW = PAW × Zr`, `RAW = p × TAW`, y `θ_alerta = θ_CC − RAW / (1000 × Zr)`.
 
 PAW de la tabla 19 (agua disponible, mm por metro de suelo), tal como aparece en el ejemplo 36: arena franco-lojema 90, limo 170, arcilla limosa 120. Falta extraer la tabla 19 completa.
 
