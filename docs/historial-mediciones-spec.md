@@ -1,6 +1,6 @@
-# Historial y gráficas de mediciones — Especificación (borrador, pendiente de aprobación)
+# Historial y gráficas de mediciones — Especificación (aprobada el 27/10/2026)
 
-> Alcance aprobado el 23/10/2026 (`docs/historial-mediciones.md`). Este documento define los requisitos y criterios de aceptación. **No se implementa nada hasta aprobar esta especificación.**
+> Alcance aprobado el 23/10/2026 (`docs/historial-mediciones.md`). Este documento define los requisitos y criterios de aceptación. **Especificación aprobada por JowlArx el 27/10/2026.**
 >
 > **Enmienda de ubicación (23/10/2026, decisión del humano: «Prefiero que el historial de mediciones esté en la sección de sensores»):** el Historial de mediciones deja de ser una sección propia de la navegación y pasa a ser una **pestaña dentro de la sección Sensores**, con el estado en la URL (`?vista=sensores&panel=historial`). El resto de la especificación (filtros, gráfica, exportación, retención y RLS) no cambia.
 >
@@ -42,7 +42,7 @@ El usuario puede descargar un archivo `.xlsx` con todos los datos crudos del ran
 
 ### R-H4 — Retención y agregación (BD)
 
-Las mediciones crudas se conservan 30 días; los agregados diarios se conservan indefinidamente. **Aprobado por JowlArx el 26/10/2026**; el resto de este documento sigue como borrador.
+Las mediciones crudas se conservan 30 días; los agregados diarios se conservan indefinidamente. **Aprobado por JowlArx el 26/10/2026** (retención) y el 27/10/2026 (especificación completa).
 
 - **AC1:** Existe tabla `mediciones_diarias` con `(sensor_id, tipo, dia, valor_medio, valor_min, valor_max, n)` y RLS por dueño del sensor.
 - **AC2:** Job diario agrega las mediciones del día anterior en `mediciones_diarias`.

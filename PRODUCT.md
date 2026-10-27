@@ -63,7 +63,7 @@ El resultado para el usuario: no un panel de números, sino «tu cultivo está f
 - Coste: ~0 €/mes (Supabase free tier, Vercel Hobby).
 - Fuera de alcance: notificaciones externas, sensores compartidos, suscripciones, riego automático, app móvil.
 - Próximo bloque decidido: **hardware y firmware ESP32** (el generador simulado queda como sustituto mientras no exista sensor). El protocolo de comunicación sigue sin definirse.
-- Hechos de producto explícitamente sin decidir: fuentes que justifiquen los umbrales del catálogo; fuentes y ampliación de la semilla de `localidades`; formato concreto de handoff entre roles de agente; protocolo ESP32.
+- Hechos de producto explícitamente sin decidir: fuentes que justifiquen los umbrales del catálogo; formato concreto de handoff entre roles de agente; protocolo ESP32.
 
 ## Brand Commitments
 
