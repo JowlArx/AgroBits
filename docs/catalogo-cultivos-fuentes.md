@@ -9,7 +9,7 @@
 | Temperatura y lluvia | FAO EcoCrop, vía portal GAEZ v4 (https://gaez.fao.org/pages/ecocrop) | Extraída (esta tabla) |
 | Humedad relativa | FAO (manual técnico) y extensión universitaria | Pendiente |
 | pH del suelo | Extensión universitaria (Universidad de Florida, IFAS) | Pendiente |
-| Humedad del suelo | FAO-56 (riego), según tipo de suelo | Pendiente |
+| Humedad del suelo | FAO-56 (Tablas 19 y 22) | Extraída (esta document) |
 | Luminosidad | lux medido (BH1750) + DLI estimado (1 µmol/m²/s ≈ 54 lx); validación local pendiente | Implementado en la app el 27/10/2026 |
 | Validación local | INTA o agrónomo | Pendiente |
 
@@ -72,7 +72,7 @@ Los valores actuales se parecen al óptimo de EcoCrop, pero no tienen cita. Hay 
 
 ## Limitaciones
 
-- EcoCrop solo cubre temperatura y lluvia. Humedad relativa, pH, humedad del suelo y luz quedan pendientes.
+- EcoCrop solo cubre temperatura y lluvia. Humedad relativa queda pendiente; humedad del suelo (FAO-56) y pH ya están extraídos.
 - Varias especies comparten registro (zapallitos y calabacín; zapallo anco y plomo; acelga y remolacha). La base no distingue esas variedades.
 - Los frutales se describen por clima de crecimiento. La base no contempla heladas ni floración; hay que revisarlos con fuente local.
 - Los valores son de un modelo climático global. Un cultivo en invernadero o con riego puede tener rangos distintos.
@@ -118,7 +118,56 @@ pH: `PHOPMN`–`PHOPMX` (óptimo) y `PHMIN`–`PHMAX` (absoluto). La luz de EcoC
 | Naranjo (cítricos) | 5–6 | 4–8.3 | muy brillante | 720 |
 | Limonero (cítricos) | 6.5–7 | 5.5–8 | muy brillante | 714 |
 
-Nota: el pH del suelo real depende de la extracción de la muestra (sólido saturado). Estos rangos son de referencia, no medibles con el sensor propuesto directamente en tierra.
+Nota: el pH del suelo real depende de la extracción de la muestra (sólido saturado). Estos rangos son de referencia y no se miden directamente en tierra. Para hoy no hay sensor de pH (postergado por decisión de JowlArx, 27/10/2026).
+
+## Humedad del suelo (FAO-56, cap. 8)
+
+Fuente: FAO Irrigation and Drainage Paper 56, Tabla 22 (p y Zr) y Tabla 19 (agua disponible por textura), extraídas de https://www.fao.org/4/X0490E/x0490e0e.htm el 27/10/2026.
+
+El umbral de alerta dependè del tipo de suelo de cada usuario. No se fija un % volumétrico único: se almacenan `p` y `Zr`, y la app calcula `TAW = PAW × Zr`, `RAW = p × TAW`, y `θ_alerta = θ_CC − RAW / (1000 × Zr)`.
+
+PAW de la tabla 19 (agua disponible, mm por metro de suelo), tal como aparece en el ejemplo 36: arena franco-lojema 90, limo 170, arcilla limosa 120. Falta extraer la tabla 19 completa.
+
+| Cultivo | Zr (m) | p | Entrada FAO-56 | Observación |
+|---|---|---|---|---|
+| Lechuga | 0.3–0.5 | 0.30 | «Lettuce» (hortalizas menores) | |
+| Acelga | sin dato | — | — | «Swiss chard» no está en la tabla 22 |
+| Espinaca | 0.3–0.5 | 0.20 | «Spinach» | |
+| Rúcula | sin dato | — | — | sin entrada |
+| Radicheta | sin dato | — | — | sin entrada |
+| Achicoria | sin dato | — | — | sin entrada |
+| Perejil | sin dato | — | — | sin entrada |
+| Cebolla de verdeo | 0.3–0.6 | 0.30 | «Onions, green» | |
+| Cilantro | sin dato | — | — | sin entrada |
+| Tomate | 0.7–1.5 | 0.40 | «Tomato» | |
+| Pimiento | 0.5–1.0 | 0.30 | «Sweet peppers (bell)» | |
+| Zapallito de tronco | 0.6–1.0 | 0.50 | «Squash, zucchini» | |
+| Calabacín | 0.6–1.0 | 0.50 | «Squash, zucchini» | mismo registro |
+| Zapallo anco / Coquena | 1.0–1.5 | 0.35 | «Pumpkin, winter squash» | |
+| Zapallo cabutiá | 1.0–1.5 | 0.35 | «Pumpkin, winter squash» | aproximo: moschata no tiene entrada propia |
+| Zapallo plomo | 1.0–1.5 | 0.35 | «Pumpkin, winter squash» | mismo registro |
+| Berenjena | 0.7–1.2 | 0.45 | «Egg plant» | |
+| Zanahoria | 0.5–1.0 | 0.35 | «Carrots» | |
+| Remolacha | 0.6–1.0 | 0.50 | «Beets, table» | ≠ azucarera (0.7–1.2, 0.55) |
+| Cebolla | 0.3–0.6 | 0.30 | «Onions, dry» | |
+| Ajo | 0.3–0.5 | 0.30 | «Garlic» | |
+| Rábano | 0.3–0.5 | 0.30 | «Radishes» | |
+| Frutilla | 0.2–0.3 | 0.20 | «Strawberries» (perennes) | |
+| Orégano | sin dato | — | — | sin entrada |
+| Romero | sin dato | — | — | sin entrada |
+| Tomillo | sin dato | — | — | sin entrada |
+| Albahaca | sin dato | — | — | sin entrada |
+| Menta | 0.4–0.8 | 0.40 | «Mint» | sí está en la tabla 22, aunque no en EcoCrop |
+| Ciruelo | 1.0–2.0 | 0.50 | «Apricots, peaches, stone fruit» | |
+| Duraznero | 1.0–2.0 | 0.50 | «Apricots, peaches, stone fruit» | mismo registro |
+| Higuera | sin dato | — | — | sin entrada |
+| Manzano | 1.0–2.0 | 0.50 | «Apples, cherries, pears» | |
+| Naranjo (cítricos) | 0.8–1.5 | 0.50 | «Citrus» | cubre copas del 20 al 70 % |
+| Limonero (cítricos) | 0.8–1.5 | 0.50 | «Citrus» | mismo registro |
+
+Ejemplo trabajado (tomate en suelo limo, del ejemplo 36 de FAO-56): TAW = 170 × 0.8 = 136 mm; RAW = 0.40 × 136 = 54 mm; con θ_CC = 0.32 y Zr = 0.8, θ_alerta ≈ 0.25 m³/m³ (25 % vol).
+
+Ajustes del capítulo 8: con ETc alta el p baja 10–25 %, y con ETc baja sube hasta +20 %; en arenas el p sube 5–10 % y en arcillas baja 5–10 %.
 
 ## DLI estimado
 
