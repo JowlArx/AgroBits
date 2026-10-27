@@ -72,8 +72,8 @@ export async function crearCultivo(page: Page, nombre: string, temperatura?: [st
   await page.getByTestId('max-temperatura').fill(temperatura?.[1] ?? '100')
   await page.getByTestId('min-humedad_ambiental').fill('0')
   await page.getByTestId('max-humedad_ambiental').fill('100')
-  await page.getByTestId('min-luminosidad').fill('0')
-  await page.getByTestId('max-luminosidad').fill('60000')
+  // La luz ya no lleva umbral por lectura: el DLI se evalúa a diario en la BD
+  // (20261027000002_alertas_dli.sql), así que no hay campos min/max-luminosidad.
   await page.getByRole('button', { name: 'Guardar' }).click()
   await expect(page.getByTestId('lista-cultivos')).toContainText(nombre)
 }

@@ -21,20 +21,23 @@ interface Props {
   onCancelar: () => void
 }
 
-type ValoresUmbral = Record<TipoMedicion, { min: string; max: string }>
+type ValoresUmbral = Partial<Record<TipoMedicion, { min: string; max: string }>>
 
 function aCadenas(umbrales: UmbralesPorTipo): ValoresUmbral {
-  const resultado = {} as ValoresUmbral
+  const resultado: ValoresUmbral = {}
   for (const tipo of TIPOS_MEDICION) {
-    resultado[tipo] = { min: String(umbrales[tipo].min), max: String(umbrales[tipo].max) }
+    const umbral = umbrales[tipo]
+    if (!umbral) continue
+    resultado[tipo] = { min: String(umbral.min), max: String(umbral.max) }
   }
   return resultado
 }
 
 function aNumeros(cadenas: ValoresUmbral): UmbralesPorTipo {
   const resultado = {} as UmbralesPorTipo
-  for (const tipo of TIPOS_MEDICION) {
-    resultado[tipo] = { min: Number(cadenas[tipo].min), max: Number(cadenas[tipo].max) }
+  for (const [tipo, valores] of Object.entries(cadenas)) {
+    if (!valores) continue
+    resultado[tipo as TipoMedicion] = { min: Number(valores.min), max: Number(valores.max) }
   }
   return resultado
 }
@@ -177,9 +180,12 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
 
         <fieldset>
           <legend>Umbrales de alerta</legend>
-          {TIPOS_MEDICION.map((tipo) => (
+          {/* La luz ya no lleva umbral por lectura: el DLI se evalúa a diario
+              en la base (20261027000002_alertas_dli.sql). Solo se muestran los
+              tipos con umbral. */}
+          {Object.entries(cadenas).map(([tipo]) => (
             <div key={tipo} className="fila-umbral">
-              <span className="etiqueta-umbral">{ETIQUETAS_MEDICION[tipo]}</span>
+              <span className="etiqueta-umbral">{ETIQUETAS_MEDICION[tipo as TipoMedicion]}</span>
               <label>
                 Mínimo
                 <input
@@ -187,11 +193,11 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
                   id={`campo-min-${tipo}`}
                   name={`min-${tipo}`}
                   data-testid={`min-${tipo}`}
-                  aria-label={`Mínimo de ${ETIQUETAS_MEDICION[tipo].toLowerCase()}`}
+                  aria-label={`Mínimo de ${ETIQUETAS_MEDICION[tipo as TipoMedicion].toLowerCase()}`}
                   aria-invalid={conError(`umbrales.${tipo}`) || undefined}
                   aria-describedby={conError(`umbrales.${tipo}`) ? `error-umbrales.${tipo}` : undefined}
-                  value={cadenas[tipo].min}
-                  onChange={(e) => cambiarUmbral(tipo, 'min', e.target.value)}
+                  value={cadenas[tipo as TipoMedicion]?.min ?? ''}
+                  onChange={(e) => cambiarUmbral(tipo as TipoMedicion, 'min', e.target.value)}
                 />
               </label>
               <label>
@@ -201,11 +207,11 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
                   id={`campo-max-${tipo}`}
                   name={`max-${tipo}`}
                   data-testid={`max-${tipo}`}
-                  aria-label={`Máximo de ${ETIQUETAS_MEDICION[tipo].toLowerCase()}`}
+                  aria-label={`Máximo de ${ETIQUETAS_MEDICION[tipo as TipoMedicion].toLowerCase()}`}
                   aria-invalid={conError(`umbrales.${tipo}`) || undefined}
                   aria-describedby={conError(`umbrales.${tipo}`) ? `error-umbrales.${tipo}` : undefined}
-                  value={cadenas[tipo].max}
-                  onChange={(e) => cambiarUmbral(tipo, 'max', e.target.value)}
+                  value={cadenas[tipo as TipoMedicion]?.max ?? ''}
+                  onChange={(e) => cambiarUmbral(tipo as TipoMedicion, 'max', e.target.value)}
                 />
               </label>
             </div>

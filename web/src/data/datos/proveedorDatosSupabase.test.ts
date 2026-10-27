@@ -133,7 +133,7 @@ describe('ProveedorDatosSupabase — cultivos', () => {
     })
   })
 
-  it('crearCultivo inserta el crop con user_id del token y luego 4 umbrales', async () => {
+  it('crearCultivo inserta el crop con user_id del token y luego 3 umbrales (la luz se evalúa a diario con DLI)', async () => {
     const capturas: Captura[] = []
     const proveedor = new ProveedorDatosSupabase(
       clienteFalso((captura) => {
@@ -153,8 +153,9 @@ describe('ProveedorDatosSupabase — cultivos', () => {
 
     expect(capturas[1].tabla).toBe('crop_thresholds')
     const filasUmbral = capturas[1].cargas[0] as { crop_id: string; tipo: string; min: number; max: number }[]
-    expect(filasUmbral).toHaveLength(4)
+    expect(filasUmbral).toHaveLength(3)
     expect(filasUmbral).toContainEqual({ crop_id: 'nuevo', tipo: 'temperatura', min: 12, max: 28 })
+    expect(filasUmbral).not.toContainEqual(expect.objectContaining({ tipo: 'luminosidad' }))
   })
 
   it('crearCultivo compensa (borra el crop) si fallan los umbrales', async () => {

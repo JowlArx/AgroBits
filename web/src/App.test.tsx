@@ -50,7 +50,8 @@ describe('flujo de cultivos en la interfaz (T-13/T-23)', () => {
 
     expect((screen.getByTestId('min-temperatura') as HTMLInputElement).value).toBe('15')
     expect((screen.getByTestId('max-temperatura') as HTMLInputElement).value).toBe('28')
-    expect((screen.getByTestId('max-luminosidad') as HTMLInputElement).value).toBe('50000')
+    // La luz ya no lleva umbral por lectura: el DLI se evalúa a diario en la BD.
+    expect(screen.queryByTestId('max-luminosidad')).toBeNull()
   })
 
   it('R-11 AC1: cambiar de tipo en el formulario reemplaza los umbrales', () => {

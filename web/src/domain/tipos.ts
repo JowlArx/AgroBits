@@ -33,7 +33,9 @@ export interface Umbral {
   max: number
 }
 
-export type UmbralesPorTipo = Record<TipoMedicion, Umbral>
+// La luminosidad no tiene umbral en lux: se evalúa por DLI (perfil del cultivo).
+export type UmbralesPorTipo = Record<Exclude<TipoMedicion, 'luminosidad'>, Umbral> &
+  Partial<Record<'luminosidad', Umbral>>
 
 export interface Cultivo {
   id: string

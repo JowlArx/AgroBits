@@ -2,7 +2,7 @@
 // una única alerta activa por (cultivo, tipo) que se mantiene mientras la
 // medición siga fuera de rango y se resuelve al volver al rango.
 
-import type { Umbral } from './tipos'
+import type { TipoMedicion, Umbral } from './tipos'
 
 /** Fuera de rango cuando el valor es estrictamente menor que el mínimo o
  *  estrictamente mayor que el máximo. Los valores exactos en el límite
@@ -19,12 +19,16 @@ export type AccionAlerta = 'crear' | 'mantener' | 'resolver' | 'ninguna'
  * - 'mantener' → fuera de rango y ya había alerta activa: sin duplicados (AC2)
  * - 'resolver' → dentro de rango y había alerta activa (AC3)
  * - 'ninguna'  → dentro de rango y sin alerta previa (AC4)
+ * La luminosidad no genera alertas por lectura: se evalúa a diario (DLI) en la BD.
  */
 export function evaluarAlerta(
   valor: number,
   umbral: Umbral,
   hayAlertaActiva: boolean,
+  tipo?: TipoMedicion,
 ): AccionAlerta {
+  // Shortcut: la alerta de luminosidad es diaria (DLI), no por lectura.
+  if (tipo === 'luminosidad') return 'ninguna'
   const fuera = estaFueraDeRango(valor, umbral)
   if (fuera) return hayAlertaActiva ? 'mantener' : 'crear'
   return hayAlertaActiva ? 'resolver' : 'ninguna'

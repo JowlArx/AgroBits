@@ -111,7 +111,8 @@ export default function ListaCultivos({ onNuevo, onEditar, onVerMediciones }: Pr
                     </tr>
                   </thead>
                   <tbody>
-                    {TIPOS_MEDICION.map((tipo) => (
+                    {/* Shortcut: la luminosidad (DLI) aún no tiene fila aquí; pendiente. */}
+                    {TIPOS_MEDICION.filter((tipo) => tipo !== 'luminosidad').map((tipo) => (
                       <tr key={tipo}>
                         <td>{ETIQUETAS_MEDICION[tipo]}</td>
                         <td>{cultivo.umbrales[tipo].min}</td>

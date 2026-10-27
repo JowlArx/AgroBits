@@ -14,6 +14,7 @@ export function validarUmbrales(umbrales: UmbralesPorTipo): ErrorUmbral[] {
   for (const tipo of TIPOS_MEDICION) {
     const umbral = umbrales[tipo]
     if (umbral === undefined) {
+      if (tipo === 'luminosidad') continue // DLI: la alerta es diaria en la BD (20261027000002), sin umbral por lectura
       errores.push({ tipo, motivo: 'Falta el umbral para este tipo de medición' })
       continue
     }

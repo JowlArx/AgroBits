@@ -20,7 +20,6 @@ export const CATALOGO_CULTIVOS: readonly EntradaCatalogo[] = [
       humedad_suelo: { min: 40, max: 75 },
       temperatura: { min: 15, max: 28 },
       humedad_ambiental: { min: 50, max: 80 },
-      luminosidad: { min: 10_000, max: 50_000 },
     },
   },
   {
@@ -29,7 +28,6 @@ export const CATALOGO_CULTIVOS: readonly EntradaCatalogo[] = [
       humedad_suelo: { min: 45, max: 75 },
       temperatura: { min: 10, max: 22 },
       humedad_ambiental: { min: 50, max: 80 },
-      luminosidad: { min: 8_000, max: 40_000 },
     },
   },
   {
@@ -38,7 +36,6 @@ export const CATALOGO_CULTIVOS: readonly EntradaCatalogo[] = [
       humedad_suelo: { min: 40, max: 70 },
       temperatura: { min: 18, max: 30 },
       humedad_ambiental: { min: 50, max: 80 },
-      luminosidad: { min: 10_000, max: 45_000 },
     },
   },
   {
@@ -47,7 +44,6 @@ export const CATALOGO_CULTIVOS: readonly EntradaCatalogo[] = [
       humedad_suelo: { min: 40, max: 70 },
       temperatura: { min: 16, max: 30 },
       humedad_ambiental: { min: 50, max: 80 },
-      luminosidad: { min: 12_000, max: 50_000 },
     },
   },
 ]

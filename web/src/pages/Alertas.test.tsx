@@ -29,17 +29,17 @@ function fijarUmbral(tipo: string, min: string, max: string): void {
   fireEvent.change(screen.getByTestId(`max-${tipo}`), { target: { value: max } })
 }
 
-/** Umbrales donde solo la humedad de suelo queda fuera del rango simulado (5–80 %). */
+/** Umbrales donde solo la humedad de suelo queda fuera del rango simulado (5–80 %).
+ *  La luz ya no lleva umbral por lectura: el DLI se evalúa a diario en la BD. */
 function umbralesSoloHumedadFuera(): void {
   fijarUmbral('humedad_suelo', '0', '1')
   fijarUmbral('temperatura', '0', '100')
   fijarUmbral('humedad_ambiental', '0', '100')
-  fijarUmbral('luminosidad', '0', '100000')
 }
 
 /** Umbrales tan amplios que toda lectura simulada queda dentro de rango. */
 function umbralesSiempreDentro(): void {
-  for (const tipo of TIPOS_MEDICION) fijarUmbral(tipo, '-1000', '100000')
+  for (const tipo of TIPOS_MEDICION.filter((t) => t !== 'luminosidad')) fijarUmbral(tipo, '-1000', '100000')
 }
 
 async function crearCultivoCon(nombre: string, fijarUmbrales: () => void): Promise<void> {

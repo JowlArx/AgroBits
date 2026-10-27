@@ -283,6 +283,8 @@ export class DatosFalsos implements ProveedorDatos {
       if (!cultivo) continue
 
       for (const tipo of TIPOS_MEDICION) {
+        // La luminosidad se evalúa a diario (DLI) en BD, no por lectura.
+        if (tipo === 'luminosidad') continue
         let ultima: Medicion | undefined
         for (const s of this.sensores) {
           if (!s.cultivoIds.includes(cultivoId)) continue

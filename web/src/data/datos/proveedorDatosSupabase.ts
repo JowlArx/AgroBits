@@ -241,7 +241,8 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
   }
 
   private async guardarUmbrales(cropId: string, umbrales: UmbralesPorTipo): Promise<boolean> {
-    const filas = TIPOS_MEDICION.map((tipo) => ({
+    // La luminosidad ya no tiene umbral en lux (se evalúa por DLI): no se copia.
+    const filas = TIPOS_MEDICION.filter((tipo) => tipo !== 'luminosidad').map((tipo) => ({
       crop_id: cropId,
       tipo,
       min: umbrales[tipo].min,
