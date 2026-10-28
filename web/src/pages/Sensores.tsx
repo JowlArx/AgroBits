@@ -10,16 +10,6 @@
 
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import {
-  Area,
-  CartesianGrid,
-  ComposedChart,
-  Line,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
-import {
   actualizarColorSensor,
   eliminarSensor,
   obtenerSensores,
@@ -28,11 +18,12 @@ import {
 import { obtenerCultivo, suscribirCultivos } from '../data/storeCultivos'
 import { eliminarMediciones, generarLectura, obtenerMediciones, suscribirMediciones } from '../data/medicionesSimuladas'
 import { cargarAlertas } from '../data/storeAlertas'
-import { COLORES_SENSOR, TIPOS_MEDICION, UNIDADES, type ColorSensor, type Medicion, type TipoMedicion } from '../domain/tipos'
+import { COLORES_SENSOR, TIPOS_MEDICION, type ColorSensor, type Medicion, type TipoMedicion } from '../domain/tipos'
 import { dliEstimado } from '../domain/luz'
 import { numero } from '../domain/formato'
 import { ETIQUETAS_COLOR_SENSOR, ETIQUETAS_MEDICION, ETIQUETAS_MEDICION_CORTA, VAR_COLOR_SENSOR } from '../data/catalogo'
 import ConfirmacionEnLinea from '../components/ConfirmacionEnLinea'
+import GraficoLecturas from '../components/GraficoLecturas'
 import Historial from './Historial'
 
 interface Props {
@@ -43,13 +34,6 @@ interface Props {
 function horaLegible(iso: string): string {
   const fecha = new Date(iso)
   return Number.isNaN(fecha.getTime()) ? iso : fecha.toLocaleString('es-ES')
-}
-
-function horaCorta(iso: string): string {
-  const fecha = new Date(iso)
-  return Number.isNaN(fecha.getTime())
-    ? iso
-    : fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 }
 
 /** Última lectura del sensor (la más reciente de cualquier tipo). */
@@ -125,7 +109,7 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
     ? obtenerMediciones(sensorActivo.id)
         .filter((m) => m.tipo === tipoActivo)
         .slice(-15)
-        .map((m) => ({ medidaEn: m.medidaEn, hora: horaCorta(m.medidaEn), valor: m.valor }))
+        .map((m) => ({ medidaEn: m.medidaEn, valor: m.valor }))
     : []
 
   const ultimasDelActivo: Partial<Record<TipoMedicion, Medicion>> = sensorActivo
@@ -248,57 +232,11 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
                           ver la curva.
                         </p>
                       ) : (
-                        <div className="grafico-lineas grafico-sensor">
-                          <ResponsiveContainer width="100%" height="100%">
-                            {/* D31: eje Y alineado con el título + relleno plano (DESIGN.md). */}
-                            <ComposedChart data={puntosSensor} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
-                              <CartesianGrid stroke="var(--borde)" strokeDasharray="3 3" vertical={false} />
-                              {/* D41: la clave del eje es el instante completo, no la hora
-                                  formateada (misma razón que en el tablero). */}
-                              <XAxis
-                                dataKey="medidaEn"
-                                tickFormatter={(valor: string) => horaCorta(valor)}
-                                stroke="var(--texto-tenue)"
-                                tickLine={false}
-                                axisLine={false}
-                                fontSize={12}
-                              />
-                              <YAxis stroke="var(--texto-tenue)" tickLine={false} axisLine={false} fontSize={12} width={44} />
-                              <Tooltip
-                                /* D41: la etiqueta del tooltip es el instante; se muestra
-                                    como hora legible, no como marca de tiempo cruda. */
-                                labelFormatter={(valor) => horaCorta(String(valor))}
-                                contentStyle={{
-                                  background: 'var(--superficie)',
-                                  border: '1px solid var(--borde)',
-                                  borderRadius: 8,
-                                  color: 'var(--texto)',
-                                  fontFamily: 'var(--fuente-texto)',
-                                }}
-                                formatter={(valor) => [`${valor} ${UNIDADES[tipoActivo]}`, ETIQUETAS_MEDICION[tipoActivo]]}
-                              />
-                              <Area
-                                type="linear"
-                                dataKey="valor"
-                                /* D41: el relleno no va al tooltip (si no, el sensor
-                                   aparecía dos veces). */
-                                tooltipType="none"
-                                stroke="none"
-                                fill={VAR_COLOR_SENSOR[sensorActivo.colorLinea]}
-                                fillOpacity={0.12}
-                                isAnimationActive={false}
-                              />
-                              <Line
-                                type="linear"
-                                dataKey="valor"
-                                stroke={VAR_COLOR_SENSOR[sensorActivo.colorLinea]}
-                                strokeWidth={2}
-                                dot={false}
-                                isAnimationActive={false}
-                              />
-                            </ComposedChart>
-                          </ResponsiveContainer>
-                        </div>
+                        <GraficoLecturas
+                          puntos={puntosSensor}
+                          tipo={tipoActivo}
+                          color={VAR_COLOR_SENSOR[sensorActivo.colorLinea]}
+                        />
                       )}
 
                       <h5>Última lectura de cada tipo</h5>

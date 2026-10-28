@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import App from '../App'
 import { exigirProveedor } from '../data/datos/proveedorDatos'
 import { reiniciarCultivos, obtenerCultivos } from '../data/storeCultivos'
@@ -386,5 +386,19 @@ describe('orden de la vista de detalle (hitos de jerarquía)', () => {
     const mediciones = screen.getByRole('heading', { level: 2, name: 'Mediciones' })
     const sensores = screen.getByRole('heading', { level: 3, name: 'Sensores' })
     expect(mediciones.compareDocumentPosition(sensores) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+})
+
+describe('evolución de lecturas en la banda inferior', () => {
+  it('sin lecturas del sensor y tipo: muestra «sin lecturas» con las pestañas de tipo', async () => {
+    render(<App />)
+    await crearCultivoConDetalle('Huerto grafica')
+    crearSensor('Sensor G')
+    await screen.findByTestId('lista-sensores')
+
+    const bloque = screen.getByTestId('grafico-cultivo')
+    expect(within(bloque).getByRole('heading', { level: 3, name: 'Evolución de lecturas' })).toBeTruthy()
+    expect(within(bloque).getAllByRole('button')).toHaveLength(TIPOS_MEDICION.length)
+    expect(screen.getByTestId('sin-lecturas-cultivo').textContent).toMatch(/sin lecturas/i)
   })
 })

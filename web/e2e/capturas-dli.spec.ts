@@ -54,6 +54,11 @@ test('capturas de la vista de cultivo en tres anchos', async ({ page }) => {
     await page.waitForTimeout(200)
     await page.screenshot({ path: `${SALIDA}\\cultivo-390-matriz.png` })
 
+    // Banda inferior en móvil: sensores, alertas y gráfica colapsados a 1 columna.
+    await page.getByRole('heading', { name: 'Evolución de lecturas' }).scrollIntoViewIfNeeded()
+    await page.waitForTimeout(200)
+    await page.screenshot({ path: `${SALIDA}\\banda-390.png` })
+
     // Acciones con el formulario expandido.
     await page.getByRole('button', { name: /Asociar sensor/ }).click()
     await page.getByRole('button', { name: 'Crear y asociar' }).scrollIntoViewIfNeeded()

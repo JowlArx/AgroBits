@@ -17,8 +17,9 @@ import { alertasOrdenadas, cargarAlertas, obtenerAlertas, suscribirAlertas } fro
 import ConfirmacionEnLinea from '../components/ConfirmacionEnLinea'
 import { exigirProgramador } from '../data/programadorLecturas'
 import { obtenerCultivo, suscribirCultivos, obtenerCultivos } from '../data/storeCultivos'
-import { TIPOS_MEDICION, UNIDADES } from '../domain/tipos'
-import { ETIQUETAS_MEDICION } from '../data/catalogo'
+import { TIPOS_MEDICION, UNIDADES, type TipoMedicion } from '../domain/tipos'
+import { ETIQUETAS_MEDICION, ETIQUETAS_MEDICION_CORTA, VAR_COLOR_SENSOR } from '../data/catalogo'
+import GraficoLecturas from '../components/GraficoLecturas'
 import { exigirProveedor } from '../data/datos/proveedorDatos'
 import { numero, tiempoRelativo } from '../domain/formato'
 
@@ -126,6 +127,9 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
   // Formularios de sensor plegados por defecto; `null` = sin elección manual
   // (se despliegan solo si el cultivo no tiene sensores).
   const [asociarManual, setAsociarManual] = useState<boolean | null>(null)
+  // Gráfica de evolución de la banda inferior: tipo de medición y sensor elegidos.
+  const [tipoGrafico, setTipoGrafico] = useState<TipoMedicion>('temperatura')
+  const [sensorGraficoId, setSensorGraficoId] = useState('')
   // DLI de ayer (UTC) de ESTE cultivo: lo calcula el proveedor (R-H4) con los
   // sensores enlazados al cultivo. `null` (se muestra «—») si no hay lecturas
   // de luz ayer o aún no ha llegado la respuesta.
@@ -182,6 +186,17 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
   const ultimas = ultimasPorTipo(sensores.map((s) => s.id))
   const conDatos = TIPOS_MEDICION.filter((tipo) => ultimas[tipo] !== undefined).length
   const formulariosAbiertos = asociarManual ?? sensores.length === 0
+  // Sensor de la gráfica: el elegido si sigue en el cultivo; si no, el primero.
+  // shortcut: solo se pinta un sensor a la vez (sin superponer series).
+  const sensorGrafico = sensores.find((s) => s.id === sensorGraficoId) ?? sensores[0]
+  const colorGrafico = sensorGrafico ? VAR_COLOR_SENSOR[sensorGrafico.colorLinea] : 'var(--texto-tenue)'
+  // Últimas 15 lecturas del tipo elegido para ese sensor (mismo criterio que Sensores).
+  const puntosGrafico = sensorGrafico
+    ? obtenerMediciones(sensorGrafico.id)
+        .filter((m) => m.tipo === tipoGrafico)
+        .slice(-15)
+        .map((m) => ({ medidaEn: m.medidaEn, valor: m.valor }))
+    : []
   // Alertas de este cultivo (R-14), activas primero; máximo 5 en esta vista.
   const alertasDelCultivo = alertasOrdenadas()
     .filter((a) => a.cultivoId === cultivoId)
@@ -328,7 +343,9 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
         </tbody>
       </table>
 
-      {/* 2. Sensores del cultivo. */}
+      {/* 2. Banda inferior en dos columnas: izquierda Sensores + Alertas; derecha la evolución. */}
+      <div className="banda-inferior">
+      <div className="columna-banda-inferior">
       <h3>Sensores</h3>
       {sensores.length === 0 ? (
         <p data-testid="sin-sensores" className="estado-vacio">Este cultivo aún no tiene sensores asociados.</p>
@@ -369,6 +386,45 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
           ))}
         </ul>
       )}
+
+      </div>
+
+      {/* Columna derecha: evolución de lecturas del cultivo. */}
+      <div className="bloque-grafico-cultivo" data-testid="grafico-cultivo">
+        <h3>Evolución de lecturas</h3>
+        {sensores.length > 1 && (
+          <label className="selector-sensor-grafico">
+            Sensor
+            <select
+              name="sensorGrafico"
+              data-testid="sensor-grafico"
+              value={sensorGrafico?.id ?? ''}
+              onChange={(e) => setSensorGraficoId(e.target.value)}
+            >
+              {sensores.map((sensor) => (
+                <option key={sensor.id} value={sensor.id}>
+                  {sensor.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <div className="pestanas-widget" role="group" aria-label="Tipo de medición a mostrar">
+          {TIPOS_MEDICION.map((tipo) => (
+            <button key={tipo} type="button" aria-pressed={tipo === tipoGrafico} onClick={() => setTipoGrafico(tipo)}>
+              {ETIQUETAS_MEDICION_CORTA[tipo]}
+            </button>
+          ))}
+        </div>
+        {puntosGrafico.length === 0 ? (
+          <p className="estado-vacio" data-testid="sin-lecturas-cultivo">
+            Sin lecturas todavía para “{ETIQUETAS_MEDICION[tipoGrafico]}”.
+          </p>
+        ) : (
+          <GraficoLecturas puntos={puntosGrafico} tipo={tipoGrafico} color={colorGrafico} />
+        )}
+      </div>
+      </div>
 
       {/* 3. Formularios plegados tras un único botón; abiertos si no hay sensores. */}
       <button

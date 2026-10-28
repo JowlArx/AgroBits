@@ -1443,6 +1443,39 @@ button.boton-google:hover {
    `.visually-hidden` de más arriba. */
 
 /* D34 — Sensores del cultivo con la acción de desasociar. */
+/* Banda inferior del detalle de cultivo: Sensores + Alertas (izq.) y evolución (der.). */
+.banda-inferior {
+  display: grid;
+  gap: var(--espacio-5);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  align-items: start;
+}
+
+.columna-banda-inferior,
+.bloque-grafico-cultivo {
+  min-width: 0;
+}
+
+.selector-sensor-grafico {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+@media (max-width: 62rem) {
+  .banda-inferior {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Móvil: las 4 pestañas del gráfico del cultivo se envuelven; a 390 px la
+   última quedaba cortada. Solo dentro de este bloque, no en Sensores. */
+@media (max-width: 47.99rem) {
+  .bloque-grafico-cultivo .pestanas-widget {
+    flex-wrap: wrap;
+  }
+}
+
 .lista-sensores-cultivo {
   list-style: none;
   margin: 0 0 var(--espacio-4);
