@@ -392,29 +392,31 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
       {/* Columna derecha: evolución de lecturas del cultivo. */}
       <div className="bloque-grafico-cultivo" data-testid="grafico-cultivo">
         <h3>Evolución de lecturas</h3>
-        {sensores.length > 1 && (
-          <label className="selector-sensor-grafico">
-            Sensor
-            <select
-              name="sensorGrafico"
-              data-testid="sensor-grafico"
-              value={sensorGrafico?.id ?? ''}
-              onChange={(e) => setSensorGraficoId(e.target.value)}
-            >
-              {sensores.map((sensor) => (
-                <option key={sensor.id} value={sensor.id}>
-                  {sensor.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-        <div className="pestanas-widget" role="group" aria-label="Tipo de medición a mostrar">
-          {TIPOS_MEDICION.map((tipo) => (
-            <button key={tipo} type="button" aria-pressed={tipo === tipoGrafico} onClick={() => setTipoGrafico(tipo)}>
-              {ETIQUETAS_MEDICION_CORTA[tipo]}
-            </button>
-          ))}
+        <div className="barra-grafico">
+          <div className="pestanas-widget" role="group" aria-label="Tipo de medición a mostrar">
+            {TIPOS_MEDICION.map((tipo) => (
+              <button key={tipo} type="button" aria-pressed={tipo === tipoGrafico} onClick={() => setTipoGrafico(tipo)}>
+                {ETIQUETAS_MEDICION_CORTA[tipo]}
+              </button>
+            ))}
+          </div>
+          {sensores.length > 1 && (
+            <label className="selector-sensor-grafico">
+              Sensor
+              <select
+                name="sensorGrafico"
+                data-testid="sensor-grafico"
+                value={sensorGrafico?.id ?? ''}
+                onChange={(e) => setSensorGraficoId(e.target.value)}
+              >
+                {sensores.map((sensor) => (
+                  <option key={sensor.id} value={sensor.id}>
+                    {sensor.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
         </div>
         {puntosGrafico.length === 0 ? (
           <p className="estado-vacio" data-testid="sin-lecturas-cultivo">

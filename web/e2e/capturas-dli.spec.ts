@@ -17,6 +17,8 @@ import {
 const SALIDA = 'C:\\Users\\uarce\\AppData\\Local\\Temp\\opencode\\capturas'
 
 test('capturas de la vista de cultivo en tres anchos', async ({ page }) => {
+  // Dos sensores con espera de lectura (hasta 60 s c/u) + limpieza: supera los 120 s por defecto.
+  test.setTimeout(300_000)
   const nombre = `Huerto captura ${sello()}`
   const nombreSensor = `Sensor captura ${sello()}`
 
@@ -59,24 +61,50 @@ test('capturas de la vista de cultivo en tres anchos', async ({ page }) => {
     await page.waitForTimeout(200)
     await page.screenshot({ path: `${SALIDA}\\banda-390.png` })
 
+    // Segundo sensor: aparece el selector de sensor en el gráfico.
+    // Con un sensor el formulario va plegado: hay que abrirlo antes de rellenarlo.
+    await abrirFormularioSensor(page)
+    await crearSensor(page, 'Sensor captura 2 ' + sello())
+    await esperarLectura(page, 'temperatura')
+    await page.getByTestId('grafico-cultivo').scrollIntoViewIfNeeded()
+    await page.waitForTimeout(200)
+    await page.screenshot({ path: `${SALIDA}\\selector-390.png` })
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.waitForTimeout(300)
+    await page.getByTestId('grafico-cultivo').scrollIntoViewIfNeeded()
+    await page.waitForTimeout(200)
+    await page.screenshot({ path: `${SALIDA}\\selector-1440.png` })
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.waitForTimeout(300)
+
     // Acciones con el formulario expandido.
-    await page.getByRole('button', { name: /Asociar sensor/ }).click()
+    await abrirFormularioSensor(page)
     await page.getByRole('button', { name: 'Crear y asociar' }).scrollIntoViewIfNeeded()
     await page.waitForTimeout(200)
     await page.screenshot({ path: `${SALIDA}\\acciones-390.png` })
   } finally {
-    await eliminar(page, nombreSensor)
+    await eliminarSensoresCaptura(page)
     await eliminarCultivo(page, nombre)
   }
 })
 
-async function eliminar(page: import('@playwright/test').Page, nombreSensor: string): Promise<void> {
+// Despliega el formulario "＋ Asociar sensor" solo si está plegado (no lo pliega).
+async function abrirFormularioSensor(page: import('@playwright/test').Page): Promise<void> {
+  const alterna = page.getByRole('button', { name: /Asociar sensor/ })
+  if ((await alterna.getAttribute('aria-expanded')) !== 'true') await alterna.click()
+}
+
+// Borra TODOS los sensores cuyo nombre empieza por 'Sensor captura' (incluye el segundo).
+async function eliminarSensoresCaptura(page: import('@playwright/test').Page): Promise<void> {
   const nav = page.getByTestId('nav-sensores')
   if ((await nav.count()) === 0) return
   await nav.click()
-  const tarjeta = page.getByTestId('tarjeta-sensor').filter({ hasText: nombreSensor })
-  if ((await tarjeta.count()) === 0) return
-  await tarjeta.getByRole('button', { name: 'Eliminar' }).click()
-  await tarjeta.getByRole('button', { name: 'Sí', exact: true }).click()
-  await expect(tarjeta).toHaveCount(0, { timeout: 30_000 })
+  const tarjetas = page.getByTestId('tarjeta-sensor').filter({ hasText: 'Sensor captura' })
+  const total = await tarjetas.count()
+  for (let i = 0; i < total; i++) {
+    const tarjeta = tarjetas.first()
+    await tarjeta.getByRole('button', { name: 'Eliminar' }).click()
+    await tarjeta.getByRole('button', { name: 'Sí', exact: true }).click()
+    await expect(tarjetas).toHaveCount(total - i - 1, { timeout: 30_000 })
+  }
 }

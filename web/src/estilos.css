@@ -1451,9 +1451,30 @@ button.boton-google:hover {
   align-items: start;
 }
 
-.columna-banda-inferior,
-.bloque-grafico-cultivo {
+.columna-banda-inferior {
   min-width: 0;
+}
+
+/* Misma superficie que .widget (copiada, no reutilizada: el bloque conserva su nombre). */
+.bloque-grafico-cultivo {
+  /* D31: fondo plano (sin degradado; regla de house style). */
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: var(--espacio-4);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Pestañas de tipo y selector de sensor en una sola banda. */
+.barra-grafico {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--espacio-3);
+  flex-wrap: wrap;
+  margin: var(--espacio-2) 0;
 }
 
 .selector-sensor-grafico {
@@ -1468,11 +1489,22 @@ button.boton-google:hover {
   }
 }
 
-/* Móvil: las 4 pestañas del gráfico del cultivo se envuelven; a 390 px la
-   última quedaba cortada. Solo dentro de este bloque, no en Sensores. */
+/* Móvil: sensor primero y los tipos de medición en 2×2 parejo (en vez del
+   wrap desigual). Solo dentro de este bloque, no en Sensores. */
 @media (max-width: 47.99rem) {
+  .bloque-grafico-cultivo .barra-grafico {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bloque-grafico-cultivo .selector-sensor-grafico {
+    order: -1;
+  }
+
   .bloque-grafico-cultivo .pestanas-widget {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--espacio-1);
   }
 }
 
