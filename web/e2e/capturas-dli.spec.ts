@@ -61,6 +61,11 @@ test('capturas de la vista de cultivo en tres anchos', async ({ page }) => {
     await page.waitForTimeout(200)
     await page.screenshot({ path: `${SALIDA}\\banda-390.png` })
 
+    // Acciones en móvil: botón «Generar lectura simulada» y aviso bajo él.
+    await page.getByText('Las lecturas simuladas se guardan').scrollIntoViewIfNeeded()
+    await page.waitForTimeout(200)
+    await page.screenshot({ path: `${SALIDA}\\acciones-simular-390.png` })
+
     // Segundo sensor: aparece el selector de sensor en el gráfico.
     // Con un sensor el formulario va plegado: hay que abrirlo antes de rellenarlo.
     await abrirFormularioSensor(page)

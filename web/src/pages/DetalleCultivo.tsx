@@ -426,95 +426,98 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
           <GraficoLecturas puntos={puntosGrafico} tipo={tipoGrafico} color={colorGrafico} />
         )}
       </div>
-      </div>
 
-      {/* 3. Formularios plegados tras un único botón; abiertos si no hay sensores. */}
-      <button
-        type="button"
-        className="alterna-sensores"
-        aria-expanded={formulariosAbiertos}
-        onClick={() => setAsociarManual(!formulariosAbiertos)}
-      >
-        ＋ Asociar sensor
-      </button>
-
-      {formulariosAbiertos && (
-        <>
-      {/* D35: sensors de la cuenta que todavía no están en este cultivo. */}
-      {sensoresDisponibles.length > 0 && (
-        <form onSubmit={asociarExistente} className="fila-sensor">
-          <label>
-            Sensor de tu cuenta
-            <select
-              name="sensorParaAsociar"
-              data-testid="sensor-para-asociar"
-              value={sensorParaAsociar}
-              onChange={(e) => setSensorParaAsociar(e.target.value)}
-            >
-              <option value="">— Elige un sensor —</option>
-              {sensoresDisponibles.map((sensor) => (
-                <option key={sensor.id} value={sensor.id}>
-                  {sensor.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button type="submit" className="btn-primario" data-testid="asociar-sensor" disabled={!sensorParaAsociar}>
-            Asociar
-          </button>
-        </form>
-      )}
-
-      <form onSubmit={crearYAsociar} className="fila-sensor">
-        <label>
-          Nombre del sensor
-          <input
-            type="text"
-            name="nombreSensor"
-            autoComplete="off"
-            data-testid="nombre-sensor"
-            value={nombreSensor}
-            onChange={(e) => setNombreSensor(e.target.value)}
-            placeholder="Ej.: Sensor del balcón"
-          />
-        </label>
-        <button type="submit" className="btn-primario" data-testid="crear-sensor">
-          Crear y asociar
-        </button>
-        {errorSensor && (
-          <p role="alert" data-testid="error-sensor">
-            {errorSensor}
-          </p>
-        )}
-      </form>
-        </>
-      )}
-
-      {/* 4. Simulación y aviso. */}
-      {sensores.length > 0 && (
+      {/* 3. Acciones: tercer hijo de la banda; en escritorio, bajo la columna de sensores. */}
+      <div className="acciones-cultivo">
+        {/* Formularios plegados tras un único botón; abiertos si no hay sensores. */}
         <button
           type="button"
-          className="btn-primario"
-          data-testid="simular-lectura"
-          onClick={() => {
-            void (async () => {
-              // T-23: cada lectura se guarda en la BD antes de mostrarse.
-              for (const sensor of sensores) await generarLectura(sensor.id)
-              // T-25: la evaluación de alertas (D14, R-13) es del trigger de
-              // la BD; se recargan para que la vista de alertas (R-14) las
-              // muestre en esta sesión sin recargar la página.
-              await cargarAlertas()
-            })()
-          }}
+          className="alterna-sensores"
+          aria-expanded={formulariosAbiertos}
+          onClick={() => setAsociarManual(!formulariosAbiertos)}
         >
-          Generar lectura simulada
+          ＋ Asociar sensor
         </button>
-      )}
 
-      <p className="aviso aviso-compacto">
-        Las lecturas simuladas se guardan en el servidor y se generan automáticamente cada 5
-        minutos por sensor mientras la sesión está abierta.
-      </p>
+        {formulariosAbiertos && (
+          <>
+            {/* D35: sensors de la cuenta que todavía no están en este cultivo. */}
+            {sensoresDisponibles.length > 0 && (
+              <form onSubmit={asociarExistente} className="fila-sensor">
+                <label>
+                  Sensor de tu cuenta
+                  <select
+                    name="sensorParaAsociar"
+                    data-testid="sensor-para-asociar"
+                    value={sensorParaAsociar}
+                    onChange={(e) => setSensorParaAsociar(e.target.value)}
+                  >
+                    <option value="">— Elige un sensor —</option>
+                    {sensoresDisponibles.map((sensor) => (
+                      <option key={sensor.id} value={sensor.id}>
+                        {sensor.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button type="submit" className="btn-primario" data-testid="asociar-sensor" disabled={!sensorParaAsociar}>
+                  Asociar
+                </button>
+              </form>
+            )}
+
+            <form onSubmit={crearYAsociar} className="fila-sensor">
+              <label>
+                Nombre del sensor
+                <input
+                  type="text"
+                  name="nombreSensor"
+                  autoComplete="off"
+                  data-testid="nombre-sensor"
+                  value={nombreSensor}
+                  onChange={(e) => setNombreSensor(e.target.value)}
+                  placeholder="Ej.: Sensor del balcón"
+                />
+              </label>
+              <button type="submit" className="btn-primario" data-testid="crear-sensor">
+                Crear y asociar
+              </button>
+              {errorSensor && (
+                <p role="alert" data-testid="error-sensor">
+                  {errorSensor}
+                </p>
+              )}
+            </form>
+          </>
+        )}
+
+        {/* Simulación y aviso. */}
+        {sensores.length > 0 && (
+          <button
+            type="button"
+            className="btn-primario"
+            data-testid="simular-lectura"
+            onClick={() => {
+              void (async () => {
+                // T-23: cada lectura se guarda en la BD antes de mostrarse.
+                for (const sensor of sensores) await generarLectura(sensor.id)
+                // T-25: la evaluación de alertas (D14, R-13) es del trigger de
+                // la BD; se recargan para que la vista de alertas (R-14) las
+                // muestre en esta sesión sin recargar la página.
+                await cargarAlertas()
+              })()
+            }}
+          >
+            Generar lectura simulada
+          </button>
+        )}
+
+        <p className="aviso aviso-compacto aviso-simulacion">
+          Las lecturas simuladas se guardan en el servidor y se generan automáticamente cada 5
+          minutos por sensor mientras la sesión está abierta.
+        </p>
+      </div>
+      </div>
     </section>
   )
 }
