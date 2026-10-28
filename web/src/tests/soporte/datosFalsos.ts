@@ -40,6 +40,11 @@ export class DatosFalsos implements ProveedorDatos {
   private contadorSensor = 0
   private mediciones = new Map<string, Medicion[]>()
   private alertas: Alerta[] = []
+
+  /** Solo para tests: añade una alerta ya construida (p. ej. resueltas para probar el historial paginado) sin depender de lecturas. */
+  sembrarAlerta(alerta: Alerta): void {
+    this.alertas = [...this.alertas, alerta]
+  }
   private contadorAlerta = 0
   private perfil: Perfil | null = null
 

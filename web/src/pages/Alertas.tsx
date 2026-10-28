@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { alertasOrdenadas, obtenerAlertas, suscribirAlertas, type Alerta } from '../data/storeAlertas'
 import { obtenerCultivo } from '../data/storeCultivos'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
@@ -12,6 +12,9 @@ function horaLegible(iso: string): string {
     ? iso
     : fecha.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })
 }
+
+/** Alertas del historial que se muestran antes de pulsar «Mostrar más». */
+const ALERTAS_POR_PAGINA = 10
 
 function filaAlerta(alerta: Alerta) {
   const cultivo = obtenerCultivo(alerta.cultivoId)
@@ -133,8 +136,10 @@ export default function Alertas() {
   const desde = params.desde ? desdeIsoLocal(params.desde) : undefined
   const hasta = params.hasta ? desdeIsoLocal(params.hasta) : undefined
   const rango: RangoTiempo = { tipo: tipoRango, desde, hasta }
+  const [mostradas, setMostradas] = useState(ALERTAS_POR_PAGINA)
 
   function elegirRango(tipo: TipoPreseleccion | 'personalizado'): void {
+    setMostradas(ALERTAS_POR_PAGINA)
     if (tipo === 'personalizado') {
       escribirParamsUrl(
         { rango: 'personalizado', desde: aIsoLocal(desde ?? inicioDeHoy()), hasta: aIsoLocal(hasta ?? finDeHoy()) },
@@ -174,6 +179,15 @@ export default function Alertas() {
           {' · '}
           {historial.length} {historial.length === 1 ? 'resuelta' : 'resueltas'}
         </p>
+        {/* Escritorio: el log se descarga desde la cabecera, sin bajar a la
+            zona final de la vista. Incluye todo el historial, no solo lo visible. */}
+        <button
+          data-testid="descargar-log"
+          className="btn-primario solo-escritorio descargar-log"
+          onClick={() => descargarLogAlertas([...activas, ...historial])}
+        >
+          Descargar log
+        </button>
       </header>
 
       {/* --- Sección 1: las alertas que hay ahora mismo --- */}
@@ -261,20 +275,23 @@ export default function Alertas() {
             No hay alertas resueltas en el rango de tiempo seleccionado.
           </p>
         ) : (
-          <ul className="lista-alertas" data-testid="lista-historial">
-            {historial.map(filaAlerta)}
-          </ul>
+          <>
+            <ul className="lista-alertas" data-testid="lista-historial">
+              {historial.slice(0, mostradas).map(filaAlerta)}
+            </ul>
+            {historial.length > mostradas && (
+              <button
+                type="button"
+                className="btn-secundario"
+                data-testid="mostrar-mas-historial"
+                onClick={() => setMostradas(mostradas + ALERTAS_POR_PAGINA)}
+              >
+                Mostrar más ({historial.length - mostradas} restantes)
+              </button>
+            )}
+          </>
         )}
       </section>
-
-      {/* --- Botón Descargar log (escritorio: en móvil no aporta) --- */}
-      <button
-        data-testid="descargar-log"
-        className="btn-primario solo-escritorio descargar-log"
-        onClick={() => descargarLogAlertas([...activas, ...historial])}
-      >
-        Descargar log
-      </button>
     </section>
   )
 }

@@ -4,9 +4,10 @@ import App from '../App'
 import { reiniciarCultivos } from '../data/storeCultivos'
 import { reiniciarSensores } from '../data/storeSensores'
 import { reiniciarMediciones } from '../data/medicionesSimuladas'
-import { vaciarAlertas } from '../data/storeAlertas'
+import { cargarAlertas, vaciarAlertas } from '../data/storeAlertas'
 import { iniciarSesion } from '../data/storeSesion'
 import { TIPOS_MEDICION } from '../domain/tipos'
+import { datosFalsosActual } from '../tests/soporte/configurarTests'
 
 // T-23: los pasos de cultivo/sensor/lectura son asíncronos (ProveedorDatos);
 // T-25: la evaluación de alertas vive en la BD (trigger) y el doble
@@ -163,5 +164,22 @@ describe('pantalla de alertas (T-15/T-23, R-13 y R-14)', () => {
     abrirAlertas()
 
     expect(await screen.findByTestId('vacio-alertas')).toBeTruthy()
+  })
+
+  it('historial paginado: 10 filas y «Mostrar más» revela las 11 resueltas', async () => {
+    const datos = datosFalsosActual()
+    const ahora = Date.now()
+    for (let i = 0; i < 11; i++) {
+      const creadaEn = new Date(ahora - i * 60_000).toISOString()
+      datos.sembrarAlerta({ id: `resuelta-${i}`, cultivoId: 'cultivo-sembrado', tipo: 'humedad_suelo', valor: 90, estado: 'resuelta', creadaEn, resueltaEn: creadaEn })
+    }
+    await cargarAlertas()
+    render(<App />)
+    abrirAlertas()
+
+    const lista = await screen.findByTestId('lista-historial')
+    expect(lista.querySelectorAll('li')).toHaveLength(10)
+    fireEvent.click(screen.getByTestId('mostrar-mas-historial'))
+    await waitFor(() => expect(lista.querySelectorAll('li')).toHaveLength(11))
   })
 })

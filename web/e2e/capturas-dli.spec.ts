@@ -124,6 +124,17 @@ test('captura de «Última lectura por tipo» (1440)', async ({ page }) => {
   }
 })
 
+test('captura de la vista de alertas (1440 y 390)', async ({ page }) => {
+  await iniciarSesion(page, cuentaA)
+  await page.getByTestId('nav-alertas').click()
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.waitForTimeout(300)
+  await page.locator('.fila-entre').first().screenshot({ path: `${SALIDA}\\alertas-cabecera-1440.png` })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.waitForTimeout(300)
+  await page.screenshot({ path: `${SALIDA}\\alertas-390.png`, fullPage: true })
+})
+
 // Despliega el formulario "＋ Asociar sensor" solo si está plegado (no lo pliega).
 async function abrirFormularioSensor(page: import('@playwright/test').Page): Promise<void> {
   const alterna = page.getByRole('button', { name: /Asociar sensor/ })

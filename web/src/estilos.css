@@ -1106,10 +1106,6 @@ dd {
   font-size: 0.85rem;
 }
 
-.descargar-log {
-  margin-top: var(--espacio-4);
-}
-
 /* Errores (role="alert") -------------------------------------------------- */
 
 [role='alert'] {
@@ -1477,7 +1473,7 @@ button.boton-google:hover {
 
 @media (min-width: 62.01rem) {
   .acciones-cultivo .alterna-sensores {
-    margin-top: 0;
+    margin-top: var(--espacio-5);
   }
 }
 
