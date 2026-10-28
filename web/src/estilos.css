@@ -2672,7 +2672,10 @@ button.boton-google:hover {
 
   .acciones-topbar {
     margin-left: 0;
-    width: 100%;
+  }
+
+  .chip-alertas {
+    white-space: nowrap;
   }
 }
 
