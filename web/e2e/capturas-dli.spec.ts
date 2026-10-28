@@ -1,9 +1,18 @@
 // ESPEC DE CAPTURAS VISUALES (revisiones de diseño de la vista de cultivo).
-// Abre la lista de cultivos con el detalle "Ver mediciones" y captura
-// 1440, 768 y 390 px (más la matriz en 390) para comparar rondas de diseño.
+// Captura la lista de cultivos, el detalle "Ver mediciones", la matriz en
+// móvil y las acciones con el formulario expandido, en 1440, 768 y 390 px.
 
 import { test, expect } from '@playwright/test'
-import { abrirDetalle, cuentaA, crearCultivo, crearSensor, eliminarCultivo, esperarLectura, iniciarSesion, sello } from './entorno'
+import {
+  abrirDetalle,
+  cuentaA,
+  crearCultivo,
+  crearSensor,
+  eliminarCultivo,
+  esperarLectura,
+  iniciarSesion,
+  sello,
+} from './entorno'
 
 const SALIDA = 'C:\\Users\\uarce\\AppData\\Local\\Temp\\opencode\\capturas'
 
@@ -14,11 +23,23 @@ test('capturas de la vista de cultivo en tres anchos', async ({ page }) => {
   await iniciarSesion(page, cuentaA)
   try {
     await crearCultivo(page, nombre)
+
+    // Lista de cultivos: la tarjeta con sus botones (antes de abrir el detalle).
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.waitForTimeout(300)
+    await page.screenshot({ path: `${SALIDA}\\lista-1440.png`, fullPage: true })
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.waitForTimeout(300)
+    await page.screenshot({ path: `${SALIDA}\\lista-390.png`, fullPage: true })
+    await page.getByTestId('lista-cultivos').scrollIntoViewIfNeeded()
+    await page.waitForTimeout(200)
+    await page.screenshot({ path: `${SALIDA}\\tarjeta-390.png` })
+
+    // Detalle "Ver mediciones" con su sensor y lectura.
+    await page.setViewportSize({ width: 1440, height: 900 })
     await abrirDetalle(page, nombre)
     await crearSensor(page, nombreSensor)
     await esperarLectura(page, 'temperatura')
-
-    await page.setViewportSize({ width: 1440, height: 900 })
     await expect(page.getByTestId('tabla-mediciones')).toBeVisible()
     await page.screenshot({ path: `${SALIDA}\\cultivo-1440.png`, fullPage: true })
 
@@ -32,6 +53,12 @@ test('capturas de la vista de cultivo en tres anchos', async ({ page }) => {
     await page.getByTestId('tabla-mediciones').scrollIntoViewIfNeeded()
     await page.waitForTimeout(200)
     await page.screenshot({ path: `${SALIDA}\\cultivo-390-matriz.png` })
+
+    // Acciones con el formulario expandido.
+    await page.getByRole('button', { name: /Asociar sensor/ }).click()
+    await page.getByRole('button', { name: 'Crear y asociar' }).scrollIntoViewIfNeeded()
+    await page.waitForTimeout(200)
+    await page.screenshot({ path: `${SALIDA}\\acciones-390.png` })
   } finally {
     await eliminar(page, nombreSensor)
     await eliminarCultivo(page, nombre)

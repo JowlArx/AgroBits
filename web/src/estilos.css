@@ -401,6 +401,20 @@ legend {
   margin-bottom: 0;
 }
 
+/* El botón que despliega los formularios no se pega a la primera etiqueta. */
+.alterna-sensores {
+  margin-bottom: var(--espacio-3);
+}
+
+/* Móvil: el par control + botón no se parte en dos islas; el label encoge
+   para que el botón quede en la misma línea (mismo hueco que en escritorio). */
+@media (max-width: 47.99rem) {
+  .fila-sensor label {
+    flex: 1 1 12rem;
+    min-width: 0;
+  }
+}
+
 .fila-umbral {
   display: grid;
   /* minmax(0, …) evita que los inputs numéricos (ancho intrínseco) desborden

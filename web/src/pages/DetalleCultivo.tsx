@@ -373,6 +373,7 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
       {/* 3. Formularios plegados tras un único botón; abiertos si no hay sensores. */}
       <button
         type="button"
+        className="alterna-sensores"
         aria-expanded={formulariosAbiertos}
         onClick={() => setAsociarManual(!formulariosAbiertos)}
       >
