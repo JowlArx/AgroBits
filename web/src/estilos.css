@@ -401,8 +401,11 @@ legend {
   margin-bottom: 0;
 }
 
-/* El botón que despliega los formularios no se pega a la primera etiqueta. */
+/* Botones de la zona de acciones: separados entre sí y del bloque de
+   alertas que queda encima; el formulario no se pega a la primera etiqueta. */
 .alterna-sensores {
+  margin-top: var(--espacio-4);
+  margin-right: var(--espacio-4);
   margin-bottom: var(--espacio-3);
 }
 
