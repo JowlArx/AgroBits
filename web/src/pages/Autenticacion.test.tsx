@@ -86,6 +86,16 @@ describe('acceso real (T-22, Supabase Auth vía doble de contrato)', () => {
     expect(screen.getByTestId('nav-alertas')).toBeTruthy()
   })
 
+  it('el botón de ojo alterna la visibilidad de la contraseña', () => {
+    render(<App />)
+    const clave = screen.getByTestId('clave')
+    expect(clave.getAttribute('type')).toBe('password')
+    fireEvent.click(screen.getByRole('button', { name: 'Mostrar contraseña' }))
+    expect(clave.getAttribute('type')).toBe('text')
+    fireEvent.click(screen.getByRole('button', { name: 'Ocultar contraseña' }))
+    expect(clave.getAttribute('type')).toBe('password')
+  })
+
   it('registro de cuenta nueva entra en la aplicación (R-01 AC1)', async () => {
     render(<App />)
 

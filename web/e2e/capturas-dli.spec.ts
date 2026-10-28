@@ -93,6 +93,37 @@ test('capturas de la vista de cultivo en tres anchos', async ({ page }) => {
   }
 })
 
+test('captura del botón de ojo en el acceso (1440)', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/app.html')
+  await expect(page.getByTestId('pantalla-acceso')).toBeVisible()
+  await page.locator('.campo-clave').first().screenshot({ path: `${SALIDA}\\ojo-1440.png` })
+  await page.getByRole('button', { name: 'Mostrar contraseña' }).first().click()
+  await page.locator('.campo-clave').first().screenshot({ path: `${SALIDA}\\ojo-pulsado-1440.png` })
+})
+
+test('captura de «Última lectura por tipo» (1440)', async ({ page }) => {
+  test.setTimeout(300_000)
+  const nombre = `Huerto barras ${sello()}`
+  const nombreSensor = `Sensor captura barras ${sello()}`
+
+  await iniciarSesion(page, cuentaA)
+  try {
+    await crearCultivo(page, nombre)
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await abrirDetalle(page, nombre)
+    await crearSensor(page, nombreSensor)
+    await esperarLectura(page, 'temperatura')
+    // Vuelve a la vista principal (tablero) y captura las barras.
+    await page.goto('/app.html')
+    await expect(page.locator('.barras-tipo')).toBeVisible({ timeout: 30_000 })
+    await page.locator('.barras-tipo').screenshot({ path: `${SALIDA}\\barras-1440.png` })
+  } finally {
+    await eliminarSensoresCaptura(page)
+    await eliminarCultivo(page, nombre)
+  }
+})
+
 // Despliega el formulario "＋ Asociar sensor" solo si está plegado (no lo pliega).
 async function abrirFormularioSensor(page: import('@playwright/test').Page): Promise<void> {
   const alterna = page.getByRole('button', { name: /Asociar sensor/ })

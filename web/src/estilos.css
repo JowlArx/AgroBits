@@ -1798,8 +1798,8 @@ button.boton-google:hover {
 
 .barras-tipo li {
   display: grid;
-  /* D35: la etiqueta cede espacio y el valor no se corta. */
-  grid-template-columns: minmax(0, auto) minmax(2rem, 1fr) auto;
+  /* Columnas fijas: todas las pistas empiezan y miden igual. */
+  grid-template-columns: 9rem minmax(2rem, 1fr) 6.5rem;
   align-items: center;
   gap: var(--espacio-3);
   font-size: 0.9rem;
@@ -2750,4 +2750,31 @@ button.boton-google:hover {
   to {
     opacity: 1;
   }
+}
+
+/* Campo de contraseña: el ojo va dentro del campo, a la derecha. */
+.campo-clave {
+  position: relative;
+}
+
+.campo-clave input {
+  width: 100%;
+  padding-right: 2.75rem;
+}
+
+.boton-ver-clave {
+  position: absolute;
+  right: var(--espacio-1);
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--texto-tenue);
+  cursor: pointer;
 }

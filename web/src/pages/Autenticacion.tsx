@@ -16,6 +16,25 @@ import type { Localidad } from '../data/datos/proveedorDatos'
 // navega (la redirección va aislada en `data/sesion/redireccion.ts`); la
 // sesión llega sola cuando el navegador vuelve.
 
+/** Ojo para mostrar u ocultar la contraseña del campo que lo acompaña. */
+function BotonVerClave({ visible, onAlternar }: { visible: boolean; onAlternar: () => void }) {
+  return (
+    <button
+      type="button"
+      className="boton-ver-clave"
+      aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+      aria-pressed={visible}
+      onClick={onAlternar}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" focusable="false">
+        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+        <circle cx="12" cy="12" r="3" />
+        {visible && <path d="M3 3l18 18" />}
+      </svg>
+    </button>
+  )
+}
+
 type Modo = 'sesion' | 'registro'
 
 /** Logotipo oficial de Google (G de cuatro colores) para el botón de acceso. */
@@ -50,6 +69,8 @@ export default function Autenticacion() {
   const [email, setEmail] = useState('')
   const [clave, setClave] = useState('')
   const [confirmacion, setConfirmacion] = useState('')
+  const [mostrarClave, setMostrarClave] = useState(false)
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false)
   const [nombreUsuario, setNombreUsuario] = useState('')
   const [telefono, setTelefono] = useState('')
   const [provincia, setProvincia] = useState('')
@@ -194,17 +215,21 @@ export default function Autenticacion() {
         </label>
         <label>
           Contraseña
-          <input
-            type="password"
-            id="campo-clave"
-            name="clave"
-            autoComplete={modo === 'sesion' ? 'current-password' : 'new-password'}
-            aria-describedby="reglas-clave"
-            aria-invalid={invalido('clave') || undefined}
-            data-testid="clave"
-            value={clave}
-            onChange={(e) => setClave(e.target.value)}
-          />
+          <div className="campo-clave">
+            <input
+              type={mostrarClave ? 'text' : 'password'}
+              id="campo-clave"
+              name="clave"
+              aria-label="Contraseña"
+              autoComplete={modo === 'sesion' ? 'current-password' : 'new-password'}
+              aria-describedby="reglas-clave"
+              aria-invalid={invalido('clave') || undefined}
+              data-testid="clave"
+              value={clave}
+              onChange={(e) => setClave(e.target.value)}
+            />
+            <BotonVerClave visible={mostrarClave} onAlternar={() => setMostrarClave(!mostrarClave)} />
+          </div>
           {/* R-01 AC3 / riesgo T-22: la regla queda documentada en pantalla. */}
           <small id="reglas-clave" data-testid="reglas-clave">Mínimo {LONGITUD_MINIMA_CLAVE} caracteres.</small>
         </label>
@@ -212,16 +237,20 @@ export default function Autenticacion() {
           <>
             <label>
               Repite la contraseña
-              <input
-                type="password"
-                id="campo-confirmacion"
-                name="confirmacion"
-                autoComplete="new-password"
-                aria-invalid={invalido('confirmacion') || undefined}
-                data-testid="confirmar-clave"
-                value={confirmacion}
-                onChange={(e) => setConfirmacion(e.target.value)}
-              />
+              <div className="campo-clave">
+                <input
+                  type={mostrarConfirmacion ? 'text' : 'password'}
+                  id="campo-confirmacion"
+                  name="confirmacion"
+                  aria-label="Repite la contraseña"
+                  autoComplete="new-password"
+                  aria-invalid={invalido('confirmacion') || undefined}
+                  data-testid="confirmar-clave"
+                  value={confirmacion}
+                  onChange={(e) => setConfirmacion(e.target.value)}
+                />
+                <BotonVerClave visible={mostrarConfirmacion} onAlternar={() => setMostrarConfirmacion(!mostrarConfirmacion)} />
+              </div>
             </label>
             <label>
               Nombre de usuario (opcional)
