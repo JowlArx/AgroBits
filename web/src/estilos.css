@@ -45,7 +45,6 @@ h2 {
 
 h3 {
   font-size: var(--t-md);
-  margin-top: var(--espacio-5);
 }
 
 /* D40 — El topbar de la vista aporta el h2; dentro de una vista los
@@ -407,6 +406,9 @@ legend {
   margin-top: var(--espacio-4);
   margin-right: var(--espacio-4);
   margin-bottom: var(--espacio-3);
+}
+.bloque-alertas .btn-secundario {
+  margin-top: var(--espacio-3);
 }
 
 /* Móvil: el par control + botón no se parte en dos islas; el label encoge
