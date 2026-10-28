@@ -678,6 +678,122 @@ legend {
   background: var(--superficie);
 }
 
+/* Escala del DLI: pista plana, zona de banda tintada y marca del valor. */
+.tabla-mediciones .fila-escala-dli td {
+  width: auto;
+  text-align: left;
+  background: var(--superficie);
+}
+
+.escala-dli {
+  display: grid;
+  gap: 6px;
+  padding: 4px 0 8px;
+}
+
+.escala-dli-pista {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--borde);
+}
+
+.escala-dli-banda {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--marca) 18%, transparent);
+}
+
+.escala-dli-marca {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 999px;
+  background: var(--marca);
+}
+
+.escala-dli-marca.fuera {
+  background: var(--senal);
+}
+
+.escala-dli-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+  color: var(--texto-tenue);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.escala-dli-valor {
+  color: var(--texto);
+  font-weight: 600;
+}
+
+/* Móvil: la escala ocupa el bloque apilado del DLI completo. */
+@media (max-width: 47.99rem) {
+  .tabla-mediciones .fila-escala-dli td {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Alertas del cultivo (DetalleCultivo): lista compacta con pastillas de estado. */
+.alertas-cultivo-vacio {
+  color: var(--texto-tenue);
+}
+
+.lista-alertas-cultivo {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fila-alerta-cultivo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  font-size: 14px;
+}
+
+.tipo-alerta-cultivo {
+  font-weight: 600;
+}
+
+.valor-alerta-cultivo {
+  font-variant-numeric: tabular-nums;
+}
+
+.fila-alerta-cultivo time {
+  color: var(--texto-tenue);
+  font-size: 13px;
+}
+
+.fila-alerta-cultivo .pastilla {
+  display: inline-block;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.fila-alerta-cultivo .estado-fuera {
+  background: var(--senal-suave);
+}
+
+.fila-alerta-cultivo .estado-dentro {
+  background: var(--superficie);
+  color: var(--texto);
+}
+
 /* Móvil: cada medición es un bloque apilado (sin scroll horizontal). */
 @media (max-width: 47.99rem) {
   .tabla-umbrales thead {

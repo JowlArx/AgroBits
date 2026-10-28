@@ -12,6 +12,8 @@ import { reiniciarMediciones } from '../data/medicionesSimuladas'
 import { iniciarSesion } from '../data/storeSesion'
 import { programadorFalsoActual } from '../tests/soporte/configurarTests'
 import { UNIDADES, TIPOS_MEDICION } from '../domain/tipos'
+import { cargarAlertas } from '../data/storeAlertas'
+import { ETIQUETAS_MEDICION } from '../data/catalogo'
 
 const existeCultivo = (id: string) => obtenerCultivos().some((c) => c.id === id)
 
@@ -147,6 +149,87 @@ describe('matriz de mediciones: banda y estado (R-09, R-H4)', () => {
     await waitFor(() => expect(screen.getByTestId('estado-dli_ayer').textContent).toBe('fuera'))
     expect(screen.getByTestId('valor-dli_ayer').textContent).toBe('45,0 mol/m²/día')
     vi.restoreAllMocks()
+  })
+})
+
+describe('escala del DLI de ayer (R-H4)', () => {
+  it('valor dentro de la banda: marca en tono de marca, sin señal', async () => {
+    vi.spyOn(exigirProveedor(), 'consultarBandaDli').mockResolvedValue({ min: 12, max: 30 })
+    vi.spyOn(exigirProveedor(), 'consultarDliDeAyer').mockResolvedValue(20)
+    render(<App />)
+    await crearCultivoConDetalle('Huerto escala dentro')
+
+    await waitFor(() => expect(screen.getByTestId('escala-dli-valor').textContent).toBe('20,0 mol/m²/día'))
+    expect(screen.getByTestId('escala-dli-banda')).toBeTruthy()
+    expect(screen.getByTestId('escala-dli-marca').className).not.toContain('fuera')
+    vi.restoreAllMocks()
+  })
+
+  it('valor fuera de la banda: marca con tono de señal', async () => {
+    vi.spyOn(exigirProveedor(), 'consultarBandaDli').mockResolvedValue({ min: 12, max: 30 })
+    vi.spyOn(exigirProveedor(), 'consultarDliDeAyer').mockResolvedValue(45)
+    render(<App />)
+    await crearCultivoConDetalle('Huerto escala fuera')
+
+    await waitFor(() => expect(screen.getByTestId('escala-dli-marca').className).toContain('fuera'))
+    vi.restoreAllMocks()
+  })
+
+  it('sin lecturas de luz ayer: muestra el motivo y no pinta marca', async () => {
+    vi.spyOn(exigirProveedor(), 'consultarBandaDli').mockResolvedValue({ min: 12, max: 30 })
+    vi.spyOn(exigirProveedor(), 'consultarDliDeAyer').mockResolvedValue(null)
+    render(<App />)
+    await crearCultivoConDetalle('Huerto escala sin datos')
+
+    await waitFor(() => expect(screen.getByText('sin lecturas de luz ayer')).toBeTruthy())
+    expect(screen.queryByTestId('escala-dli-marca')).toBeNull()
+    vi.restoreAllMocks()
+  })
+
+  it('sin banda conocida: no se muestra la escala', async () => {
+    vi.spyOn(exigirProveedor(), 'consultarBandaDli').mockResolvedValue(null)
+    render(<App />)
+    await crearCultivoConDetalle('Huerto escala sin banda')
+
+    expect(screen.getByTestId('fila-dli_ayer')).toBeTruthy()
+    expect(screen.queryByTestId('escala-dli')).toBeNull()
+    vi.restoreAllMocks()
+  })
+})
+
+describe('alertas del cultivo en su vista de detalle', () => {
+  it('lista las alertas del cultivo con tipo, valor, estado y fecha', async () => {
+    render(<App />)
+    await crearCultivoConDetalle('Huerto con alertas')
+    const idCultivo = obtenerCultivos()[0].id
+    const creadaEn = new Date(2026, 9, 27, 14, 30).toISOString()
+    vi.spyOn(exigirProveedor(), 'cargarAlertas').mockResolvedValue([
+      { id: 'al-1', cultivoId: idCultivo, tipo: 'temperatura', valor: 38, estado: 'activa', creadaEn },
+      { id: 'al-2', cultivoId: idCultivo, tipo: 'humedad_suelo', valor: 12.5, estado: 'resuelta', creadaEn },
+      { id: 'al-3', cultivoId: 'otro', tipo: 'temperatura', valor: 40, estado: 'activa', creadaEn },
+    ])
+    await act(async () => {
+      await cargarAlertas()
+    })
+
+    const filas = screen.getAllByTestId('alerta-cultivo')
+    expect(filas).toHaveLength(2)
+    expect(filas[0].textContent).toContain(ETIQUETAS_MEDICION.temperatura)
+    expect(filas[0].textContent).toContain('38')
+    expect(filas[0].textContent).toContain('activa')
+    expect(filas[0].textContent).toContain('27/10/2026 14:30')
+    expect(filas[1].textContent).toContain('12,5')
+    expect(filas[1].textContent).toContain('resuelta')
+    expect(screen.queryByTestId('sin-alertas')).toBeNull()
+    vi.restoreAllMocks()
+  })
+
+  it('sin alertas del cultivo: muestra «Sin alertas.»', async () => {
+    render(<App />)
+    await crearCultivoConDetalle('Huerto sin alertas')
+
+    expect(screen.getByTestId('sin-alertas').textContent).toBe('Sin alertas.')
+    expect(screen.queryByTestId('lista-alertas-cultivo')).toBeNull()
   })
 })
 

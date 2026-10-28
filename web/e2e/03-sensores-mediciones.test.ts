@@ -48,9 +48,11 @@ test('sensor dispara lectura automática con formato R-08, unidades R-09 y persi
   await expect(page.getByTestId('valor-temperatura')).not.toContainText('sin datos')
 
   // El botón manual (mismo flujo de escritura) produce OTRA lectura
-  const tablaAntes = await page.getByTestId('tabla-mediciones').textContent()
+  // La hora se muestra relativa («ahora», «hace N min»): la nueva lectura se
+  // detecta por la hora absoluta del atributo title (incluye segundos).
+  const horaAntes = await page.getByTestId('hora-temperatura').locator('time').getAttribute('title')
   await page.getByTestId('simular-lectura').click()
-  await expect(page.getByTestId('tabla-mediciones')).not.toHaveText(tablaAntes ?? '')
+  await expect(page.getByTestId('hora-temperatura').locator('time')).not.toHaveAttribute('title', horaAntes ?? '')
 
   await eliminarCultivo(page, nombre)
 })

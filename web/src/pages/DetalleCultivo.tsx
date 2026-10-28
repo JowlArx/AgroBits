@@ -13,14 +13,14 @@ import {
   obtenerSensoresDeCultivo,
   suscribirSensores,
 } from '../data/storeSensores'
-import { cargarAlertas } from '../data/storeAlertas'
+import { alertasOrdenadas, cargarAlertas, obtenerAlertas, suscribirAlertas } from '../data/storeAlertas'
 import ConfirmacionEnLinea from '../components/ConfirmacionEnLinea'
 import { exigirProgramador } from '../data/programadorLecturas'
 import { obtenerCultivo, suscribirCultivos, obtenerCultivos } from '../data/storeCultivos'
 import { TIPOS_MEDICION, UNIDADES } from '../domain/tipos'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
 import { exigirProveedor } from '../data/datos/proveedorDatos'
-import { numero } from '../domain/formato'
+import { numero, tiempoRelativo } from '../domain/formato'
 
 interface Props {
   cultivoId: string
@@ -52,6 +52,56 @@ function claseEstado(estado: 'dentro' | 'fuera' | 'sin datos' | '—'): string {
   return 'estado-sin-datos'
 }
 
+/** Fecha corta local: dd/mm/yyyy hh:mm. */
+function fechaCorta(iso: string): string {
+  const fecha = new Date(iso)
+  if (Number.isNaN(fecha.getTime())) return iso
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${p(fecha.getDate())}/${p(fecha.getMonth() + 1)}/${fecha.getFullYear()} ${p(fecha.getHours())}:${p(fecha.getMinutes())}`
+}
+
+/**
+ * Escala del DLI de ayer: pista 0..máximo de la banda, zona de banda y marca
+ * del valor. La marca sale en tono de señal si el valor queda fuera de la banda
+ * (se recorta a los bordes). Sin valor, muestra el motivo en vez de marca.
+ */
+function EscalaDli({ valor, banda }: { valor: number | null; banda: Banda }) {
+  const pct = (v: number) => Math.min(100, Math.max(0, (v / banda.max) * 100))
+  const fuera = valor !== null && (valor < banda.min || valor > banda.max)
+  return (
+    <tr className="fila-escala-dli" data-testid="escala-dli">
+      <td colSpan={5}>
+        <div className="escala-dli">
+          <div className="escala-dli-pista" aria-hidden="true">
+            <div
+              className="escala-dli-banda"
+              data-testid="escala-dli-banda"
+              style={{ left: `${pct(banda.min)}%`, width: `${100 - pct(banda.min)}%` }}
+            />
+            {valor !== null && (
+              <span
+                className={fuera ? 'escala-dli-marca fuera' : 'escala-dli-marca'}
+                data-testid="escala-dli-marca"
+                style={{ left: `${pct(valor)}%` }}
+              />
+            )}
+          </div>
+          <div className="escala-dli-leyenda">
+            <span>{`${banda.min}–${banda.max} mol/m²/día`}</span>
+            {valor === null ? (
+              <span>sin lecturas de luz ayer</span>
+            ) : (
+              <span className="escala-dli-valor" data-testid="escala-dli-valor">
+                {`${numero(valor, 1)} mol/m²/día`}
+              </span>
+            )}
+          </div>
+        </div>
+      </td>
+    </tr>
+  )
+}
+
 export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: Props) {
   // Suscripciones a los almacenes que puede cambiar esta vista.
   // Nota: getSnapshot debe devolver valores estables; por eso se usan
@@ -59,6 +109,7 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
   // para las mediciones (cambia cuando crece el nº de lecturas).
   useSyncExternalStore(suscribirCultivos, obtenerCultivos)
   useSyncExternalStore(suscribirSensores, obtenerSensores)
+  useSyncExternalStore(suscribirAlertas, obtenerAlertas)
   useSyncExternalStore(
     (oyente) => suscribirMediciones(cultivoId, oyente),
     () =>
@@ -131,6 +182,10 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
   const ultimas = ultimasPorTipo(sensores.map((s) => s.id))
   const conDatos = TIPOS_MEDICION.filter((tipo) => ultimas[tipo] !== undefined).length
   const formulariosAbiertos = asociarManual ?? sensores.length === 0
+  // Alertas de este cultivo (R-14), activas primero; máximo 5 en esta vista.
+  const alertasDelCultivo = alertasOrdenadas()
+    .filter((a) => a.cultivoId === cultivoId)
+    .slice(0, 5)
 
   async function crearYAsociar(evento: React.FormEvent): Promise<void> {
     evento.preventDefault()
@@ -233,7 +288,13 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
                   )}
                 </td>
                 <td data-testid={`hora-${tipo}`} data-label="Hora">
-                  {medicion ? <time dateTime={medicion.medidaEn}>{horaLegible(medicion.medidaEn)}</time> : '—'}
+                  {medicion ? (
+                    <time dateTime={medicion.medidaEn} title={horaLegible(medicion.medidaEn)}>
+                      {tiempoRelativo(medicion.medidaEn)}
+                    </time>
+                  ) : (
+                    '—'
+                  )}
                 </td>
                 <td data-testid={`banda-${tipo}`} data-label="Banda">
                   {banda ? `${banda.min}–${banda.max} ${UNIDADES[tipo]}` : ''}
@@ -263,6 +324,7 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
               </span>
             </td>
           </tr>
+          {bandaDli && bandaDli.max > 0 && <EscalaDli valor={dliAyer} banda={bandaDli} />}
         </tbody>
       </table>
 
@@ -282,6 +344,27 @@ export default function DetalleCultivo({ cultivoId, onVolver, onVerHistorial }: 
                 testId="desasociar-sensor"
                 onConfirmar={() => void desasociar(sensor.id)}
               />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* 2b. Alertas de este cultivo: mismas alertas que la vista de alertas. */}
+      <h3>Alertas del cultivo</h3>
+      {alertasDelCultivo.length === 0 ? (
+        <p data-testid="sin-alertas" className="alertas-cultivo-vacio">Sin alertas.</p>
+      ) : (
+        <ul data-testid="lista-alertas-cultivo" className="lista-alertas-cultivo">
+          {alertasDelCultivo.map((alerta) => (
+            <li key={alerta.id} data-testid="alerta-cultivo" className="fila-alerta-cultivo">
+              <span className="tipo-alerta-cultivo">{ETIQUETAS_MEDICION[alerta.tipo]}</span>
+              <span className="valor-alerta-cultivo">
+                {numero(alerta.valor, Number.isInteger(alerta.valor) ? 0 : 1)}
+              </span>
+              <span className={`pastilla ${alerta.estado === 'activa' ? 'estado-fuera' : 'estado-dentro'}`}>
+                {alerta.estado}
+              </span>
+              <time dateTime={alerta.creadaEn}>{fechaCorta(alerta.creadaEn)}</time>
             </li>
           ))}
         </ul>
