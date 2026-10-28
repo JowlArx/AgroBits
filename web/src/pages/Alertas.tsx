@@ -179,20 +179,23 @@ export default function Alertas() {
           {' · '}
           {historial.length} {historial.length === 1 ? 'resuelta' : 'resueltas'}
         </p>
-        {/* Escritorio: el log se descarga desde la cabecera, sin bajar a la
-            zona final de la vista. Incluye todo el historial, no solo lo visible. */}
-        <button
-          data-testid="descargar-log"
-          className="btn-primario solo-escritorio descargar-log"
-          onClick={() => descargarLogAlertas([...activas, ...historial])}
-        >
-          Descargar log
-        </button>
       </header>
 
       {/* --- Sección 1: las alertas que hay ahora mismo --- */}
       <section className="bloque-alertas">
-        <h3>Alertas activas</h3>
+        <div className="fila-entre">
+          <h3>Alertas activas</h3>
+          {activas.length > 0 && (
+            <button
+              type="button"
+              className="btn-secundario"
+              data-testid="descargar-activas"
+              onClick={() => descargarLogAlertas(activas, 'activas')}
+            >
+              Descargar alertas activas
+            </button>
+          )}
+        </div>
         {activas.length === 0 ? (
           <p data-testid="vacio-alertas" className="estado-vacio">
             No hay alertas activas: ninguna lectura está fuera de rango.
@@ -238,6 +241,14 @@ export default function Alertas() {
             onClick={() => elegirRango('personalizado')}
           >
             Personalizar
+          </button>
+          <button
+            type="button"
+            className="btn-secundario"
+            data-testid="descargar-log"
+            onClick={() => descargarLogAlertas(historial, 'log')}
+          >
+            Descargar log
           </button>
         </div>
 
@@ -297,7 +308,7 @@ export default function Alertas() {
 }
 
 /// Genera un archivo CSV con las alertas y dispara la descarga.
-function descargarLogAlertas(alertas: Alerta[]): void {
+function descargarLogAlertas(alertas: Alerta[], etiqueta: 'activas' | 'log'): void {
   if (alertas.length === 0) return
 
   const cabeceras = ['Cultivo', 'Tipo', 'Valor', 'Estado', 'Hora de creación']
@@ -320,7 +331,7 @@ function descargarLogAlertas(alertas: Alerta[]): void {
   tmpLink.href = url
   const ahora = new Date()
   const sello = `${ahora.toISOString().split('T')[0]}_${ahora.toTimeString().slice(0, 5).replace(':', '')}`
-  tmpLink.download = `alertas-${sello}.csv`
+  tmpLink.download = `alertas-${etiqueta}-${sello}.csv`
   tmpLink.click()
   URL.revokeObjectURL(url)
 }

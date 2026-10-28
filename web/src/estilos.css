@@ -1018,6 +1018,18 @@ dd {
   font-size: var(--t-md);
 }
 
+/* Cabecera de la sección activas: título + botón de descarga en una fila.
+   El margen inferior del h3 se anula dentro de la fila para que el título
+   quede centrado con el botón; la fila conserva la separación con la lista. */
+.bloque-alertas .fila-entre {
+  gap: var(--espacio-3);
+  margin-bottom: var(--espacio-3);
+}
+
+.bloque-alertas .fila-entre > h3 {
+  margin: 0;
+}
+
 /* Controles de rango: en escritorio, botones sueltos; en móvil, control
    segmentado (se ve el rango activo de un vistazo, sin recordar el estado). */
 .controles-rango {

@@ -129,7 +129,7 @@ test('captura de la vista de alertas (1440 y 390)', async ({ page }) => {
   await page.getByTestId('nav-alertas').click()
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.waitForTimeout(300)
-  await page.locator('.fila-entre').first().screenshot({ path: `${SALIDA}\\alertas-cabecera-1440.png` })
+  await page.screenshot({ path: `${SALIDA}\\alertas-1440.png`, fullPage: true })
   await page.setViewportSize({ width: 390, height: 844 })
   await page.waitForTimeout(300)
   await page.screenshot({ path: `${SALIDA}\\alertas-390.png`, fullPage: true })

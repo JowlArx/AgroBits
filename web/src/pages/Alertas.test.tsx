@@ -182,4 +182,17 @@ describe('pantalla de alertas (T-15/T-23, R-13 y R-14)', () => {
     fireEvent.click(screen.getByTestId('mostrar-mas-historial'))
     await waitFor(() => expect(lista.querySelectorAll('li')).toHaveLength(11))
   })
+
+  it('descargas separadas: «activas» solo con alertas activas; «log» dentro de los filtros del historial', async () => {
+    const datos = datosFalsosActual()
+    render(<App />)
+    abrirAlertas()
+    expect(await screen.findByTestId('vacio-alertas')).toBeTruthy()
+    expect(screen.queryByTestId('descargar-activas')).toBeNull()
+
+    datos.sembrarAlerta({ id: 'activa-1', cultivoId: 'cultivo-sembrado', tipo: 'humedad_suelo', valor: 10, estado: 'activa', creadaEn: new Date().toISOString() })
+    await cargarAlertas()
+    expect(await screen.findByTestId('descargar-activas')).toBeTruthy()
+    expect(screen.getByTestId('descargar-log').closest('.controles-rango')).not.toBeNull()
+  })
 })
