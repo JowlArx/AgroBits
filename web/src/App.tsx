@@ -52,6 +52,26 @@ function vistaDesdeParams(vista: string | null, id: string | null, cultivo: stri
   }
 }
 
+/** Ruta estable por vista para Vercel SpeedInsights (sin ids ni nombres de cultivo). */
+function rutaDeVista(vista: Vista): string {
+  switch (vista.tipo) {
+    case 'lista':
+      return '/'
+    case 'nuevo':
+      return '/cultivos/nuevo'
+    case 'editar':
+      return '/cultivos/editar'
+    case 'detalle':
+      return '/cultivos/detalle'
+    case 'alertas':
+      return '/alertas'
+    case 'sensores':
+      return '/sensores'
+    case 'cuenta':
+      return '/cuenta'
+  }
+}
+
 /** Título del topbar (D31) según la vista actual. */
 function tituloVista(vista: Vista): string {
   switch (vista.tipo) {
@@ -486,8 +506,8 @@ export default function App() {
           {vista.tipo === 'lista' && <PanelLateral onVerAlertas={() => irA({ tipo: 'alertas' })} />}
         </div>
       </div>
-      {/* Vercel SpeedInsights: métricas de rendimiento en producción. */}
-      <SpeedInsights />
+      {/* Vercel SpeedInsights: métricas de rendimiento en producción. La app navega por query (?vista=), el pathname no cambia, así que se pasa una ruta por vista. */}
+      <SpeedInsights route={rutaDeVista(vista)} />
     </div>
   )
 }
