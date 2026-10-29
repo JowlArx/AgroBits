@@ -8,6 +8,7 @@ import Cuenta from './pages/Cuenta'
 import Sensores from './pages/Sensores'
 import PanelLateral from './components/PanelLateral'
 import Tablero from './components/Tablero'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import { cerrarSesion, obtenerSesion, suscribirSesion } from './data/storeSesion'
 import { cargarDatosSesion, vaciarDatosSesion } from './data/cargarDatos'
 import { obtenerCultivo, obtenerCultivos, suscribirCultivos } from './data/storeCultivos'
@@ -485,6 +486,8 @@ export default function App() {
           {vista.tipo === 'lista' && <PanelLateral onVerAlertas={() => irA({ tipo: 'alertas' })} />}
         </div>
       </div>
+      {/* Vercel SpeedInsights: métricas de rendimiento en producción. */}
+      <SpeedInsights />
     </div>
   )
 }
