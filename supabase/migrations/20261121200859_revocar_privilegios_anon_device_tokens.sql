@@ -1,0 +1,1 @@
+revoke all on public.device_tokens from anon;
