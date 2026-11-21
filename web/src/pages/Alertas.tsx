@@ -2,7 +2,7 @@ import { useState, useSyncExternalStore } from 'react'
 import { alertasOrdenadas, obtenerAlertas, suscribirAlertas, type Alerta } from '../data/storeAlertas'
 import { obtenerCultivo } from '../data/storeCultivos'
 import { ETIQUETAS_MEDICION } from '../data/catalogo'
-import { UNIDADES } from '../domain/tipos'
+import { UNIDADES_ALERTA } from '../domain/tipos'
 import { numero } from '../domain/formato'
 import { useParamsUrl } from '../hooks/useParamsUrl'
 
@@ -27,7 +27,7 @@ function filaAlerta(alerta: Alerta) {
         </span>
       </div>
       <p className="alerta-valor" data-testid="alerta-valor">
-        {numero(alerta.valor, Number.isInteger(alerta.valor) ? 0 : 1)} {UNIDADES[alerta.tipo]}
+        {numero(alerta.valor, Number.isInteger(alerta.valor) ? 0 : 1)} {UNIDADES_ALERTA[alerta.tipo]}
       </p>
       <p className="alerta-contexto" data-testid={`detalle-${alerta.id}`}>
         <span data-testid="alerta-cultivo">{cultivo ? cultivo.nombre : 'Cultivo eliminado'}</span>

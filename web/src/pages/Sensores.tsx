@@ -11,6 +11,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import {
   actualizarColorSensor,
+  actualizarOrigenSensor,
   eliminarSensor,
   obtenerSensores,
   suscribirSensores,
@@ -18,12 +19,20 @@ import {
 import { obtenerCultivo, suscribirCultivos } from '../data/storeCultivos'
 import { eliminarMediciones, generarLectura, obtenerMediciones, suscribirMediciones } from '../data/medicionesSimuladas'
 import { cargarAlertas } from '../data/storeAlertas'
-import { COLORES_SENSOR, TIPOS_MEDICION, type ColorSensor, type Medicion, type TipoMedicion } from '../domain/tipos'
+import {
+  COLORES_SENSOR,
+  TIPOS_MEDICION,
+  type ColorSensor,
+  type Medicion,
+  type OrigenSensor,
+  type TipoMedicion,
+} from '../domain/tipos'
 import { dliEstimado } from '../domain/luz'
 import { numero } from '../domain/formato'
 import { ETIQUETAS_COLOR_SENSOR, ETIQUETAS_MEDICION, ETIQUETAS_MEDICION_CORTA, VAR_COLOR_SENSOR } from '../data/catalogo'
 import ConfirmacionEnLinea from '../components/ConfirmacionEnLinea'
 import GraficoLecturas from '../components/GraficoLecturas'
+import TokensDispositivo from '../components/TokensDispositivo'
 import Historial from './Historial'
 
 interface Props {
@@ -66,6 +75,7 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
   const [sensorActivoId, setSensorActivoId] = useState<string | null>(null)
   const [tipoActivo, setTipoActivo] = useState<TipoMedicion>('temperatura')
   const [errorColor, setErrorColor] = useState('')
+  const [tokensSensorId, setTokensSensorId] = useState<string | null>(null)
 
   // Al venir de «Ver historial» de un cultivo, la vista baja hasta el historial.
   useEffect(() => {
@@ -84,6 +94,12 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
 
   async function cambiarColor(sensorId: string, color: ColorSensor): Promise<void> {
     const resultado = await actualizarColorSensor(sensorId, color)
+    setErrorColor(resultado.ok ? '' : resultado.errores.map((e) => e.motivo).join('. '))
+  }
+
+  /** Alterna el origen real/simulado; la confirmación la pide la propia tarjeta. */
+  async function cambiarOrigen(sensorId: string, origen: OrigenSensor): Promise<void> {
+    const resultado = await actualizarOrigenSensor(sensorId, origen)
     setErrorColor(resultado.ok ? '' : resultado.errores.map((e) => e.motivo).join('. '))
   }
 
@@ -135,21 +151,27 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
               const abierto = sensorActivoId === sensor.id
               return (
                 <li key={sensor.id} className="tarjeta-sensor" data-testid="tarjeta-sensor">
-                  <div className="datos-sensor">
-                    <div className="fila-datos-sensor">
-                      <strong className="nombre-sensor-panel">{sensor.nombre}</strong>
-                      {/* D31: la hora de la última lectura, arriba a la derecha. */}
-                      <span className="ultima-lectura-sensor">
-                        {ultima ? (
-                          <>
-                            Últ. lectura:{' '}
-                            <time dateTime={ultima.medidaEn}>{horaLegible(ultima.medidaEn)}</time>
-                          </>
-                        ) : (
-                          'Sin lecturas todavía'
-                        )}
-                      </span>
-                    </div>
+                  {/* Banda 1: nombre, origen y última lectura (a la derecha). */}
+                  <div className="tarjeta-cabecera">
+                    <strong className="nombre-sensor-panel">{sensor.nombre}</strong>
+                    {/* Origen de las lecturas: real (hardware) o simulado (generador de la SPA). */}
+                    <span className="etiqueta" data-testid="origen-sensor">
+                      {sensor.origen === 'real' ? 'Real' : 'Simulado'}
+                    </span>
+                    {/* D31: la hora de la última lectura, arriba a la derecha. */}
+                    <span className="ultima-lectura-sensor">
+                      {ultima ? (
+                        <>
+                          Últ. lectura: <time dateTime={ultima.medidaEn}>{horaLegible(ultima.medidaEn)}</time>
+                        </>
+                      ) : (
+                        'Sin lecturas todavía'
+                      )}
+                    </span>
+                  </div>
+
+                  {/* Banda 2: cultivos vinculados y color de la línea. */}
+                  <div className="tarjeta-meta">
                     <span className="vinculos-sensor">
                       {sensor.cultivoIds.length === 0
                         ? 'Sin cultivos vinculados'
@@ -157,29 +179,28 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
                             .map((id) => obtenerCultivo(id)?.nombre ?? 'Cultivo eliminado')
                             .join(' · ')}
                     </span>
-                  </div>
-
-                  <div
-                    className="paleta-colores"
-                    role="group"
-                    aria-label={`Color de la línea de ${sensor.nombre}`}
-                  >
-                    {COLORES_SENSOR.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        className="muestra-color"
-                        style={{ background: VAR_COLOR_SENSOR[color] }}
-                        data-color={color}
-                        data-testid={`color-${color}`}
-                        aria-label={`${ETIQUETAS_COLOR_SENSOR[color]} — color de ${sensor.nombre}`}
-                        aria-pressed={sensor.colorLinea === color}
-                        title={ETIQUETAS_COLOR_SENSOR[color]}
-                        onClick={() => void cambiarColor(sensor.id, color)}
-                      />
-                    ))}
-                    {/* D35: el color activo se nombra, no solo se insinúa. */}
-                    <span className="nombre-color-sensor">{ETIQUETAS_COLOR_SENSOR[sensor.colorLinea]}</span>
+                    <div
+                      className="paleta-colores"
+                      role="group"
+                      aria-label={`Color de la línea de ${sensor.nombre}`}
+                    >
+                      {COLORES_SENSOR.map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          className="muestra-color"
+                          style={{ background: VAR_COLOR_SENSOR[color] }}
+                          data-color={color}
+                          data-testid={`color-${color}`}
+                          aria-label={`${ETIQUETAS_COLOR_SENSOR[color]} — color de ${sensor.nombre}`}
+                          aria-pressed={sensor.colorLinea === color}
+                          title={ETIQUETAS_COLOR_SENSOR[color]}
+                          onClick={() => void cambiarColor(sensor.id, color)}
+                        />
+                      ))}
+                      {/* D35: el color activo se nombra, no solo se insinúa. */}
+                      <span className="nombre-color-sensor">{ETIQUETAS_COLOR_SENSOR[sensor.colorLinea]}</span>
+                    </div>
                   </div>
 
                   <div className="acciones acciones-tarjeta">
@@ -190,6 +211,26 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
                     >
                       {abierto ? 'Ocultar mediciones' : 'Ver mediciones'}
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setTokensSensorId(tokensSensorId === sensor.id ? null : sensor.id)}
+                      aria-expanded={tokensSensorId === sensor.id}
+                    >
+                      Token de dispositivo
+                    </button>
+                    {/* Banda 3: el origen se alterna desde las acciones (la confirmación la pide la tarjeta). */}
+                    <ConfirmacionEnLinea
+                      etiqueta={sensor.origen === 'real' ? 'Marcar como simulado' : 'Marcar como real'}
+                      pregunta={
+                        sensor.origen === 'real'
+                          ? `¿Marcar ${sensor.nombre} como simulado? Volverán a generarse lecturas simuladas.`
+                          : `¿Marcar ${sensor.nombre} como real? Se dejarán de generar lecturas simuladas.`
+                      }
+                      testId="alternar-origen-sensor"
+                      onConfirmar={() =>
+                        void cambiarOrigen(sensor.id, sensor.origen === 'real' ? 'simulado' : 'real')
+                      }
+                    />
                     <ConfirmacionEnLinea
                       etiqueta="Eliminar"
                       pregunta={`¿Eliminar «${sensor.nombre}»?`}
@@ -262,10 +303,13 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
                         {dliActivo === null ? '— (sin lecturas hoy)' : `${numero(dliActivo, 1)} mol/m²/día`}
                       </p>
 
+                      {/* Un sensor real recibe lecturas de hardware: no se simulan desde la UI. */}
                       <button
                         type="button"
                         className="btn-primario"
                         data-testid="simular-lectura-sensor"
+                        disabled={sensorActivo.origen === 'real'}
+                        title={sensorActivo.origen === 'real' ? 'Sensor real: sin simulación' : undefined}
                         onClick={() => {
                           void (async () => {
                             await generarLectura(sensorActivo.id)
@@ -275,12 +319,21 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
                       >
                         Generar lectura simulada
                       </button>
+                      {sensorActivo.origen === 'real' && (
+                        <p className="aviso" data-testid="aviso-sensor-real">
+                          Sensor real: sin simulación.
+                        </p>
+                      )}
 
                       <p className="aviso">
                         El color de la línea se guarda en el sensor y se aplica también al tablero principal.
                         Las lecturas simuladas se generan cada 5 minutos mientras la sesión está abierta.
                       </p>
                     </article>
+                  )}
+
+                  {tokensSensorId === sensor.id && (
+                    <TokensDispositivo sensorId={sensor.id} sensorNombre={sensor.nombre} />
                   )}
                 </li>
               )

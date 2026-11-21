@@ -16,6 +16,13 @@ import { vaciarAlertas } from '../../data/storeAlertas'
 import { AuthFalso } from './authFalso'
 import { DatosFalsos } from './datosFalsos'
 import { ProgramadorFalso } from './programadorFalso'
+import { webcrypto } from 'node:crypto'
+import { TextEncoder as TextEncoderNode } from 'node:util'
+
+// Tokens de dispositivo (SHA-256 con Web Crypto): si jsdom no expone `crypto.subtle`
+// o `TextEncoder`, se usan los de Node. Solo afecta al entorno de pruebas.
+if (!globalThis.crypto?.subtle) Object.defineProperty(globalThis, 'crypto', { value: webcrypto, configurable: true })
+if (!globalThis.TextEncoder) Object.defineProperty(globalThis, 'TextEncoder', { value: TextEncoderNode, configurable: true })
 
 let actual: AuthFalso | null = null
 let actualDatos: DatosFalsos | null = null

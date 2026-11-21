@@ -1,11 +1,6 @@
 import { useEffect, useState } from 'react'
-import {
-  AVISO_CATALOGO,
-  CATALOGO_CULTIVOS,
-  ETIQUETAS_MEDICION,
-  TIPO_PERSONALIZADO,
-  umbralesPorDefecto,
-} from '../data/catalogo'
+import { AVISO_CATALOGO, CATALOGO_CULTIVOS, ETIQUETAS_MEDICION, TIPO_PERSONALIZADO } from '../data/catalogo'
+import { exigirProveedor, type EntradaCatalogoCultivo } from '../data/datos/proveedorDatos'
 import {
   actualizarCultivo,
   crearCultivo,
@@ -13,7 +8,13 @@ import {
   obtenerCultivo,
   type ErrorCampo,
 } from '../data/storeCultivos'
-import { TIPOS_MEDICION, type TipoMedicion, type UmbralesPorTipo } from '../domain/tipos'
+import {
+  TIPOS_MEDICION,
+  UMBRALES_POR_DEFECTO,
+  type TipoMedicion,
+  type Umbral,
+  type UmbralesPorTipo,
+} from '../domain/tipos'
 
 interface Props {
   cultivoId?: string
@@ -23,10 +24,11 @@ interface Props {
 
 type ValoresUmbral = Partial<Record<TipoMedicion, { min: string; max: string }>>
 
-function aCadenas(umbrales: UmbralesPorTipo): ValoresUmbral {
+function aCadenas(umbrales: Partial<Record<TipoMedicion, Umbral>>): ValoresUmbral {
   const resultado: ValoresUmbral = {}
   for (const tipo of TIPOS_MEDICION) {
-    const umbral = umbrales[tipo]
+    // Un tipo sin umbral guardado (p. ej. luminosidad en cultivos antiguos) usa su valor por defecto.
+    const umbral = umbrales[tipo] ?? UMBRALES_POR_DEFECTO[tipo]
     if (!umbral) continue
     resultado[tipo] = { min: String(umbral.min), max: String(umbral.max) }
   }
@@ -52,10 +54,27 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
   const [errores, setErrores] = useState<ErrorCampo[]>([])
   // T-23: el guardado es asíncrono (BD); el bloqueo evita envíos duplicados.
   const [guardando, setGuardando] = useState(false)
+  // T2: catálogo de la BD. Mientras carga (o si falla o viene vacío) se usa el estático.
+  const [catalogo, setCatalogo] = useState<readonly EntradaCatalogoCultivo[]>(CATALOGO_CULTIVOS)
 
-  const esPersonalizado = !CATALOGO_CULTIVOS.some((e) => e.tipoCultivo === tipoCultivo)
+  const esPersonalizado = !catalogo.some((e) => e.tipoCultivo === tipoCultivo)
   // D35: los campos con error se marcan y reciben el foco al enviar.
   const conError = (campo: string): boolean => errores.some((e) => e.campo === campo)
+
+  useEffect(() => {
+    let vivo = true
+    exigirProveedor()
+      .cargarCatalogoCultivos()
+      .then((entradas) => {
+        if (vivo && entradas.length > 0) setCatalogo(entradas)
+      })
+      .catch((error: unknown) => {
+        console.error('No se pudo cargar el catálogo de cultivos', error)
+      })
+    return () => {
+      vivo = false
+    }
+  }, [])
 
   useEffect(() => {
     if (errores.length === 0) return
@@ -70,8 +89,9 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
       return
     }
     setTipoCultivo(valor)
-    const defecto = umbralesPorDefecto(valor)
-    if (defecto) setCadenas(aCadenas(defecto)) // R-11 AC1: umbrales precargados
+    // R-11 AC1: umbrales precargados desde el catálogo activo (BD o estático).
+    const defecto = catalogo.find((e) => e.tipoCultivo === valor)?.umbrales
+    if (defecto) setCadenas(aCadenas(defecto))
   }
 
   function cambiarUmbral(tipo: TipoMedicion, lado: 'min' | 'max', valor: string): void {
@@ -152,7 +172,7 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
             value={esPersonalizado ? TIPO_PERSONALIZADO : tipoCultivo}
             onChange={(e) => cambiarTipo(e.target.value)}
           >
-            {CATALOGO_CULTIVOS.map((e) => (
+            {catalogo.map((e) => (
               <option key={e.tipoCultivo} value={e.tipoCultivo}>
                 {e.tipoCultivo}
               </option>
@@ -180,9 +200,8 @@ export default function FormularioCultivo({ cultivoId, onGuardado, onCancelar }:
 
         <fieldset>
           <legend>Umbrales de alerta</legend>
-          {/* La luz ya no lleva umbral por lectura: el DLI se evalúa a diario
-              en la base (20261027000002_alertas_dli.sql). Solo se muestran los
-              tipos con umbral. */}
+          {/* La luminosidad vuelve a tener umbral en lux (100–1500) además del
+              DLI diario que evalúa la base (20261027000002_alertas_dli.sql). */}
           {Object.entries(cadenas).map(([tipo]) => (
             <div key={tipo} className="fila-umbral">
               <span className="etiqueta-umbral">{ETIQUETAS_MEDICION[tipo as TipoMedicion]}</span>

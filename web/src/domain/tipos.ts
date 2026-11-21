@@ -17,6 +17,21 @@ export const UNIDADES: Record<TipoMedicion, string> = {
   luminosidad: 'lux',
 }
 
+/** Tipos de alerta: las mediciones más los índices diarios calculados en la BD. */
+export type TipoAlerta = TipoMedicion | 'dli' | 'sol_directo'
+
+/** Unidad de cada tipo de alerta: las mediciones usan UNIDADES; DLI y sol directo, sus propias. */
+export const UNIDADES_ALERTA: Record<TipoAlerta, string> = {
+  ...UNIDADES,
+  dli: 'mol/m²/día',
+  sol_directo: 'h',
+}
+
+/** Umbrales precargados en cultivos nuevos para los tipos que los tienen por defecto. */
+export const UMBRALES_POR_DEFECTO: Partial<Record<TipoMedicion, Umbral>> = {
+  luminosidad: { min: 100, max: 1500 },
+}
+
 /** Rangos plausibles para el generador de datos simulados (T-12). */
 export const RANGOS_SIMULACION: Record<
   TipoMedicion,
@@ -44,9 +59,13 @@ export interface Cultivo {
   umbrales: UmbralesPorTipo
 }
 
+/** Origen de las lecturas: `simulado` (genera el simulador de la SPA) o `real` (hardware; el simulador no actúa). */
+export type OrigenSensor = 'simulado' | 'real'
+
 export interface Sensor {
   id: string
   nombre: string
+  origen: OrigenSensor
 }
 
 /** Contrato de medición (R-08): compartido por mocks, generador y futuro ESP32. */
@@ -63,7 +82,7 @@ export type EstadoAlerta = 'activa' | 'resuelta'
 export interface Alerta {
   id: string
   cultivoId: string
-  tipo: TipoMedicion
+  tipo: TipoAlerta
   valor: number
   estado: EstadoAlerta
 }

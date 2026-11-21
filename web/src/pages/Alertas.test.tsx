@@ -96,6 +96,22 @@ describe('pantalla de alertas (T-15/T-23, R-13 y R-14)', () => {
     expect(screen.getByText('Activa')).toBeTruthy()
   })
 
+  it('R-13: alertas dli y sol_directo muestran su etiqueta y su unidad (mol/m²/día, h)', async () => {
+    const datos = datosFalsosActual()
+    const creadaEn = new Date().toISOString()
+    datos.sembrarAlerta({ id: 'dli-1', cultivoId: 'cultivo-sembrado', tipo: 'dli', valor: 30, estado: 'activa', creadaEn })
+    datos.sembrarAlerta({ id: 'sol-1', cultivoId: 'cultivo-sembrado', tipo: 'sol_directo', valor: 6, estado: 'activa', creadaEn })
+    await cargarAlertas()
+    render(<App />)
+    abrirAlertas()
+
+    const valores = await screen.findAllByTestId('alerta-valor')
+    expect(valores).toHaveLength(2)
+    expect(valores.map((v) => v.textContent)).toEqual(expect.arrayContaining(['30 mol/m²/día', '6 h']))
+    expect(screen.getAllByText('Índice de luz diaria (DLI)').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Horas de sol directo').length).toBeGreaterThanOrEqual(1)
+  })
+
   it('R-13 AC2: lecturas repetidas fuera de rango no duplican la alerta', async () => {
     render(<App />)
     await crearCultivoCon('Huerto repetido', umbralesSoloHumedadFuera)

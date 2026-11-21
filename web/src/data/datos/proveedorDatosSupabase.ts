@@ -10,7 +10,7 @@
 //    UI (R-09: "la más reciente gana") sigan siendo correctas.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { ColorSensor, Cultivo, Medicion, TipoMedicion, UmbralesPorTipo } from '../../domain/tipos'
+import type { ColorSensor, Cultivo, Medicion, OrigenSensor, TipoMedicion, UmbralesPorTipo } from '../../domain/tipos'
 import { TIPOS_MEDICION, esColorSensor } from '../../domain/tipos'
 import type {
   NuevoCultivo,
@@ -20,6 +20,8 @@ import type {
   Resultado,
   SolicitudEliminacion,
   AgregadoDiario,
+  EntradaCatalogoCultivo,
+  TokenDispositivo,
 } from './proveedorDatos'
 import type { Sensor } from '../storeSensores'
 import type { Alerta } from '../storeAlertas'
@@ -30,6 +32,13 @@ interface FilaUmbral {
   tipo: TipoMedicion
   min: number
   max: number
+}
+
+interface FilaCatalogoCultivo {
+  crop_type: string
+  tipo: TipoMedicion
+  default_min: number | null
+  default_max: number | null
 }
 
 interface FilaCultivo {
@@ -43,10 +52,11 @@ interface FilaSensor {
   id: string
   name: string
   color_linea?: string | null
+  origen?: string | null
   sensor_crop: { crop_id: string }[] | null
 }
 
-const SELECT_SENSOR = 'id, name, color_linea, sensor_crop(crop_id)'
+const SELECT_SENSOR = 'id, name, color_linea, origen, sensor_crop(crop_id)'
 
 interface FilaMedicion {
   sensor_id: string
@@ -115,6 +125,8 @@ function aSensor(fila: FilaSensor): Sensor {
     cultivoIds: (fila.sensor_crop ?? []).map((enlace) => enlace.crop_id),
     // D30: si la fila viniera de una versión previa sin color, se usa el verde.
     colorLinea: esColorSensor(fila.color_linea ?? '') ? (fila.color_linea as ColorSensor) : 'verde',
+    // Sin columna `origen` (filas previas a la migración) se trata como simulado.
+    origen: fila.origen === 'real' ? 'real' : 'simulado',
   }
 }
 
@@ -149,6 +161,26 @@ function aAlerta(fila: FilaAlerta): Alerta {
     estado: fila.estado,
     creadaEn: aISO(fila.created_at),
     resueltaEn: fila.resolved_at ? aISO(fila.resolved_at) : undefined,
+  }
+}
+
+interface FilaTokenDispositivo {
+  id: string
+  nombre: string
+  activo: boolean
+  created_at: string
+  last_seen_at: string | null
+  revoked_at: string | null
+}
+
+function aTokenDispositivo(fila: FilaTokenDispositivo): TokenDispositivo {
+  return {
+    id: fila.id,
+    nombre: fila.nombre,
+    activo: fila.activo,
+    createdAt: aISO(fila.created_at),
+    lastSeenAt: fila.last_seen_at ? aISO(fila.last_seen_at) : null,
+    revokedAt: fila.revoked_at ? aISO(fila.revoked_at) : null,
   }
 }
 
@@ -282,7 +314,7 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
       return SERVIDOR(error?.message ?? 'sin identificador devuelto', 'guardar el sensor')
     }
     const id = (data as { id: string }).id
-    return { ok: true, valor: { id, nombre: nombre.trim(), cultivoIds: [], colorLinea: 'verde' } }
+    return { ok: true, valor: { id, nombre: nombre.trim(), cultivoIds: [], colorLinea: 'verde', origen: 'simulado' } }
   }
 
   async asociarSensor(sensorId: string, cultivoId: string): Promise<Resultado<Sensor>> {
@@ -304,6 +336,28 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
     if (error || !data) {
       console.error('asociarSensor (relectura):', error)
       return SERVIDOR(error?.message ?? 'sin datos', 'asociar el sensor')
+    }
+    return { ok: true, valor: aSensor(data as unknown as FilaSensor) }
+  }
+
+  /** Marca el sensor como `real` o `simulado` (RLS sensors_update_own; sin cambios de esquema). */
+  async actualizarOrigenSensor(sensorId: string, origen: OrigenSensor): Promise<Resultado<Sensor>> {
+    if (origen !== 'real' && origen !== 'simulado') {
+      return { ok: false, errores: [{ campo: 'origen', motivo: 'Origen de sensor no válido' }] }
+    }
+    const { error } = await this.cliente.from('sensors').update({ origen }).eq('id', sensorId)
+    if (error) {
+      console.error('actualizarOrigenSensor:', error)
+      return SERVIDOR(error.message, 'guardar el origen del sensor')
+    }
+    const { data, error: relectura } = await this.cliente
+      .from('sensors')
+      .select(SELECT_SENSOR)
+      .eq('id', sensorId)
+      .single()
+    if (relectura || !data) {
+      console.error('actualizarOrigenSensor (relectura):', relectura)
+      return SERVIDOR(relectura?.message ?? 'sin datos', 'guardar el origen del sensor')
     }
     return { ok: true, valor: aSensor(data as unknown as FilaSensor) }
   }
@@ -477,6 +531,31 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
     return ((data ?? []) as unknown as FilaAlerta[]).map(aAlerta)
   }
 
+  // — Catálogo de cultivos (BD) ——————————————————————————————————
+
+  /**
+   * Lee `crop_type_catalog` (una fila por tipo de cultivo y medición) y lo agrupa
+   * por `crop_type`. Las filas sin límites o con un tipo de medición desconocido se
+   * ignoran. Lanza error si la consulta falla (el formulario cae al catálogo estático).
+   */
+  async cargarCatalogoCultivos(): Promise<EntradaCatalogoCultivo[]> {
+    const { data, error } = await this.cliente
+      .from('crop_type_catalog')
+      .select('crop_type, tipo, default_min, default_max')
+      .order('crop_type', { ascending: true })
+    if (error) throw new Error(`No se pudo cargar el catálogo de cultivos (${error.message})`)
+
+    const porTipo = new Map<string, EntradaCatalogoCultivo>()
+    for (const fila of (data ?? []) as FilaCatalogoCultivo[]) {
+      if (!TIPOS_MEDICION.includes(fila.tipo)) continue
+      if (fila.default_min === null || fila.default_max === null) continue
+      const entrada = porTipo.get(fila.crop_type) ?? { tipoCultivo: fila.crop_type, umbrales: {} }
+      entrada.umbrales[fila.tipo] = { min: Number(fila.default_min), max: Number(fila.default_max) }
+      porTipo.set(fila.crop_type, entrada)
+    }
+    return [...porTipo.values()]
+  }
+
   // — Catálogo de localidades (registro, D27 / R-01 v3) ————————————
 
   // Legible SIN sesión: el formulario de registro se carga antes del login y
@@ -497,22 +576,26 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
   // Lectura propia (RLS `perfiles_select_own`, D27). Cuentas previas a D27
   // sin fila devuelven `null` y la vista ofrece el formulario vacío.
   async cargarPerfil(): Promise<Perfil | null> {
-    const { data, error } = await this.cliente.from('perfiles').select('telefono, localidad_id').maybeSingle()
+    const { data, error } = await this.cliente
+      .from('perfiles')
+      .select('telefono, localidad_id, zona_horaria')
+      .maybeSingle()
     if (error) {
       console.error('cargarPerfil:', error)
       return null
     }
     if (!data) return null
-    const fila = data as { telefono: string; localidad_id: number }
-    return { telefono: fila.telefono, localidadId: fila.localidad_id }
+    const fila = data as { telefono: string; localidad_id: number; zona_horaria: string }
+    return { telefono: fila.telefono, localidadId: fila.localidad_id, zonaHoraria: fila.zona_horaria }
   }
 
   // Escritura vía RPC `actualizar_perfil` (SECURITY DEFINER, D19/D27): el
   // servidor valida teléfono y localidad y hace upsert del perfil propio.
-  async actualizarPerfil(telefono: string, localidadId: number): Promise<Resultado<Perfil>> {
+  async actualizarPerfil(telefono: string, localidadId: number, zonaHoraria: string): Promise<Resultado<Perfil>> {
     const { data, error } = await this.cliente.rpc('actualizar_perfil', {
       p_telefono: telefono.trim(),
       p_localidad_id: localidadId,
+      p_zona_horaria: zonaHoraria.trim(),
     })
     if (error) {
       console.error('actualizarPerfil:', error)
@@ -520,12 +603,17 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
         ? 'El teléfono debe tener entre 6 y 20 dígitos (admite +, espacios, paréntesis, puntos y guiones)'
         : error.message.includes('localidad_inexistente')
           ? 'La localidad seleccionada ya no está disponible'
-          : error.message
+          : error.message.includes('zona_horaria_invalida')
+            ? 'La zona horaria no es válida (usa un nombre IANA, p. ej. America/Argentina/Buenos_Aires)'
+            : error.message
       return { ok: false, errores: [{ campo: 'general', motivo: `No se pudo guardar el perfil: ${motivo}` }] }
     }
-    const fila = data as { telefono: string; localidad_id: number } | null
+    const fila = data as { telefono: string; localidad_id: number; zona_horaria: string } | null
     if (!fila) return SERVIDOR('sin datos devueltos', 'guardar el perfil')
-    return { ok: true, valor: { telefono: fila.telefono, localidadId: fila.localidad_id } }
+    return {
+      ok: true,
+      valor: { telefono: fila.telefono, localidadId: fila.localidad_id, zonaHoraria: fila.zona_horaria },
+    }
   }
 
   // — Eliminación de la cuenta (D46) ——————————————————————————————
@@ -635,6 +723,58 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
     if (error) {
       console.error('cancelarEliminacion:', error)
       return { ok: false, errores: [{ campo: 'general', motivo: 'No se pudo cancelar el borrado. Inténtalo de nuevo.' }] }
+    }
+    return { ok: true, valor: null }
+  }
+
+  // — Tokens de dispositivo (ingesta) ————————————————————————————
+
+  /** Persiste SOLO el hash (RLS de `device_tokens` por propiedad del sensor). */
+  async registrarTokenDispositivo(sensorId: string, nombre: string, tokenHash: string): Promise<Resultado<{ id: string }>> {
+    const { data, error } = await this.cliente
+      .from('device_tokens')
+      .insert({ sensor_id: sensorId, nombre: nombre.trim(), token_hash: tokenHash })
+      .select('id')
+      .single()
+    if (error || !data) {
+      console.error('registrarTokenDispositivo:', error)
+      return SERVIDOR(error?.message ?? 'sin identificador devuelto', 'crear el token de dispositivo')
+    }
+    return { ok: true, valor: { id: (data as { id: string }).id } }
+  }
+
+  async cargarTokensDispositivo(sensorId: string): Promise<TokenDispositivo[]> {
+    const { data, error } = await this.cliente
+      .from('device_tokens')
+      .select('id, nombre, activo, created_at, last_seen_at, revoked_at')
+      .eq('sensor_id', sensorId)
+      .order('created_at', { ascending: false })
+    if (error) throw new Error(`No se pudieron cargar los tokens (${error.message})`)
+    return ((data ?? []) as unknown as FilaTokenDispositivo[]).map(aTokenDispositivo)
+  }
+
+  async revocarTokenDispositivo(id: string): Promise<Resultado<null>> {
+    const { error } = await this.cliente
+      .from('device_tokens')
+      .update({ activo: false, revoked_at: new Date().toISOString() })
+      .eq('id', id)
+    if (error) {
+      console.error('revocarTokenDispositivo:', error)
+      return SERVIDOR(error.message, 'revocar el token')
+    }
+    return { ok: true, valor: null }
+  }
+
+  /** Una sola sentencia UPDATE: los tokens activos del sensor pasan a revocados. */
+  async revocarTokensDeSensor(sensorId: string): Promise<Resultado<null>> {
+    const { error } = await this.cliente
+      .from('device_tokens')
+      .update({ activo: false, revoked_at: new Date().toISOString() })
+      .eq('sensor_id', sensorId)
+      .eq('activo', true)
+    if (error) {
+      console.error('revocarTokensDeSensor:', error)
+      return SERVIDOR(error.message, 'revocar los tokens anteriores')
     }
     return { ok: true, valor: null }
   }

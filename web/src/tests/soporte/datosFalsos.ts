@@ -17,7 +17,17 @@ import {
   type Medicion,
   type TipoMedicion,
 } from '../../domain/tipos'
-import type { AgregadoDiario, ErrorCampo, Localidad, NuevoCultivo, Perfil, ProveedorDatos, Resultado } from '../../data/datos/proveedorDatos'
+import type {
+  AgregadoDiario,
+  EntradaCatalogoCultivo,
+  ErrorCampo,
+  Localidad,
+  NuevoCultivo,
+  Perfil,
+  ProveedorDatos,
+  Resultado,
+  TokenDispositivo,
+} from '../../data/datos/proveedorDatos'
 import type { Sensor } from '../../data/storeSensores'
 import type { Alerta } from '../../data/storeAlertas'
 
@@ -29,6 +39,26 @@ const LOCALIDADES_FALSAS: Localidad[] = [
   { id: 4, provincia: 'Santa Fe', localidad: 'Rosario' },
   { id: 5, provincia: 'Mendoza', localidad: 'Mendoza' },
 ]
+
+/** Catálogo de cultivos del doble (T2): los 4 tipos estáticos más uno solo de la base. */
+const CATALOGO_FALSO: EntradaCatalogoCultivo[] = [
+  { tipoCultivo: 'Tomate', umbrales: { humedad_suelo: { min: 40, max: 75 }, temperatura: { min: 15, max: 28 }, humedad_ambiental: { min: 50, max: 80 } } },
+  { tipoCultivo: 'Lechuga', umbrales: { humedad_suelo: { min: 45, max: 75 }, temperatura: { min: 10, max: 22 }, humedad_ambiental: { min: 50, max: 80 } } },
+  { tipoCultivo: 'Albahaca', umbrales: { humedad_suelo: { min: 40, max: 70 }, temperatura: { min: 18, max: 30 }, humedad_ambiental: { min: 50, max: 80 } } },
+  { tipoCultivo: 'Pimiento', umbrales: { humedad_suelo: { min: 40, max: 70 }, temperatura: { min: 16, max: 30 }, humedad_ambiental: { min: 50, max: 80 } } },
+  // Solo en la base: sin luminosidad, para probar el relleno con UMBRALES_POR_DEFECTO.
+  { tipoCultivo: 'Zanahoria', umbrales: { humedad_suelo: { min: 60, max: 85 }, temperatura: { min: 7, max: 24 } } },
+]
+
+/** Valida una zona IANA con el mismo criterio que el servidor (`pg_timezone_names`). */
+function zonaValida(zona: string): boolean {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: zona })
+    return true
+  } catch {
+    return false
+  }
+}
 
 const exito = <T>(valor: T): Resultado<T> => ({ ok: true, valor })
 const fallo = (errores: ErrorCampo[]): Resultado<never> => ({ ok: false, errores })
@@ -91,9 +121,32 @@ export class DatosFalsos implements ProveedorDatos {
   }
 
   async crearSensor(nombre: string): Promise<Resultado<Sensor>> {
-    const sensor: Sensor = { id: `s${++this.contadorSensor}`, nombre: nombre.trim(), cultivoIds: [], colorLinea: 'verde' }
+    const sensor: Sensor = {
+      id: `s${++this.contadorSensor}`,
+      nombre: nombre.trim(),
+      cultivoIds: [],
+      colorLinea: 'verde',
+      origen: 'simulado',
+    }
     this.sensores.push(sensor)
     return exito(sensor)
+  }
+
+  /** Solo para tests: cambia el origen de un sensor (p. ej. a `real`). */
+  marcarOrigen(sensorId: string, origen: Sensor['origen']): void {
+    this.sensores = this.sensores.map((s) => (s.id === sensorId ? { ...s, origen } : s))
+  }
+
+  /** Emula el update de `sensors.origen` en la BD y devuelve la fila actualizada. */
+  async actualizarOrigenSensor(sensorId: string, origen: Sensor['origen']): Promise<Resultado<Sensor>> {
+    const sensor = this.sensores.find((s) => s.id === sensorId)
+    if (!sensor) return fallo([{ campo: 'sensor', motivo: 'Sensor no encontrado' }])
+    if (origen !== 'real' && origen !== 'simulado') {
+      return fallo([{ campo: 'origen', motivo: 'Origen de sensor no válido' }])
+    }
+    const actualizado: Sensor = { ...sensor, origen }
+    this.sensores = this.sensores.map((s) => (s.id === sensorId ? actualizado : s))
+    return exito({ ...actualizado, cultivoIds: [...actualizado.cultivoIds] })
   }
 
   async asociarSensor(sensorId: string, cultivoId: string): Promise<Resultado<Sensor>> {
@@ -227,6 +280,12 @@ export class DatosFalsos implements ProveedorDatos {
     return LOCALIDADES_FALSAS.map((l) => ({ ...l }))
   }
 
+  // — Catálogo de cultivos (T2) ———————————————————————————————————
+
+  async cargarCatalogoCultivos(): Promise<EntradaCatalogoCultivo[]> {
+    return CATALOGO_FALSO.map((e) => ({ ...e, umbrales: { ...e.umbrales } }))
+  }
+
   // — Perfil editable (D30) ————————————————————————————————————
 
   /** Para tests: siembra el perfil de la cuenta (como si el signup lo creara). */
@@ -244,12 +303,12 @@ export class DatosFalsos implements ProveedorDatos {
   /** Email de la cuenta, para comprobar la confirmación. */
   emailCuenta = 'pruebas@agrobits.test'
 
-  consultarDliDeAyer(_cropId?: string): Promise<number | null> {
+  consultarDliDeAyer(): Promise<number | null> {
     // Doble sin lecturas de luz: el DLI de ayer no está disponible.
     return Promise.resolve(null)
   }
 
-  consultarBandaDli(_cropType: string): Promise<{ min: number; max: number } | null> {
+  consultarBandaDli(): Promise<{ min: number; max: number } | null> {
     // Doble sin perfil de tipo de cultivo: no hay banda DLI.
     return Promise.resolve(null)
   }
@@ -275,13 +334,81 @@ export class DatosFalsos implements ProveedorDatos {
     return { ok: true, valor: null }
   }
 
-  async actualizarPerfil(telefono: string, localidadId: number): Promise<Resultado<Perfil>> {
+  async actualizarPerfil(telefono: string, localidadId: number, zonaHoraria: string): Promise<Resultado<Perfil>> {
     // Emula los backstops del RPC `actualizar_perfil` (D30).
     if (!LOCALIDADES_FALSAS.some((l) => l.id === localidadId)) {
       return fallo([{ campo: 'general', motivo: 'No se pudo guardar el perfil: La localidad seleccionada ya no está disponible' }])
     }
-    this.perfil = { telefono: telefono.trim(), localidadId }
+    // Emula la validación de zona del RPC (`zona_horaria_invalida`).
+    if (!zonaValida(zonaHoraria.trim())) {
+      return fallo([
+        {
+          campo: 'general',
+          motivo: 'No se pudo guardar el perfil: La zona horaria no es válida (usa un nombre IANA, p. ej. America/Argentina/Buenos_Aires)',
+        },
+      ])
+    }
+    this.perfil = { telefono: telefono.trim(), localidadId, zonaHoraria: zonaHoraria.trim() }
     return exito({ ...this.perfil })
+  }
+
+  // — Tokens de dispositivo ————————————————————————————————————————
+
+  private tokensDispositivo: (TokenDispositivo & { sensorId: string; tokenHash: string })[] = []
+  private contadorTokenDispositivo = 0
+
+  /** Solo para tests: filas tal y como quedarían en la BD (incluye el hash). */
+  tokensDispositivoGuardados(): (TokenDispositivo & { sensorId: string; tokenHash: string })[] {
+    return this.tokensDispositivo.map((t) => ({ ...t }))
+  }
+
+  async registrarTokenDispositivo(sensorId: string, nombre: string, tokenHash: string): Promise<Resultado<{ id: string }>> {
+    if (!this.sensores.some((s) => s.id === sensorId)) return fallo([{ campo: 'sensor', motivo: 'Sensor no encontrado' }])
+    const id = `t${++this.contadorTokenDispositivo}`
+    this.tokensDispositivo.push({
+      id,
+      nombre: nombre.trim(),
+      activo: true,
+      createdAt: new Date().toISOString(),
+      lastSeenAt: null,
+      revokedAt: null,
+      sensorId,
+      tokenHash,
+    })
+    return exito({ id })
+  }
+
+  async cargarTokensDispositivo(sensorId: string): Promise<TokenDispositivo[]> {
+    // Sin el hash: igual que la vista de la BD para el cliente.
+    return this.tokensDispositivo
+      .filter((t) => t.sensorId === sensorId)
+      .map((t) => ({
+        id: t.id,
+        nombre: t.nombre,
+        activo: t.activo,
+        createdAt: t.createdAt,
+        lastSeenAt: t.lastSeenAt,
+        revokedAt: t.revokedAt,
+      }))
+  }
+
+  async revocarTokenDispositivo(id: string): Promise<Resultado<null>> {
+    const token = this.tokensDispositivo.find((t) => t.id === id)
+    if (!token) return fallo([{ campo: 'id', motivo: 'Token no encontrado' }])
+    token.activo = false
+    token.revokedAt = new Date().toISOString()
+    return exito(null)
+  }
+
+  async revocarTokensDeSensor(sensorId: string): Promise<Resultado<null>> {
+    const ahora = new Date().toISOString()
+    for (const token of this.tokensDispositivo) {
+      if (token.sensorId === sensorId && token.activo) {
+        token.activo = false
+        token.revokedAt = ahora
+      }
+    }
+    return exito(null)
   }
 
   private hayActiva(cultivoId: string, tipo: TipoMedicion): Alerta | undefined {

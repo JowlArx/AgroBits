@@ -50,8 +50,9 @@ describe('flujo de cultivos en la interfaz (T-13/T-23)', () => {
 
     expect((screen.getByTestId('min-temperatura') as HTMLInputElement).value).toBe('15')
     expect((screen.getByTestId('max-temperatura') as HTMLInputElement).value).toBe('28')
-    // La luz ya no lleva umbral por lectura: el DLI se evalúa a diario en la BD.
-    expect(screen.queryByTestId('max-luminosidad')).toBeNull()
+    // La luminosidad conserva sus umbrales en el formulario, pero no genera alertas por lectura: el DLI se evalúa a diario en la BD.
+    expect((screen.getByTestId('min-luminosidad') as HTMLInputElement).value).toBe('100')
+    expect((screen.getByTestId('max-luminosidad') as HTMLInputElement).value).toBe('1500')
   })
 
   it('R-11 AC1: cambiar de tipo en el formulario reemplaza los umbrales', () => {
@@ -68,6 +69,27 @@ describe('flujo de cultivos en la interfaz (T-13/T-23)', () => {
     irANuevoCultivo()
 
     expect(screen.getByTestId('aviso-catalogo').textContent).toMatch(/orientativa/)
+  })
+
+  it('T2: el selector ofrece los tipos de la base de datos (no solo los 4 estáticos)', async () => {
+    render(<App />)
+    irANuevoCultivo()
+
+    expect(await screen.findByRole('option', { name: 'Zanahoria' })).toBeTruthy()
+  })
+
+  it('T2: al elegir un tipo solo de la base se precargan sus umbrales', async () => {
+    render(<App />)
+    irANuevoCultivo()
+    await screen.findByRole('option', { name: 'Zanahoria' })
+
+    fireEvent.change(screen.getByLabelText('Tipo de cultivo'), { target: { value: 'Zanahoria' } })
+
+    expect((screen.getByTestId('min-temperatura') as HTMLInputElement).value).toBe('7')
+    expect((screen.getByTestId('max-temperatura') as HTMLInputElement).value).toBe('24')
+    expect((screen.getByTestId('min-humedad_suelo') as HTMLInputElement).value).toBe('60')
+    // Sin luminosidad en el catálogo de la BD: relleno con UMBRALES_POR_DEFECTO.
+    expect((screen.getByTestId('min-luminosidad') as HTMLInputElement).value).toBe('100')
   })
 
   it('R-04 AC1: crea un cultivo y aparece en la lista', async () => {

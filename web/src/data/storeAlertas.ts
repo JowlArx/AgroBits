@@ -9,12 +9,12 @@
 // desde el ProveedorDatos (mismo patrón que cultivos/sensores/mediciones).
 
 import { exigirProveedor } from './datos/proveedorDatos'
-import type { TipoMedicion } from '../domain/tipos'
+import type { TipoAlerta } from '../domain/tipos'
 
 export interface Alerta {
   id: string
   cultivoId: string
-  tipo: TipoMedicion
+  tipo: TipoAlerta
   valor: number
   estado: 'activa' | 'resuelta'
   creadaEn: string

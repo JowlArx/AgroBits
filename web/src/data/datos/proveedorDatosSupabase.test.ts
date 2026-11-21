@@ -324,7 +324,14 @@ describe('ProveedorDatosSupabase — sensores', () => {
     const resultado = await proveedor.crearSensor('Sensor A')
 
     expect(resultado.ok).toBe(true)
-    if (resultado.ok) expect(resultado.valor).toEqual({ id: 's9', nombre: 'Sensor A', cultivoIds: [], colorLinea: 'verde' })
+    if (resultado.ok)
+      expect(resultado.valor).toEqual({
+        id: 's9',
+        nombre: 'Sensor A',
+        cultivoIds: [],
+        colorLinea: 'verde',
+        origen: 'simulado',
+      })
   })
 })
 

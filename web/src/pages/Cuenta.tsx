@@ -24,6 +24,11 @@ import type { Localidad, SolicitudEliminacion } from '../data/datos/proveedorDat
 import type { Cultivo } from '../domain/tipos'
 import type { Sensor } from '../data/storeSensores'
 
+/** Zona del navegador: precarga del campo cuando el perfil no tiene una guardada. */
+function zonaDelNavegador(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Argentina/Buenos_Aires'
+}
+
 interface Props {
   email: string
   /** D43: nombre de usuario actual, para prellenar el campo. */
@@ -46,6 +51,7 @@ export default function Cuenta({
 }: Props) {
   const [localidades, setLocalidades] = useState<Localidad[]>([])
   const [telefono, setTelefono] = useState('')
+  const [zonaHoraria, setZonaHoraria] = useState(() => obtenerPerfil()?.zonaHoraria || zonaDelNavegador())
   const [provincia, setProvincia] = useState('')
   const [localidadId, setLocalidadId] = useState('')
   const [guardando, setGuardando] = useState(false)
@@ -78,6 +84,7 @@ export default function Cuenta({
         if (perfilCargado) {
           const localidad = filas.find((l) => l.id === perfilCargado.localidadId)
           setTelefono(perfilCargado.telefono)
+          setZonaHoraria(perfilCargado.zonaHoraria || zonaDelNavegador())
           if (localidad) {
             setProvincia(localidad.provincia)
             setLocalidadId(String(localidad.id))
@@ -113,7 +120,7 @@ export default function Cuenta({
     evento.preventDefault()
     setGuardando(true)
     setMensaje('')
-    const resultado = await guardarPerfil(telefono, Number(localidadId))
+    const resultado = await guardarPerfil(telefono, Number(localidadId), zonaHoraria)
     setGuardando(false)
     if (!resultado.ok) {
       setError(resultado.errores.map((e) => e.motivo).join('. '))
@@ -301,6 +308,21 @@ export default function Cuenta({
                   </option>
                 ))}
               </select>
+            </label>
+            <label>
+              Zona horaria
+              <input
+                type="text"
+                id="campo-zona-horaria"
+                name="zonaHoraria"
+                autoComplete="off"
+                spellCheck={false}
+                data-testid="zona-horaria"
+                value={zonaHoraria}
+                onChange={(e) => setZonaHoraria(e.target.value)}
+                placeholder="Ej.: America/Argentina/Buenos_Aires"
+              />
+              <small>Ej.: America/Argentina/Buenos_Aires. Se usa para saber cuándo es de día.</small>
             </label>
 
             <div className="acciones acciones-formulario">

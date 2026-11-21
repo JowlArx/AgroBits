@@ -11,11 +11,13 @@ import {
   configurarProgramadorLecturas,
 } from './programadorLecturas'
 import { crearCultivo } from './storeCultivos'
-import { asociarSensor, crearSensor, vaciarSensores } from './storeSensores'
+import { asociarSensor, cargarSensores, crearSensor, vaciarSensores } from './storeSensores'
 import { generarLectura, obtenerMediciones } from './medicionesSimuladas'
 import { cargarAlertas, obtenerAlertas } from './storeAlertas'
 import { cargarDatosSesion, vaciarDatosSesion } from './cargarDatos'
 import { INTERVALO_LECTURAS_MS } from './generador'
+import { exigirProveedor } from './datos/proveedorDatos'
+import { DatosFalsos } from '../tests/soporte/datosFalsos'
 import { programadorFalsoActual } from '../tests/soporte/configurarTests'
 import { TIPOS_MEDICION, type UmbralesPorTipo } from '../domain/tipos'
 
@@ -42,6 +44,14 @@ async function prepararSensorConCultivo(umbrales: UmbralesPorTipo = UMBRALES): P
   const asociacion = await asociarSensor(sensor.valor.id, cultivo.valor.id, () => true)
   if (!asociacion.ok) throw new Error('No se pudo asociar el sensor de prueba')
   return sensor.valor.id
+}
+
+/** Marca el sensor como real en el doble en memoria y refresca la caché de la store. */
+async function marcarComoReal(sensorId: string): Promise<void> {
+  const proveedor = exigirProveedor()
+  if (!(proveedor instanceof DatosFalsos)) throw new Error('Se esperaba el proveedor en memoria')
+  proveedor.marcarOrigen(sensorId, 'real')
+  await cargarSensores()
 }
 
 const POR_LECTURA = TIPOS_MEDICION.length // 4 filas por tick (un valor por tipo)
@@ -136,5 +146,40 @@ describe('generador de lecturas simuladas (T-24, R-10 AC2, D15)', () => {
 
     vaciarDatosSesion()
     expect(programadorFalsoActual().paradas).toBe(1)
+  })
+
+  it('origen real: el sensor no recibe lecturas simuladas ni con el reloj avanzado', async () => {
+    const sensorId = await prepararSensorConCultivo()
+    await marcarComoReal(sensorId)
+    const programador = new ProgramadorTemporizado()
+    programador.programar([sensorId])
+
+    await vi.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(INTERVALO_LECTURAS_MS * 3)
+    expect(obtenerMediciones(sensorId)).toHaveLength(0)
+    programador.parar()
+  })
+
+  it('origen simulado: el sensor sí recibe lecturas simuladas', async () => {
+    const sensorId = await prepararSensorConCultivo()
+    const programador = new ProgramadorTemporizado()
+    programador.programar([sensorId])
+
+    await vi.advanceTimersByTimeAsync(0)
+    expect(obtenerMediciones(sensorId)).toHaveLength(POR_LECTURA)
+    programador.parar()
+  })
+
+  it('un sensor que pasa a real mientras corre deja de generar lecturas', async () => {
+    const sensorId = await prepararSensorConCultivo()
+    const programador = new ProgramadorTemporizado()
+    programador.programar([sensorId])
+    await vi.advanceTimersByTimeAsync(0)
+    expect(obtenerMediciones(sensorId)).toHaveLength(POR_LECTURA)
+
+    await marcarComoReal(sensorId)
+    await vi.advanceTimersByTimeAsync(INTERVALO_LECTURAS_MS * 3)
+    expect(obtenerMediciones(sensorId)).toHaveLength(POR_LECTURA)
+    programador.parar()
   })
 })

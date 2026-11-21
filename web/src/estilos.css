@@ -2217,26 +2217,177 @@ button.boton-google:hover {
   gap: var(--espacio-3);
 }
 
+/* Tarjeta en tres bandas apiladas: cabecera, meta (cultivos y color) y acciones. */
 .tarjeta-sensor {
   min-width: 0;
   background: var(--superficie);
-  border: 1px solid var(--borde);
   border-radius: var(--radio);
   padding: var(--espacio-4);
   display: flex;
-  /* D40: los bloques empiezan arriba (no centrados): así la «Últ. lectura», la
-     paleta y los botones caen a la misma altura en todas las tarjetas. */
-  align-items: flex-start;
-  gap: var(--espacio-4);
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: var(--espacio-3);
 }
 
-.datos-sensor {
+/* Banda 1: nombre (flexible) + origen + última lectura alineada a la derecha. */
+.tarjeta-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-2) var(--espacio-3);
+}
+
+.tarjeta-cabecera .nombre-sensor-panel {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.tarjeta-cabecera .etiqueta {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.tarjeta-cabecera .ultima-lectura-sensor {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* Banda 2: cultivos vinculados y paleta de color, con salto de línea. */
+.tarjeta-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-2) var(--espacio-3);
+}
+
+/* Banda 3: acciones a la izquierda; «Eliminar» se separa a la derecha. */
+.tarjeta-sensor .acciones-tarjeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+.tarjeta-sensor .acciones-tarjeta button {
+  white-space: nowrap;
+}
+
+.tarjeta-sensor .acciones-tarjeta > :last-child {
+  margin-left: 0;
+}
+
+/* Checkbox con su etiqueta en la misma línea (regla global: `input` ocupa el ancho). */
+input[type='checkbox'] {
+  width: auto;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.campo-check {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--espacio-2);
+  margin-bottom: 0;
+  text-align: left;
+  font-weight: 400;
+}
+
+.campo-check input[type='checkbox'] {
+  margin-top: 0.15rem;
+}
+
+/* Panel de tokens: fondo de tono distinto, sin líneas de 1px. */
+.tokens-dispositivo {
+  background: var(--fondo);
+  border-radius: var(--radio);
+  padding: var(--espacio-4);
   display: flex;
   flex-direction: column;
-  gap: var(--espacio-1);
-  min-width: 12rem;
-  flex: 1;
+  gap: var(--espacio-3);
+}
+
+.tokens-dispositivo > h5 {
+  margin: 0;
+}
+
+.tokens-dispositivo .aviso {
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+.tokens-dispositivo .aviso::before {
+  display: none;
+}
+
+.tokens-dispositivo .formulario-token {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+}
+
+.tokens-dispositivo .formulario-token > button {
+  align-self: flex-start;
+  white-space: nowrap;
+}
+
+/* La ayuda se alinea con el texto de la checkbox, no con la casilla. */
+.tokens-dispositivo .formulario-token .ayuda {
+  margin: 0 0 0 1.5rem;
+}
+
+.lista-tokens {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+}
+
+.lista-tokens > li {
+  background: var(--superficie);
+  border-radius: var(--radio-sm);
+  padding: var(--espacio-2) var(--espacio-3);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-1) var(--espacio-3);
+}
+
+/* Móvil: cabecera apilada, acciones en dos columnas y «Eliminar» a todo el ancho. */
+@media (max-width: 47.99rem) {
+  .tarjeta-cabecera .nombre-sensor-panel {
+    flex-basis: 100%;
+  }
+
+  .tarjeta-cabecera .ultima-lectura-sensor {
+    margin-left: 0;
+  }
+
+  .tarjeta-sensor .acciones-tarjeta {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .tarjeta-sensor .acciones-tarjeta > * {
+    grid-column: auto;
+    margin-left: 0;
+    white-space: normal;
+  }
+
+  .tarjeta-sensor .acciones-tarjeta > :last-child {
+    grid-column: 1 / -1;
+    margin-left: 0;
+  }
 }
 
 .nombre-sensor-panel {

@@ -47,6 +47,8 @@ export class ProgramadorTemporizado implements ProgramadorLecturas {
   programar(sensorIds: readonly string[]): void {
     for (const sensorId of sensorIds) {
       this.cancelar(sensorId) // idempotente: un solo temporizador por sensor
+      // Un sensor con origen real recibe lecturas del hardware: el simulador no lo programa.
+      if (obtenerSensor(sensorId)?.origen === 'real') continue
       const retraso = retrasoHastaSiguiente(sensorId, Date.now())
       this.temporizadores.set(
         sensorId,
@@ -70,7 +72,9 @@ export class ProgramadorTemporizado implements ProgramadorLecturas {
   private async tick(sensorId: string): Promise<void> {
     this.temporizadores.delete(sensorId)
     // Sensor borrado mientras tanto (o sesión cerrada): se autodesierte.
-    if (!obtenerSensor(sensorId)) return
+    // Si pasó a origen real mientras corría, tampoco genera ni se reprograma.
+    const sensor = obtenerSensor(sensorId)
+    if (!sensor || sensor.origen === 'real') return
 
     try {
       await generarLectura(sensorId)

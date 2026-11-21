@@ -38,7 +38,11 @@ export async function cargarPerfil(): Promise<void> {
 }
 
 /** Valida y guarda el perfil; al fallar, la caché no cambia. */
-export async function guardarPerfil(telefono: string, localidadId: number): Promise<Resultado<Perfil>> {
+export async function guardarPerfil(
+  telefono: string,
+  localidadId: number,
+  zonaHoraria: string,
+): Promise<Resultado<Perfil>> {
   const errores = []
   if (telefono.trim() === '') {
     errores.push({ campo: 'telefono', motivo: 'El teléfono es obligatorio' })
@@ -51,9 +55,12 @@ export async function guardarPerfil(telefono: string, localidadId: number): Prom
   if (!Number.isInteger(localidadId) || localidadId <= 0) {
     errores.push({ campo: 'localidad', motivo: 'Selecciona una provincia y una localidad' })
   }
+  if (zonaHoraria.trim() === '') {
+    errores.push({ campo: 'zonaHoraria', motivo: 'La zona horaria es obligatoria' })
+  }
   if (errores.length > 0) return { ok: false, errores }
 
-  const resultado = await exigirProveedor().actualizarPerfil(telefono, localidadId)
+  const resultado = await exigirProveedor().actualizarPerfil(telefono, localidadId, zonaHoraria.trim())
   if (resultado.ok) {
     perfil = resultado.valor
     notificar()

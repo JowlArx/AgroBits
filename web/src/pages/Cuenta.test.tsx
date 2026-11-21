@@ -131,3 +131,46 @@ describe('eliminar mi cuenta (D46)', () => {
     expect(datos.solicitud).toBeNull()
   })
 })
+
+// T1 — La zona horaria IANA se ve y se guarda desde «Mi cuenta» (RPC `p_zona_horaria`).
+describe('zona horaria del perfil (T1)', () => {
+  async function rellenarContacto(zona: string): Promise<void> {
+    await waitFor(() =>
+      expect(screen.getByTestId('provincia-cuenta').querySelectorAll('option').length).toBeGreaterThan(1),
+    )
+    fireEvent.change(screen.getByTestId('provincia-cuenta'), { target: { value: 'Córdoba' } })
+    fireEvent.change(screen.getByTestId('localidad-cuenta'), { target: { value: '3' } })
+    fireEvent.change(screen.getByTestId('telefono-cuenta'), { target: { value: '+54 9 351 555-1000' } })
+    fireEvent.change(screen.getByTestId('zona-horaria'), { target: { value: zona } })
+  }
+
+  it('precarga la zona del navegador si el perfil no tiene una guardada', async () => {
+    await entrar()
+    render(<Cuenta {...props} />)
+
+    const campo = screen.getByTestId('zona-horaria') as HTMLInputElement
+    expect(campo.value).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone)
+  })
+
+  it('guarda la zona horaria con el botón del formulario de contacto', async () => {
+    await entrar()
+    render(<Cuenta {...props} />)
+
+    await rellenarContacto('America/Argentina/Cordoba')
+    fireEvent.click(screen.getByTestId('guardar-perfil'))
+
+    await waitFor(() => expect(screen.getByTestId('perfil-guardado')).toBeTruthy())
+    expect((await datosFalsosActual().cargarPerfil())?.zonaHoraria).toBe('America/Argentina/Cordoba')
+  })
+
+  it('muestra el error del servidor si la zona no es válida', async () => {
+    await entrar()
+    render(<Cuenta {...props} />)
+
+    await rellenarContacto('Zona/Inventada')
+    fireEvent.click(screen.getByTestId('guardar-perfil'))
+
+    await waitFor(() => expect(screen.getByTestId('error-perfil')).toBeTruthy())
+    expect(screen.getByTestId('error-perfil').textContent).toMatch(/zona horaria no es válida/i)
+  })
+})

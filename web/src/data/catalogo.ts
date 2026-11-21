@@ -59,6 +59,8 @@ export const ETIQUETAS_MEDICION: Record<string, string> = {
   temperatura: 'Temperatura (°C)',
   humedad_ambiental: 'Humedad ambiental (% HR)',
   luminosidad: 'Luminosidad (lux)',
+  dli: 'Índice de luz diaria (DLI)',
+  sol_directo: 'Horas de sol directo',
 }
 
 /**

@@ -5,7 +5,7 @@
 
 import type { Resultado, ErrorCampo } from './datos/proveedorDatos'
 import { exigirProveedor } from './datos/proveedorDatos'
-import type { ColorSensor } from '../domain/tipos'
+import type { ColorSensor, OrigenSensor } from '../domain/tipos'
 import { COLORES_SENSOR } from '../domain/tipos'
 
 export interface Sensor {
@@ -14,6 +14,8 @@ export interface Sensor {
   cultivoIds: string[]
   /** D30: color de la línea del gráfico de este sensor (paleta nombrada). */
   colorLinea: ColorSensor
+  /** `real` desactiva el simulador para este sensor; `simulado` genera lecturas automáticas. */
+  origen: OrigenSensor
 }
 
 let sensores: Sensor[] = []
@@ -168,6 +170,22 @@ export async function actualizarColorSensor(sensorId: string, color: ColorSensor
     return { ok: false, errores: [{ campo: 'color', motivo: 'Color de línea no disponible' }] }
   }
   const resultado = await exigirProveedor().actualizarColorSensor(sensorId, color)
+  if (resultado.ok) {
+    sensores = sensores.map((s) => (s.id === sensorId ? resultado.valor : s))
+    notificar()
+  }
+  return resultado
+}
+
+/**
+ * Marca el sensor como `real` (sin simulador) o `simulado`. El programador de
+ * lecturas consulta esta caché, así que el cambio se aplica de inmediato.
+ */
+export async function actualizarOrigenSensor(sensorId: string, origen: OrigenSensor): Promise<Resultado<Sensor>> {
+  if (origen !== 'real' && origen !== 'simulado') {
+    return { ok: false, errores: [{ campo: 'origen', motivo: 'Origen de sensor no válido' }] }
+  }
+  const resultado = await exigirProveedor().actualizarOrigenSensor(sensorId, origen)
   if (resultado.ok) {
     sensores = sensores.map((s) => (s.id === sensorId ? resultado.valor : s))
     notificar()

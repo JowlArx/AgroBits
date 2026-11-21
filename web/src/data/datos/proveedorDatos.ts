@@ -4,7 +4,7 @@
 // `ProveedorAuth` (T-22). Inyección: `ProveedorDatosSupabase` en `main.tsx`
 // (aplicación real) y `DatosFalsos` en `src/tests/soporte/configurarTests.ts`.
 
-import type { ColorSensor, Cultivo, Medicion, TipoMedicion, UmbralesPorTipo } from '../../domain/tipos'
+import type { ColorSensor, Cultivo, Medicion, OrigenSensor, TipoMedicion, Umbral, UmbralesPorTipo } from '../../domain/tipos'
 import type { Sensor } from '../storeSensores'
 import type { Alerta } from '../storeAlertas'
 
@@ -23,6 +23,13 @@ export interface NuevoCultivo {
   umbrales: UmbralesPorTipo
 }
 
+/** Entrada del catálogo de cultivos (tabla `crop_type_catalog`, agrupada por tipo). */
+export interface EntradaCatalogoCultivo {
+  tipoCultivo: string
+  /** Solo los tipos de medición que la base tiene por defecto para este cultivo. */
+  umbrales: Partial<Record<TipoMedicion, Umbral>>
+}
+
 /** Fila del catálogo de localidades (registro, R-01 v3 / D27). */
 export interface Localidad {
   id: number
@@ -34,6 +41,8 @@ export interface Localidad {
 export interface Perfil {
   telefono: string
   localidadId: number
+  /** Zona horaria IANA (p. ej. America/Argentina/Buenos_Aires). */
+  zonaHoraria: string
 }
 
 export interface ProveedorDatos {
@@ -55,6 +64,7 @@ export interface ProveedorDatos {
   quitarAsociacionesDeCultivo(cultivoId: string): Promise<string[]>
   /** D30: color de la línea del gráfico del sensor (paleta nombrada). */
   actualizarColorSensor(sensorId: string, color: ColorSensor): Promise<Resultado<Sensor>>
+  actualizarOrigenSensor(sensorId: string, origen: OrigenSensor): Promise<Resultado<Sensor>>
 
   // Mediciones (contrato R-08 / R-09)
   cargarMediciones(sensorIds: readonly string[]): Promise<Medicion[]>
@@ -81,10 +91,13 @@ export interface ProveedorDatos {
   // es anónimo; RLS de `localidades` lo permite).
   cargarLocalidades(): Promise<Localidad[]>
 
+  // Catálogo de cultivos (tabla `crop_type_catalog`): tipos y umbrales por defecto.
+  cargarCatalogoCultivos(): Promise<EntradaCatalogoCultivo[]>
+
   // Perfil (D30): lectura propia (RLS) y escritura vía RPC `actualizar_perfil`
   // (único punto servidor, D19/D27). `null` si la cuenta no tiene fila.
   cargarPerfil(): Promise<Perfil | null>
-  actualizarPerfil(telefono: string, localidadId: number): Promise<Resultado<Perfil>>
+  actualizarPerfil(telefono: string, localidadId: number, zonaHoraria: string): Promise<Resultado<Perfil>>
 
   // Eliminación de la cuenta (D46): petición con 7 días de gracia, mediante
   // RPC `solicitar_eliminacion_cuenta` (SECURITY DEFINER). El servidor exige
@@ -95,6 +108,26 @@ export interface ProveedorDatos {
   solicitarEliminacion(confirmacionEmail: string): Promise<Resultado<string>>
   /** Cancela la solicitud pendiente (dentro del período de gracia). */
   cancelarEliminacion(): Promise<Resultado<null>>
+
+  // Tokens de dispositivo (ingesta `x-device-token`). El token en claro NUNCA
+  // llega al proveedor: solo se persiste su SHA-256 hex (`device_tokens.token_hash`).
+  registrarTokenDispositivo(sensorId: string, nombre: string, tokenHash: string): Promise<Resultado<{ id: string }>>
+  /** Metadatos de los tokens del sensor (sin hash). */
+  cargarTokensDispositivo(sensorId: string): Promise<TokenDispositivo[]>
+  /** Revoca el token: `activo = false` y `revoked_at = now()`. */
+  revocarTokenDispositivo(id: string): Promise<Resultado<null>>
+  /** Revoca en una sola sentencia todos los tokens ACTIVOS del sensor (atómico en BD). */
+  revocarTokensDeSensor(sensorId: string): Promise<Resultado<null>>
+}
+
+/** Token de dispositivo visible en la UI (nunca incluye el hash). */
+export interface TokenDispositivo {
+  id: string
+  nombre: string
+  activo: boolean
+  createdAt: string
+  lastSeenAt: string | null
+  revokedAt: string | null
 }
 
 /** Solicitud de eliminación pendiente (D46). */
