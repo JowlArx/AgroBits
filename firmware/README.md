@@ -171,7 +171,7 @@ El log serie usa 115200 baudios (`pio device monitor -b 115200`). Las líneas de
 
 ## Limitaciones conocidas
 
-- **Sin validar en hardware.** La compilación está verificada (30/10/2026). **No probado en placa:** el portal cautivo, el botón BOOT (GPIO9 es pin de strapping: mantenerlo pulsado con el equipo ya encendido, no al encender), el envío real, la prueba con sensores reales, la verificación TLS en el dispositivo y el primer despliegue en campo.
+- **Validación en hardware.** La compilación está verificada (30/10/2026). El portal cautivo se verificó el 30/10/2026; la reapertura con BOOT y el envío de lecturas a la app quedaron verificados por el responsable a finales de octubre de 2026. **Pendiente:** verificación TLS en el dispositivo. GPIO9 es pin de strapping: mantén BOOT pulsado con el equipo ya encendido, no al encender.
 - **Sin idempotencia en la ingesta.** `measurements` no tiene índice único `(sensor_id, tipo, measured_at)` porque ya hay 2 104 grupos duplicados (generados por el simulador). Si se pierde la respuesta HTTP tras una inserción correcta, el reenvío puede duplicar filas. Añadir el índice requiere limpiar datos, con aprobación humana.
 - **Calibración pendiente** de FC-28 y LDR. Los valores por defecto no son fiables.
 - **Capacidad del buffer NVS.** `MAX_LOTES = 200`, pero la partición NVS por defecto de 4 MB (≈20 KB) probablemente no admita 200 lotes de este tamaño. Estimación: de unos 80 a 100 lotes antes de que `encolar` falle. Si se necesitan 200, hay que definir una tabla de particiones con una NVS mayor. Hasta comprobarlo, tratar el límite real como desconocido.

@@ -176,7 +176,7 @@ Reglas:
 
 ## M7 — Hardware ESP32 y ingesta (D69)
 
-Estado: **en implementación.** Alcance y R-15 (spec v6) pendientes de aprobación humana. Dependencias: T-20, T-22, T-24, T-25.
+Estado: **ingesta en producción; sensores en campo verificados por el responsable (finales de octubre de 2026).** R-15 (spec v6) aprobada el 21/11/2026. Dependencias: T-20, T-22, T-24, T-25.
 
 ### T-29 — Tabla `device_tokens` y Edge Function `ingesta`
 - **Objetivo:** guardar tokens de dispositivo hasheados y recibir lotes de lecturas de sensores reales por HTTPS (`plan.md` §2, R-15).
@@ -199,7 +199,7 @@ Estado: **en implementación.** Alcance y R-15 (spec v6) pendientes de aprobaci�
 - **Dependencias:** T-29.
 - **Archivos afectados:** `firmware/`.
 - **Criterios de aceptación:** compila con PlatformIO; envía lotes con el formato canónico; calibración de FC-28 y LDR (hecha: FC-28 2900/910 mV validado en suelo el 30/10/2026; LDR con curva de datasheet del GL5549).
-- **Pruebas requeridas:** compilación verificada el 30/10/2026 (`pio run` → SUCCESS; flash 41,6 %, RAM 12,0 %; ver registro). CA de TLS embebida (GTS Root R4). Calibración hecha el 30/10/2026 (FC-28 y LDR). Portal cautivo verificado en hardware el 30/10/2026. Pendientes: reapertura del portal con BOOT en placa, verificación TLS en el dispositivo y primer despliegue en campo.
+- **Pruebas requeridas:** compilación verificada el 30/10/2026 (`pio run` → SUCCESS; flash 41,6 %, RAM 12,0 %; ver registro). CA de TLS embebida (GTS Root R4). Calibración hecha el 30/10/2026 (FC-28 y LDR). Portal cautivo verificado en hardware el 30/10/2026; reapertura del portal con BOOT y despliegue en campo verificados por el responsable a finales de octubre de 2026. Pendiente: verificación TLS en el dispositivo.
 - **Riesgos:** calibración de dos puntos (el FC-28 no es volumétrico); el LDR no sirve para DLI (D57), solo se envían lux; token del dispositivo guardado en NVS e introducido por portal (T-33).
 
 ### T-32 — Separación real/simulado
