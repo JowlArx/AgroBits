@@ -9,6 +9,8 @@ v3 — **Enmienda aprobada por el humano el 19/10/2026** (decisión D27): R-01 a
 
 v5 — **Enmienda aprobada por el humano el 24/10/2026** (decisión D51): R-06 añade el AC4. El detalle de un sensor («Ver mediciones») se despliega justo debajo de su tarjeta y muestra la última lectura de cada tipo de medición en texto plano; el historial de mediciones pasa a un bloque debajo de la lista de sensores.
 
+v6 — **Enmienda pendiente de aprobación humana (29/10/2026)**: añade R-15 (ingesta de dispositivos físicos con token de dispositivo y simulador desactivado para sensores reales). Hasta su aprobación, R-15 no figura como aprobado.
+
 Nota sobre fases: según la decisión D6, el proyecto avanza en dos fases (Fase 1: interfaz con datos simulados y auth provisional; Fase 2: backend, base de datos y auth real). Salvo indicación, los criterios de aceptación se verifican en la fase en la que el requisito queda implementado. Los criterios marcados como **[F2]** no pueden verificarse en la Fase 1, y su equivalente provisional en Fase 1 no se acepta como validación definitiva.
 
 ## 1. Problema
@@ -32,7 +34,7 @@ Incluye:
 - Umbrales por cultivo (catálogo editable, decisión D3).
 - Visualización de alertas basadas en umbrales (decisión D4).
 
-No incluye (ver §7): historial de mediciones, hardware, sensores compartidos entre usuarios.
+No incluye (ver §7): historial de mediciones, sensores compartidos entre usuarios. El hardware ESP32 se incorpora en M7 (ver §7 y `docs/tasks.md`), pendiente de aprobación de R-15.
 
 ## 4. Tipos de medición (decisión D2, aprobada)
 
@@ -113,6 +115,12 @@ Cada cultivo define un par [mín, máx] por tipo de medición (decisión D3: val
   - AC1: la lista de alertas solo contiene alertas de cultivos del usuario en sesión. **[F2]**
   - AC2: el usuario puede ver el detalle de una alerta (cultivo, tipo, valor, hora).
 
+- **R-15** Cuando un dispositivo físico envíe un lote de lecturas con un token de dispositivo válido asociado a un sensor, el sistema debe almacenarlas con su sensor de origen y su marca de tiempo, y el simulador no debe escribir en sensores marcados como reales. La configuración del dispositivo (red WiFi y token de dispositivo) se realiza sin recompilar, mediante un portal cautivo de aprovisionamiento; el firmware es único para todos los clientes. *(Añadido en v6, pendiente de aprobación.)*
+  - AC1: un lote válido con token válido se inserta y el sensor registra su última conexión. **Verificado** el 29/10/2026 (prueba end-to-end: 200 con inserción).
+  - AC2: un lote con unidad incorrecta se rechaza. **Verificado** el 29/10/2026 (422).
+  - AC3: un token inválido se rechaza. **Verificado** el 29/10/2026 (401).
+  - AC4: el simulador no escribe en sensores con `origen = 'real'`. Migración `20261029000002_sensors_origen.sql` aplicada (29/10/2026 hora local; en remoto con versión `20261030002236`, comprobado con consulta de solo lectura el 21/11/2026).
+
 ## 6. Restricciones
 
 - Presupuesto limitado: objetivo de coste mensual ~0 € (tier gratuito, decisión D7).
@@ -124,7 +132,7 @@ Cada cultivo define un par [mín, máx] por tipo de medición (decisión D3: val
 ## 7. Fuera de alcance inicial (decisión D1 y D5, aprobadas)
 
 - Historial y gráficas de mediciones: incorporado en Fase 2 (política de retención en MEMORY, D54).
-- Hardware y firmware ESP32 (post-MVP, tras validar con simulación).
+- Hardware y firmware ESP32: en implementación desde el 29/10/2026 (ingesta con token de dispositivo, R-15 pendiente de aprobación; ver `docs/plan.md` §2 y `docs/tasks.md` M7). Instalación en campo y calibración: pendientes.
 - Compartir sensores entre usuarios (post-MVP; el modelo de datos ya lo soporta).
 - Notificaciones externas (email, push) — solo alertas dentro de la aplicación.
 - Aplicación móvil, suscripciones y automatización de riego.

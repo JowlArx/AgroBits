@@ -104,7 +104,7 @@ envía) y Supabase responde «Database error saving new user».
   formulario (metadata ausente, localidad inexistente o teléfono corto → el
   alta se rechaza). Sin cambios de esquema (ni tablas, ni políticas, ni RLS).
 - Verificación: suite `supabase/tests/20261020_t28_alta_google_oauth.sql`
-  (11 comprobaciones, `ROLLBACK`, residuo 0) re-ejecutada sobre el estado
+  (11 comprobaciones, `ROLLBACK`, residuo 0) [Nota de corrección, 21/11/2026: el MCP es autocommit y la ejecución no terminó en ROLLBACK; ver MEMORY.md:112.] re-ejecutada sobre el estado
   aplicado → **11/11 OK**.
 
 

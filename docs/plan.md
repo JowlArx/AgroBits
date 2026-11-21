@@ -31,8 +31,15 @@ Estado: **aprobado por el humano el 16/10/2026 (hito M1)**. Siguiente paso: desg
 - Hosting: estático gratuito (Vercel/Netlify/Cloudflare Pages) + proyecto Supabase gratuito.
 - Variables de entorno: `.env` con `.gitignore`; `anon key` (pública, segura solo con RLS) en cliente; `service_role` jamás en cliente ni repo.
 
-### Post-MVP
-- ESP32 escribe contra la API REST de Supabase con token de dispositivo (mínimo privilegio, rotable). No requiere cambiar la arquitectura.
+### Ingesta de dispositivos (ESP32; ingesta en producción desde la versión 4 de la Edge Function, 21/11/2026; D69)
+Flujo: ESP32 (`firmware/`, PlatformIO) → HTTPS `POST` con cabecera `x-device-token` → Edge Function `ingesta` (`verify_jwt: true`) → PostgREST con `service_role` (solo en servidor) → `measurements` → trigger `AFTER INSERT` `evaluar_alertas_de_sensor` (D19).
+
+- La Edge Function valida: lote de máximo 32 lecturas; tipos y unidades canónicos (`humedad_suelo`/% vol, `temperatura`/°C, `humedad_ambiental`/% HR, `luminosidad`/lux); `medida_en` ISO-8601 dentro de una ventana de 24 h (ampliada desde ±10 min el 29/10/2026). Actualiza `last_seen_at` del sensor.
+- Tokens de dispositivo (`device_tokens`): se guarda solo el hash SHA-256 (`token_hash`, único). RLS solo para `authenticated`, por propiedad del sensor; ninguna policy para `anon`. El token en claro se muestra una sola vez al generarlo. La UI permite generar, listar y revocar; no hay rotación automática.
+- Separación real/simulado: el simulador (D18) solo escribe en sensores con `origen = 'simulado'`. La columna `sensors.origen` llega con `20261029000002_sensors_origen.sql` (aplicada el 29/10/2026).
+- Verificación del 29/10/2026: prueba end-to-end (200, 422 y 401 según el caso; datos de prueba borrados) y de la ventana: 48 h → 422; 23 h → 401 (token inválido). La compilación del firmware es correcta (30/10/2026: RAM 12,0 %, flash 41,6 %); sensores en campo con lecturas que llegan a la app y reapertura del portal con BOOT verificadas por el responsable a finales de octubre de 2026; calibración de FC-28 y LDR cerrada el 30/10/2026 (registro del responsable). Pendiente: verificación TLS en el dispositivo.
+- Aprovisionamiento (sin probar en hardware): firmware único. Sin configuración válida abre el portal cautivo `AgroBits-XXXX`, guarda WiFi y token en NVS y pasa al ciclo normal de lecturas. BOOT (GPIO9) con el equipo encendido reabre el portal; 5 min sin WiFi también.
+- Limitación conocida: la ingesta **no es idempotente** (no hay índice único `(sensor_id, tipo, measured_at)` por 2 104 grupos duplicados existentes); un reenvío tras una respuesta perdida puede duplicar filas hasta que se apruebe la limpieza.
 
 ## 3. Modelo de datos
 
@@ -60,7 +67,7 @@ Retención de `measurements` decidida el 26/10/2026 (MEMORY, D54): crudas 30 dí
 4. **Auth**: exclusivamente la de Supabase (D8). Sin criptografía o sesiones caseras. Requisitos de contraseña definidos por el proveedor.
 5. **Entornos separados**: proyecto Supabase de desarrollo distinto del de producción; nunca datos personales en desarrollo.
 6. **Servicios facturables**: crear el proyecto Supabase en tier gratuito requiere confirmación explícita del humano antes de registrarlo o superar el tier (D7).
-7. **Ingesta futura (ESP32)**: tokens por dispositivo, rotables, mínimo privilegio (post-MVP, sin bloqueo actual).
+7. **Ingesta de dispositivos (ESP32)**: token de dispositivo hasheado, sin acceso `anon`, `service_role` solo en servidor (§2, D69). La rotación es manual: generar y revocar.
 
 ## 5. Estrategia de pruebas
 
@@ -77,8 +84,8 @@ Reglas (coherentes con `tasks.md`): ninguna tarea se cierra sin ejecutar sus pru
 
 ```
 M0. spec.md v2 aprobada                          ✅ (16/10/2026)
-M1. Aprobación de este plan (docs/plan.md)       ← pendiente
-M2. Desglose en docs/tasks.md + aprobación       ← pendiente
+M1. Aprobación de este plan (docs/plan.md)       ✅ (16/10/2026)
+M2. Desglose en docs/tasks.md + aprobación       ✅ (17/10/2026)
 M3. Fase 1 — UI con datos simulados
      M3.1 Estructura del proyecto (Vite/React/TS), tooling, .gitignore, tests de dominio
      M3.2 Cultivos: CRUD + umbrales (catálogo editable)
@@ -91,7 +98,7 @@ M4. Fase 2 — Backend y datos reales (Supabase)
      M4.3 Generador de datos simulados (1 lectura/5 min por sensor)
      M4.4 Evaluación de alertas (modelo D14) + verificación de R-01…R-14
      → Validación completa de la especificación
-M5. Post-MVP: historial, ESP32, compartir sensores (fuera de alcance actual)
+M5. Post-MVP: compartir sensores, notificaciones externas (fuera de alcance actual). ESP32: en producción fuera de este hito (§2, D69)
 ```
 
 ## 7. Riesgos y alternativas

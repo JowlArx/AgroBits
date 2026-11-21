@@ -8,7 +8,7 @@ Alcance: `docs/spec.md` v2 (aprobada, M0), requisitos **R-01…R-14** con todos 
 Cinco fuentes de evidencia, ninguna sustituye a otra:
 
 1. **Suite E2E Playwright** versionada en `web/e2e/` (nueva en T-26, chromium, contra el servidor de desarrollo y Supabase real). Ejecución final del 17/10/2026: **9/9 pruebas en verde**.
-2. **Suites SQL** con identidades simuladas y `ROLLBACK` (residuo 0): T-21 `supabase/tests/…` (autorización, R-02/R-07/R-14) y T-25 `supabase/tests/20261017_t25_evaluacion_alertas.sql` (evaluación de alertas, 8/8).
+2. **Suites SQL** con identidades simuladas y `ROLLBACK` (residuo 0) [Nota de corrección, 21/11/2026: el MCP es autocommit; ver MEMORY.md:112. El residuo 0 se verificó solo para los patrones de prueba, con consulta de solo lectura del 21/11/2026.]: T-21 `supabase/tests/…` (autorización, R-02/R-07/R-14) y T-25 `supabase/tests/20261017_t25_evaluacion_alertas.sql` (evaluación de alertas, 8/8).
 3. **Suite unitaria** (Vitest): **124 pruebas / 16 suites** en verde sobre el estado actual.
 4. **E2E manuales previos** (T-22…T-25) con chrome-devtools contra Supabase real, con evidencia registrada en `docs/tasks.md`.
 5. **Evidencia de esquema** consultada en la BD (`pg_constraint` sobre `measurements`) para R-08 AC2.

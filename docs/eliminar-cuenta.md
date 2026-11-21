@@ -53,14 +53,14 @@ El catálogo de localidades no pertenece a la cuenta y **no se toca**.
 ## Estado de la implementación
 
 - Migración: `supabase/migrations/20261021000001_eliminar_cuenta.sql` (**aplicada el 23/10/2026** vía MCP de Supabase; registrada como versión `20261023144823`).
-- Suite SQL: `supabase/tests/20261021_d46_eliminar_cuenta.sql` (**ejecutada el 23/10/2026** vía MCP: **12/12 pruebas OK**, residuo 0).
+- Suite SQL: `supabase/tests/20261021_d46_eliminar_cuenta.sql` (**ejecutada el 23/10/2026** vía MCP: **12/12 pruebas OK**, sin residuo en producción con los patrones de prueba (consulta de solo lectura del 21/11/2026); autocommit, sin ROLLBACK (MEMORY.md:112)).
 - Interfaz: implementada en `src/pages/Cuenta.tsx`, con la store `src/data/storePerfil.ts` y el contrato del proveedor de datos ampliado. Cubierta por pruebas unitarias (4 casos nuevos).
 
 La migración y la suite ya están aplicadas y validadas (12/12 OK). El purgador está programado con `pg_cron` (job id 1, diario a las 03:00 UTC) y borra automáticamente las cuentas cuyo plazo de gracia (7 días) haya vencido.
 
 ## Verificación prevista
 
-- Suite SQL versionada en `supabase/tests/`, ejecutada en transacción con `ROLLBACK`, con identidades simuladas.
+- Suite SQL versionada en `supabase/tests/`, ejecutada vía MCP (autocommit; sin ROLLBACK, MEMORY.md:112), con identidades simuladas.
 - E2E sobre la cuenta de prueba `e2e-a`: crear datos, pedir el borrado, comprobar el aviso de gracia, cancelar y confirmar que no queda solicitud. La cuenta de prueba se recrea al final.
 - Pruebas unitarias de la validación del email de confirmación y del ciclo de gracia/cancelación.
 

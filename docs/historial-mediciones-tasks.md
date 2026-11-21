@@ -9,7 +9,7 @@
 - **Objetivo:** crear la tabla de agregados diarios con RLS por dueño del sensor.
 - **Archivos:** `supabase/migrations/20261023000001_mediciones_diarias.sql`.
 - **Criterios de aceptación:** tabla creada, RLS habilitado, PK `(sensor_id, tipo, dia)`, políticas de lectura por dueño del sensor.
-- **Pruebas:** suite SQL (identidades simuladas + ROLLBACK, residuo 0).
+- **Pruebas:** suite SQL (identidades simuladas, vía MCP sin ROLLBACK por ser autocommit, con limpieza explícita y residuo 0 verificado).
 - **Riesgos:** requiere aprobación para aplicar la migración (única BD dev+prod).
 
 ## T-H2 — Migración: jobs de agregación y purga (pg_cron)
@@ -25,7 +25,7 @@
 - **Objetivo:** validar RLS y agregación con identidades simuladas.
 - **Archivos:** `supabase/tests/20261023_t_historial.sql`.
 - **Criterios de aceptación:** todas las pruebas OK, residuo 0.
-- **Pruebas:** ejecutar vía MCP con ROLLBACK.
+- **Pruebas:** ejecutar vía MCP (autocommit: sin ROLLBACK, MEMORY.md:112).
 
 ## T-H4 — Aprobación e instalación de dependencia XLSX
 

@@ -26,7 +26,7 @@ Permitir al usuario **consultar el historial de mediciones** de sus sensores/cul
 
 - **BD:** tabla `mediciones_diarias` (o vista materializada) con `(sensor_id, tipo, dia, valor_medio, min, max, n)`; job diario de agregación + purga de crudas >30 días; RLS por dueño del sensor.
 - **Cliente:** nueva vista/página, gráfico de barras (recharts ya instalado), selector de rango, exportación XLSX.
-- **Tests:** suite SQL (identidades simuladas + ROLLBACK) y E2E.
+- **Tests:** suite SQL (identidades simuladas, ejecutada vía MCP sin ROLLBACK por ser autocommit, con limpieza explícita y residuo 0 verificado) y E2E.
 
 ## 5. Fuera de alcance (por ahora)
 

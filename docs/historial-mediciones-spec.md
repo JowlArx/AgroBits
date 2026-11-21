@@ -47,7 +47,7 @@ Las mediciones crudas se conservan 30 días; los agregados diarios se conservan 
 - **AC1:** Existe tabla `mediciones_diarias` con `(sensor_id, tipo, dia, valor_medio, valor_min, valor_max, n)` y RLS por dueño del sensor.
 - **AC2:** Job diario agrega las mediciones del día anterior en `mediciones_diarias`.
 - **AC3:** Job diario borra mediciones crudas con `measured_at < now() - 30 días`.
-- **AC4:** Suite SQL (identidades simuladas + ROLLBACK) valida RLS y agregación; residuo 0.
+- **AC4:** Suite SQL (identidades simuladas, vía MCP sin ROLLBACK por ser autocommit) valida RLS y agregación; residuo 0 verificado con limpieza explícita.
 
 ### R-H5 — Coste controlado
 

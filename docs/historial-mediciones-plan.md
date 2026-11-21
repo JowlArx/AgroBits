@@ -74,7 +74,7 @@ delete from public.measurements where measured_at < now() - interval '30 days';
 
 ## 6. Pruebas
 
-- **Suite SQL** (`supabase/tests/`): identidades simuladas + ROLLBACK, residuo 0. Valida RLS y agregación.
+- **Suite SQL** (`supabase/tests/`): identidades simuladas, vía MCP sin ROLLBACK por ser autocommit, con limpieza explícita y residuo 0 verificado. Valida RLS y agregación.
 - **Unit tests** (vitest): lógica de agregación, filtros, exportación.
 - **E2E** (Playwright): flujo de consulta + exportación.
 

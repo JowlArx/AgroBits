@@ -83,7 +83,7 @@ from public.mediciones_diarias;
 reset role;
 
 -- ===== AC5: purga de crudas >30 dias =====
-delete from public.measurements where measured_at < now() - interval '30 days';
+delete from public.measurements where sensor_id in ('11111111-1111-1111-1111-111111111111','22222222-2222-2222-2222-222222222222') and measured_at < now() - interval '30 days';
 insert into public.t_h_resultados
 select 'AC5 purga crudas antiguas',
   case when not exists (select 1 from public.measurements where value = 99.0)
