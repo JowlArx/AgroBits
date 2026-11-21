@@ -21,7 +21,7 @@ El proyecto está en implementación y validación. Los hitos M0–M5 están apr
 - Pruebas: Playwright (D21) y Vitest (según docs/plan.md).
 - Hosting y despliegue: Vercel, plan Hobby (D23).
 - Tipografía: Fraunces y Atkinson Hyperlegible vía Google Fonts (D20).
-- Firmware (ESP32): pendiente; fuera del MVP (D1).
+- Firmware (ESP32): en implementación (M7, D69); compila con PlatformIO, pendiente de probar en hardware.
 - Documentación del proyecto: carpeta `docs/`.
 
 No asumir tecnologías o versiones que no hayan sido aprobadas explícitamente.
@@ -106,4 +106,4 @@ Antes de dar una tarea por terminada:
 
 ## 10. Regla de inicio
 
-Antes de implementar una funcionalidad, sus requisitos y criterios de aceptación deben estar aprobados en docs/spec.md, y su plan y tareas en docs/plan.md y docs/tasks.md. El firmware y las integraciones con sensores siguen fuera de alcance hasta su aprobación (ESP32: post-MVP).
+Antes de implementar una funcionalidad, sus requisitos y criterios de aceptación deben estar aprobados en docs/spec.md, y su plan y tareas en docs/plan.md y docs/tasks.md. La ingesta de hardware está en implementación (M7, D69): firmware en `firmware/` y Edge Function `ingesta`. La calibración de sensores y el despliegue en campo siguen pendientes de aprobación y verificación.

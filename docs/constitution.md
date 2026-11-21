@@ -34,6 +34,8 @@ Las claves privadas y credenciales no deben incluirse en el repositorio.
 
 Los cambios de arquitectura, modelo de datos, dependencias y seguridad deben justificarse y aprobarse antes de implementarse.
 
+La ingesta de lecturas desde dispositivos físicos se rige por la decisión «ingesta con token de dispositivo» (registrada en `MEMORY.md`): los tokens se guardan hasheados, no se conceden permisos a `anon`, la clave `service_role` solo se usa en servidor y el simulador no escribe en sensores marcados como reales. Cualquier cambio en este mecanismo requiere aprobación previa.
+
 ## 7. Idioma
 
 La documentación del proyecto se redacta en español, conservando en inglés los nombres técnicos convencionales.

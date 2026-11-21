@@ -27,7 +27,7 @@ Por qué existe: los usuarios de huertas domésticas y pequeños cultivos necesi
 
 El mecanismo propio: umbrales configurados por cultivo (valores por defecto de un catálogo editable, sobrescribibles por el usuario) aplicados a lecturas en vivo, con un ciclo de vida de alerta evaluado **en el servidor** (trigger `AFTER INSERT ON measurements`): una única alerta activa por (cultivo, tipo), mantenida mientras la lectura siga fuera de rango y resuelta al volver al rango.
 
-A eso se suma que el software produce lecturas con el mismo formato que enviará el ESP32 —el generador simulado ocupa su lugar hasta que exista hardware—, de modo que la plataforma se valida entera sin comprar sensores.
+A eso se suma que el software produce lecturas con el mismo formato que envía el ESP32 —el generador simulado sigue activo para sensores simulados y no escribe en sensores marcados como reales—, de modo que la plataforma se valida entera sin comprar sensores.
 
 El resultado para el usuario: no un panel de números, sino «tu cultivo está fuera de rango, con este valor, a esta hora».
 
@@ -37,7 +37,7 @@ El resultado para el usuario: no un panel de números, sino «tu cultivo está f
 - **Idioma:** documentación y producto en español, conservando en inglés los nombres técnicos convencionales (D9).
 - **Coste:** objetivo estructural de ~0 €/mes en infraestructura (tier gratuito). Cualquier servicio facturable exige aprobación humana previa (D7).
 - **Verificación:** cada funcionalidad tiene criterios de aceptación verificables y nada se declara terminado sin ejecutar las verificaciones pertinentes, declarando limitaciones y pruebas pendientes. Hoy: eslint, vitest (173/173), build y Playwright E2E (15/15 en local y 15/15 contra producción) en verde; la semántica de base de datos se certifica con suites SQL versionadas (`supabase/tests/`) que usan identidades simuladas y `ROLLBACK`.
-- **Datos:** mientras no haya hardware, el generador simulado corre en la SPA abierta y escribe con el token de la sesión del usuario (todo vía RLS, sin credenciales de servicio) (D18). Frecuencia: 1 lectura cada 5 minutos y sensor (D15).
+- **Datos:** el generador simulado corre en la SPA abierta para sensores simulados y escribe con el token de la sesión del usuario (todo vía RLS, sin credenciales de servicio) (D18). Los sensores reales escriben por HTTPS contra la Edge Function `ingesta` con token de dispositivo (ver `docs/plan.md` §2). Frecuencia: 1 lectura cada 5 minutos y sensor (D15).
 - **Publicación:** cada push a `main` despliega en Vercel (proyecto `agrobits`, root directory `web/`). Los builds quedan bloqueados si la autoría del commit no corresponde al propietario del equipo en Vercel (D25). URL pública: `https://agrobits-jowlarxs-projects.vercel.app`.
 - **Entrega de base de datos:** migraciones versionadas en `supabase/migrations/`, suites SQL en `supabase/tests/`, acceso al proyecto Supabase por MCP.
 - **Flujo en Git:** una rama y un commit por tarea, mergeados a `main` tras verificarlos; tags por hito (`m0-spec` … `m5`).
@@ -62,8 +62,8 @@ El resultado para el usuario: no un panel de números, sino «tu cultivo está f
 - Seguridad: autorización por fila con `user_id` + RLS en todas las tablas de negocio; ninguna regla de acceso público indiscriminado; las claves solo viven en `web/.env.local` (gitignored) y en las variables de entorno de Vercel, nunca en el repositorio.
 - Coste: ~0 €/mes (Supabase free tier, Vercel Hobby).
 - Fuera de alcance: notificaciones externas, sensores compartidos, suscripciones, riego automático, app móvil.
-- Próximo bloque decidido: **hardware y firmware ESP32** (el generador simulado queda como sustituto mientras no exista sensor). El protocolo de comunicación sigue sin definirse.
-- Hechos de producto explícitamente sin decidir: fuentes que justifiquen los umbrales del catálogo; formato concreto de handoff entre roles de agente; protocolo ESP32.
+- Hardware ESP32 **en implementación** (D69; `firmware/`, ESP32-C3 SuperMini con FC-28, DHT22 y LDR). La plataforma sigue siendo web; el dispositivo es una fuente de datos, no una aplicación. Protocolo: HTTPS contra la Edge Function `ingesta` con token de dispositivo; no hay MQTT ni LoRa. Pendiente: calibrar FC-28 y LDR, verificar TLS en el dispositivo y el primer despliegue en campo.
+- Hechos de producto explícitamente sin decidir: validación de los umbrales del catálogo por INTA o agrónomo (fuentes en D56); formato concreto de handoff entre roles de agente.
 
 ## Brand Commitments
 
@@ -88,7 +88,7 @@ Contenido y datos reales disponibles:
 
 Ausencias que el trabajo futuro **no debe inventar**:
 
-- No hay hardware ESP32 conectado ni datos de sensores reales: todas las lecturas son simuladas.
+- No hay dispositivos ESP32 desplegados en campo ni lecturas de sensores reales verificadas; el firmware no se ha probado en hardware. Las lecturas verificadas hasta hoy son simuladas.
 - No hay testimonios, casos de éxito, prensa, clientes reales ni métricas de uso; más allá de las cuentas de prueba, el producto no tiene usuarios.
 - No hay fotografías propias de cultivos, parcelas o personas: el único asset de imagen es el logo.
 - No hay fuente publicada que justifique los umbrales del catálogo ni las localidades sembradas.
