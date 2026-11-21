@@ -21,7 +21,7 @@ El proyecto está en implementación y validación. Los hitos M0–M5 están apr
 - Pruebas: Playwright (D21) y Vitest (según docs/plan.md).
 - Hosting y despliegue: Vercel, plan Hobby (D23).
 - Tipografía: Fraunces y Atkinson Hyperlegible vía Google Fonts (D20).
-- Firmware (ESP32): en implementación (M7, D69); compila con PlatformIO, pendiente de probar en hardware.
+- Firmware (ESP32): en producción (M7, D69); compila con PlatformIO y probado en hardware (30/10/2026 y finales de octubre de 2026, según el responsable).
 - Documentación del proyecto: carpeta `docs/`.
 
 No asumir tecnologías o versiones que no hayan sido aprobadas explícitamente.
