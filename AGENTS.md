@@ -106,4 +106,4 @@ Antes de dar una tarea por terminada:
 
 ## 10. Regla de inicio
 
-Antes de implementar una funcionalidad, sus requisitos y criterios de aceptación deben estar aprobados en docs/spec.md, y su plan y tareas en docs/plan.md y docs/tasks.md. La ingesta de hardware está en producción (M7, D69): firmware en `firmware/` y Edge Function `ingesta`. La calibración de sensores y el despliegue en campo están verificados por el responsable a finales de octubre de 2026; queda pendiente la verificación TLS en el dispositivo.
+Antes de implementar una funcionalidad, sus requisitos y criterios de aceptación deben estar aprobados en docs/spec.md, y su plan y tareas en docs/plan.md y docs/tasks.md. La ingesta de hardware está en producción (M7, D69): firmware en `firmware/` y Edge Function `ingesta`. La calibración de sensores y el despliegue en campo están verificados por el responsable a finales de octubre de 2026; el TLS está verificado el 21/11/2026 (cadena del servidor con openssl y código revisado; prueba negativa en el dispositivo omitida por decisión del responsable).

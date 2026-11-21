@@ -132,7 +132,7 @@ Cada cultivo define un par [mín, máx] por tipo de medición (decisión D3: val
 ## 7. Fuera de alcance inicial (decisión D1 y D5, aprobadas)
 
 - Historial y gráficas de mediciones: incorporado en Fase 2 (política de retención en MEMORY, D54).
-- Hardware y firmware ESP32: en implementación desde el 29/10/2026 (ingesta con token de dispositivo, R-15 aprobado el 21/11/2026; ver `docs/plan.md` §2 y `docs/tasks.md` M7). Calibración cerrada el 30/10/2026 y sensores en campo verificados por el responsable a finales de octubre de 2026; verificación TLS en el dispositivo pendiente.
+- Hardware y firmware ESP32: en implementación desde el 29/10/2026 (ingesta con token de dispositivo, R-15 aprobado el 21/11/2026; ver `docs/plan.md` §2 y `docs/tasks.md` M7). Calibración cerrada el 30/10/2026 y sensores en campo verificados por el responsable a finales de octubre de 2026; TLS verificado el 21/11/2026 (cadena y código; prueba negativa en el dispositivo omitida por decisión del responsable).
 - Compartir sensores entre usuarios (post-MVP; el modelo de datos ya lo soporta).
 - Notificaciones externas (email, push) — solo alertas dentro de la aplicación.
 - Aplicación móvil, suscripciones y automatización de riego.

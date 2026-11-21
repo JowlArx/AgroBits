@@ -47,6 +47,8 @@ El token se valida en el portal (64 caracteres hexadecimales). La página nunca 
 
 **CA de TLS embebida:** `AGROBITS_CA_PEM` contiene la GTS Root R4 (Google Trust Services, autofirmada, válida hasta 22/06/2036). Cadena observada: `supabase.co` ← `WE1` ← `GTS Root R4` ← `GlobalSign Root CA`. Si Supabase cambia de CA, hay que sustituir ese bloque PEM y recompilar.
 
+**Verificación del 21/11/2026:** `openssl s_client` confirma la cadena del servidor (verify OK: `supabase.co` ← `WE1` ← `GTS Root R4`). El código usa `setCACert` y no `setInsecure()`. La prueba negativa en el dispositivo se omitió por decisión del responsable.
+
 `include/secrets.h` (no versionado, en `firmware/.gitignore`) solo sirve para overrides de desarrollo; el cliente no lo necesita. Plantilla en `include/secrets.example.h`. **No versionar valores reales.**
 
 ### Mantenimiento de la CA de TLS (solo desarrolladores)
@@ -171,7 +173,7 @@ El log serie usa 115200 baudios (`pio device monitor -b 115200`). Las líneas de
 
 ## Limitaciones conocidas
 
-- **Validación en hardware.** La compilación está verificada (30/10/2026). El portal cautivo se verificó el 30/10/2026; la reapertura con BOOT y el envío de lecturas a la app quedaron verificados por el responsable a finales de octubre de 2026. **Pendiente:** verificación TLS en el dispositivo. GPIO9 es pin de strapping: mantén BOOT pulsado con el equipo ya encendido, no al encender.
+- **Validación en hardware.** La compilación está verificada (30/10/2026). El portal cautivo se verificó el 30/10/2026; la reapertura con BOOT y el envío de lecturas a la app quedaron verificados por el responsable a finales de octubre de 2026. **TLS:** verificado el 21/11/2026 (cadena y código; prueba negativa omitida por decisión del responsable). GPIO9 es pin de strapping: mantén BOOT pulsado con el equipo ya encendido, no al encender.
 - **Sin idempotencia en la ingesta.** `measurements` no tiene índice único `(sensor_id, tipo, measured_at)` porque ya hay 2 104 grupos duplicados (generados por el simulador). Si se pierde la respuesta HTTP tras una inserción correcta, el reenvío puede duplicar filas. Añadir el índice requiere limpiar datos, con aprobación humana.
 - **Calibración pendiente** de FC-28 y LDR. Los valores por defecto no son fiables.
 - **Capacidad del buffer NVS.** `MAX_LOTES = 200`, pero la partición NVS por defecto de 4 MB (≈20 KB) probablemente no admita 200 lotes de este tamaño. Estimación: de unos 80 a 100 lotes antes de que `encolar` falle. Si se necesitan 200, hay que definir una tabla de particiones con una NVS mayor. Hasta comprobarlo, tratar el límite real como desconocido.

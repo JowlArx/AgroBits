@@ -62,7 +62,7 @@ El resultado para el usuario: no un panel de números, sino «tu cultivo está f
 - Seguridad: autorización por fila con `user_id` + RLS en todas las tablas de negocio; ninguna regla de acceso público indiscriminado; las claves solo viven en `web/.env.local` (gitignored) y en las variables de entorno de Vercel, nunca en el repositorio.
 - Coste: ~0 €/mes (Supabase free tier, Vercel Hobby).
 - Fuera de alcance: notificaciones externas, sensores compartidos, suscripciones, riego automático, app móvil.
-- Hardware ESP32 (D69; ingesta en producción y firmware verificado en campo por el responsable a finales de octubre de 2026; `firmware/`, ESP32-C3 SuperMini con FC-28, DHT22 y LDR). La plataforma sigue siendo web; el dispositivo es una fuente de datos, no una aplicación. Protocolo: HTTPS contra la Edge Function `ingesta` con token de dispositivo; no hay MQTT ni LoRa. Pendiente: verificar TLS en el dispositivo.
+- Hardware ESP32 (D69; ingesta en producción y firmware verificado en campo por el responsable a finales de octubre de 2026; `firmware/`, ESP32-C3 SuperMini con FC-28, DHT22 y LDR). La plataforma sigue siendo web; el dispositivo es una fuente de datos, no una aplicación. Protocolo: HTTPS contra la Edge Function `ingesta` con token de dispositivo; no hay MQTT ni LoRa. TLS verificado el 21/11/2026 (cadena y código; prueba negativa omitida por decisión del responsable).
 - Hechos de producto explícitamente sin decidir: validación de los umbrales del catálogo por INTA o agrónomo (fuentes en D56); formato concreto de handoff entre roles de agente.
 
 ## Brand Commitments
