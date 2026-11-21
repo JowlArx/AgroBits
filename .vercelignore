@@ -1,0 +1,16 @@
+# Archivos que no deben subirse a Vercel.
+# El build usa solo web/ (Root Directory del proyecto), así que todo lo demás sobra.
+firmware/
+supabase/
+docs/
+.agents/
+.opencode/
+.taste-skill/
+graphify-out/
+memory/
+*.md
+web/dist/
+web/test-results/
+web/playwright-report/
+web/e2e/
+web/.env*
