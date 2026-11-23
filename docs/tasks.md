@@ -219,12 +219,12 @@ Estado: **ingesta en producción; sensores en campo verificados por el responsab
 - **Riesgos:** GPIO9 es pin de strapping, así que BOOT solo sirve con el equipo encendido; la contraseña WiFi y el token se guardan en NVS (cifrado de NVS no evaluado); un cambio de CA de Supabase obliga a recompilar.
 
 ### T-34 — Aviso «Sin señal» y etiquetas de estado (R-16)
-- **Estado:** implementada en la rama `feat/sin-senal`. Migración `20261123000001_alerta_sin_senal.sql` y job `evaluar-sin-senal` aprobados por el responsable el 23/11/2026; pendientes de aplicar en producción tras el merge.
+- **Estado:** implementada y en `main` (`f753369`). Migración `20261123055845_alerta_sin_senal.sql` aplicada en producción el 23/11/2026 y job `evaluar-sin-senal` (cada 5 min) programado; aprobados por el responsable el 23/11/2026.
 - **Objetivo:** etiquetas «Activo», «Sin señal» y «Nunca ha enviado» en sensores reales, y alerta `sin_senal` por cultivo (R-16).
 - **Dependencias:** T-29 (`device_tokens.last_seen_at`), T-32 (`origen`).
-- **Archivos afectados:** `web/src/domain/estadoSenal.ts`, `web/src/domain/tipos.ts`, `web/src/data/storeSensores.ts`, `web/src/data/datos/proveedorDatosSupabase.ts`, `web/src/tests/soporte/datosFalsos.ts`, `web/src/pages/Sensores.tsx`, `web/src/pages/Alertas.tsx`, `web/src/data/catalogo.ts`, `web/src/estilos.css`, `supabase/migrations/20261123000001_alerta_sin_senal.sql`.
+- **Archivos afectados:** `web/src/domain/estadoSenal.ts`, `web/src/domain/tipos.ts`, `web/src/data/storeSensores.ts`, `web/src/data/datos/proveedorDatosSupabase.ts`, `web/src/tests/soporte/datosFalsos.ts`, `web/src/pages/Sensores.tsx`, `web/src/pages/Alertas.tsx`, `web/src/data/catalogo.ts`, `web/src/estilos.css`, `supabase/migrations/20261123055845_alerta_sin_senal.sql`.
 - **Criterios de aceptación:** R-16 AC1–AC6.
-- **Pruebas requeridas:** `src/domain/estadoSenal.test.ts`, pruebas de «Sin señal» y «Nunca ha enviado» en `Sensores.test.tsx`, prueba de la alerta `sin_senal` en `Alertas.test.tsx`, y suite de Vitest en verde. Pendiente: comprobación en producción de la función `cultivos_sin_senal()` y del job, tras aplicar la migración.
+- **Pruebas requeridas:** `src/domain/estadoSenal.test.ts`, pruebas de «Sin señal» y «Nunca ha enviado» en `Sensores.test.tsx`, prueba de la alerta `sin_senal` en `Alertas.test.tsx`, y suite de Vitest en verde. Comprobado en producción el 23/11/2026: `cultivos_sin_senal()` devuelve 3 cultivos (sensor real «sensor prueba kalanchoe», sin datos desde el 07/11/2026); job activo; restricción `alerts_tipo_check` incluye `sin_senal`. Primer ciclo del job: pendiente de verificar.
 - **Riesgos:** la última lectura se toma de `device_tokens.last_seen_at`, que solo se actualiza al recibir lotes; un sensor con cobertura intermitente puede mostrar el aviso aunque su medición esté bien. Una sola alerta por cultivo y tipo: si dos sensores del mismo cultivo se caen a la vez, se muestra una sola alerta.
 
 ---
