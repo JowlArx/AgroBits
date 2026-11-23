@@ -53,10 +53,11 @@ interface FilaSensor {
   name: string
   color_linea?: string | null
   origen?: string | null
+  created_at?: string | null
   sensor_crop: { crop_id: string }[] | null
 }
 
-const SELECT_SENSOR = 'id, name, color_linea, origen, sensor_crop(crop_id)'
+const SELECT_SENSOR = 'id, name, color_linea, origen, created_at, sensor_crop(crop_id)'
 
 interface FilaMedicion {
   sensor_id: string
@@ -127,6 +128,7 @@ function aSensor(fila: FilaSensor): Sensor {
     colorLinea: esColorSensor(fila.color_linea ?? '') ? (fila.color_linea as ColorSensor) : 'verde',
     // Sin columna `origen` (filas previas a la migración) se trata como simulado.
     origen: fila.origen === 'real' ? 'real' : 'simulado',
+    creadoEn: fila.created_at ?? null,
   }
 }
 

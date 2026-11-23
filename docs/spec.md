@@ -120,11 +120,13 @@ Cada cultivo define un par [mín, máx] por tipo de medición (decisión D3: val
   - AC2: un lote con unidad incorrecta se rechaza. **Verificado** el 29/10/2026 (422).
   - AC3: un token inválido se rechaza. **Verificado** el 29/10/2026 (401).
   - AC4: el simulador no escribe en sensores con `origen = 'real'`. Migración `20261029000002_sensors_origen.sql` aplicada (29/10/2026 hora local; en remoto con versión `20261030002236`, comprobado con consulta de solo lectura el 21/11/2026).
-- **R-16** La vista de sensores debe avisar cuando un sensor real no ha enviado lecturas recientemente. Un sensor con `origen = 'real'` cuya última lectura de dispositivo es de hace más de 15 minutos, o que nunca ha enviado, muestra la etiqueta «Sin señal» y el tiempo transcurrido desde su última lectura («Nunca ha enviado» si no hay lecturas). Los sensores simulados no muestran este aviso. *(Propuesto el 23/11/2026; pendiente de aprobación humana.)*
-  - **AC1:** sensor real con última lectura hace 5 min: sin aviso.
-  - **AC2:** sensor real con última lectura hace 30 min: etiqueta «Sin señal» y tiempo transcurrido.
-  - **AC3:** sensor real sin lecturas de dispositivo: «Nunca ha enviado».
-  - **AC4:** sensor simulado: sin aviso, aunque no tenga lecturas de dispositivo.
+- **R-16** La vista de sensores y las alertas deben avisar cuando un sensor real no envía lecturas. Un sensor con `origen = 'real'` muestra la etiqueta «Activo» si su última lectura es de hace 15 minutos o menos, y «Sin señal» con el tiempo transcurrido si es de hace más de 15 minutos. Un sensor que nunca ha enviado muestra «Nunca ha enviado» a partir de 15 minutos después de su alta. Las etiquetas se muestran tengan o no cultivo asociado. Si el sensor está asociado a cultivos, cada cultivo recibe una alerta «Sin señal» (tipo `sin_senal`) mientras alguno de sus sensores reales esté sin señal, y la alerta se resuelve cuando todos vuelven a enviar. No se envían correos ni notificaciones externas (§7). *(Aprobado por el responsable el 23/11/2026.)*
+  - **AC1:** sensor real con última lectura hace 5 min: etiqueta «Activo» y sin alerta.
+  - **AC2:** sensor real con última lectura hace 30 min: etiqueta «Sin señal» con el tiempo transcurrido, y cada cultivo asociado recibe alerta «Sin señal».
+  - **AC3:** sensor real que nunca ha enviado: sin etiqueta durante los primeros 15 minutos desde su alta; después «Nunca ha enviado».
+  - **AC4:** sensor simulado: sin etiquetas de estado y sin alertas de sin señal.
+  - **AC5:** sensor real sin cultivo asociado: muestra la etiqueta, pero no genera alerta.
+  - **AC6:** cuando el sensor vuelve a enviar, su alerta «Sin señal» se resuelve.
 
 ## 6. Restricciones
 

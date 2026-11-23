@@ -112,6 +112,18 @@ describe('pantalla de alertas (T-15/T-23, R-13 y R-14)', () => {
     expect(screen.getAllByText('Horas de sol directo').length).toBeGreaterThanOrEqual(1)
   })
 
+  it('R-13: alerta sin_senal muestra su etiqueta «Sin señal» y «42 min sin señal»', async () => {
+    const datos = datosFalsosActual()
+    const creadaEn = new Date().toISOString()
+    datos.sembrarAlerta({ id: 'sin-senal-1', cultivoId: 'cultivo-sembrado', tipo: 'sin_senal', valor: 42, estado: 'activa', creadaEn })
+    await cargarAlertas()
+    render(<App />)
+    abrirAlertas()
+
+    expect((await screen.findAllByText('Sin señal')).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByTestId('alerta-valor').textContent).toBe('42 min sin señal')
+  })
+
   it('R-13 AC2: lecturas repetidas fuera de rango no duplican la alerta', async () => {
     render(<App />)
     await crearCultivoCon('Huerto repetido', umbralesSoloHumedadFuera)

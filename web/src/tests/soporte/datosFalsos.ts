@@ -139,6 +139,7 @@ export class DatosFalsos implements ProveedorDatos {
   async crearSensor(nombre: string): Promise<Resultado<Sensor>> {
     const sensor: Sensor = {
       id: `s${++this.contadorSensor}`,
+      creadoEn: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
       nombre: nombre.trim(),
       cultivoIds: [],
       colorLinea: 'verde',
@@ -146,6 +147,11 @@ export class DatosFalsos implements ProveedorDatos {
     }
     this.sensores.push(sensor)
     return exito(sensor)
+  }
+
+  /** Solo para tests: fija la fecha de creación de un sensor (cargarSensores la devuelve en `creadoEn`). */
+  marcarCreadoEn(sensorId: string, iso: string): void {
+    this.sensores = this.sensores.map((s) => (s.id === sensorId ? { ...s, creadoEn: iso } : s))
   }
 
   /** Solo para tests: cambia el origen de un sensor (p. ej. a `real`). */

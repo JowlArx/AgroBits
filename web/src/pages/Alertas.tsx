@@ -27,7 +27,9 @@ function filaAlerta(alerta: Alerta) {
         </span>
       </div>
       <p className="alerta-valor" data-testid="alerta-valor">
-        {numero(alerta.valor, Number.isInteger(alerta.valor) ? 0 : 1)} {UNIDADES_ALERTA[alerta.tipo]}
+        {alerta.tipo === 'sin_senal'
+          ? `${Math.round(alerta.valor)} min sin señal`
+          : `${numero(alerta.valor, Number.isInteger(alerta.valor) ? 0 : 1)} ${UNIDADES_ALERTA[alerta.tipo]}`}
       </p>
       <p className="alerta-contexto" data-testid={`detalle-${alerta.id}`}>
         <span data-testid="alerta-cultivo">{cultivo ? cultivo.nombre : 'Cultivo eliminado'}</span>

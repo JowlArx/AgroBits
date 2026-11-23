@@ -18,13 +18,14 @@ export const UNIDADES: Record<TipoMedicion, string> = {
 }
 
 /** Tipos de alerta: las mediciones más los índices diarios calculados en la BD. */
-export type TipoAlerta = TipoMedicion | 'dli' | 'sol_directo'
+export type TipoAlerta = TipoMedicion | 'dli' | 'sol_directo' | 'sin_senal'
 
 /** Unidad de cada tipo de alerta: las mediciones usan UNIDADES; DLI y sol directo, sus propias. */
 export const UNIDADES_ALERTA: Record<TipoAlerta, string> = {
   ...UNIDADES,
   dli: 'mol/m²/día',
   sol_directo: 'h',
+  sin_senal: 'min',
 }
 
 /** Umbrales precargados en cultivos nuevos para los tipos que los tienen por defecto. */

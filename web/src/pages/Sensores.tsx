@@ -13,10 +13,10 @@ import {
   actualizarColorSensor,
   actualizarOrigenSensor,
   eliminarSensor,
-  estaSinSenal,
   obtenerSensores,
   suscribirSensores,
 } from '../data/storeSensores'
+import { estadoSenal } from '../domain/estadoSenal'
 import { obtenerCultivo, suscribirCultivos } from '../data/storeCultivos'
 import { eliminarMediciones, generarLectura, obtenerMediciones, suscribirMediciones } from '../data/medicionesSimuladas'
 import { cargarAlertas } from '../data/storeAlertas'
@@ -72,10 +72,9 @@ function dliDeHoy(mediciones: readonly Medicion[]): number | null {
   return delDia.length === 0 ? null : dliEstimado(delDia.map((m) => ({ value: m.valor })))
 }
 
-/** Texto del aviso de «sin señal»: tiempo transcurrido desde la última lectura, o nunca. */
-function textoSinSenal(ultimaVezVisto: string | null | undefined, ahora: number = Date.now()): string {
-  if (!ultimaVezVisto) return 'Nunca ha enviado'
-  const minutos = Math.floor((ahora - Date.parse(ultimaVezVisto)) / 60_000)
+/** Texto de tiempo desde la última lectura del sensor (N min, mínimo 0). */
+function textoUltimaLectura(ultimaVezVisto: string, ahora: number): string {
+  const minutos = Math.max(0, Math.round((ahora - Date.parse(ultimaVezVisto)) / 60_000))
   return `Última lectura hace ${minutos} min`
 }
 
@@ -157,6 +156,8 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
             {sensores.map((sensor) => {
               const ultima = ultimaLectura(sensor.id)
               const abierto = sensorActivoId === sensor.id
+              const ahora = Date.now()
+              const estado = estadoSenal(sensor, ahora)
               return (
                 <li key={sensor.id} className="tarjeta-sensor" data-testid="tarjeta-sensor">
                   {/* Banda 1: nombre, origen y última lectura (a la derecha). */}
@@ -187,16 +188,29 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
                             .map((id) => obtenerCultivo(id)?.nombre ?? 'Cultivo eliminado')
                             .join(' · ')}
                     </span>
-                    {/* Sin señal: solo sensores reales sin lecturas recientes (estaSinSenal). */}
-                    {estaSinSenal(sensor) && (
+                    {/* Estado de señal (solo sensores reales; null para simulados). */}
+                    {estado === 'activo' && sensor.ultimaVezVisto && (
+                      <>
+                        <span className="badge-activo" data-testid="activo-sensor">
+                          Activo
+                        </span>
+                        <span className="texto-sin-senal">{textoUltimaLectura(sensor.ultimaVezVisto, ahora)}</span>
+                      </>
+                    )}
+                    {estado === 'sin_senal' && sensor.ultimaVezVisto && (
                       <>
                         <span className="badge-sin-senal" data-testid="sin-senal-sensor">
                           Sin señal
                         </span>
                         <span className="texto-sin-senal" data-testid="texto-sin-senal">
-                          {textoSinSenal(sensor.ultimaVezVisto)}
+                          {textoUltimaLectura(sensor.ultimaVezVisto, ahora)}
                         </span>
                       </>
+                    )}
+                    {estado === 'nunca_envio' && (
+                      <span className="badge-sin-senal" data-testid="nunca-envio-sensor">
+                        Nunca ha enviado
+                      </span>
                     )}
                     <div
                       className="paleta-colores"

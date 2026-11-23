@@ -90,26 +90,56 @@ describe('vista de sensores: aviso de sin señal (solo sensores reales)', () => 
     await screen.findByTestId('tarjeta-sensor')
   }
 
-  it('real con última lectura hace 5 min: sin aviso', async () => {
+  it('real con última lectura hace 5 min: badge «Activo» y sin aviso de sin señal', async () => {
     await renderSensor('real', new Date(Date.now() - 5 * 60_000).toISOString())
+    expect(screen.getByTestId('activo-sensor').textContent).toBe('Activo')
     expect(screen.queryByTestId('sin-senal-sensor')).toBeNull()
   })
 
-  it('real con última lectura hace 30 min: badge y tiempo transcurrido', async () => {
+  it('real con última lectura hace 30 min: «Sin señal» y tiempo transcurrido', async () => {
     await renderSensor('real', new Date(Date.now() - 30 * 60_000).toISOString())
     expect(screen.getByTestId('sin-senal-sensor').textContent).toBe('Sin señal')
     expect(screen.getByTestId('texto-sin-senal').textContent).toBe('Última lectura hace 30 min')
   })
 
-  it('real sin token (nunca ha enviado): badge y «Nunca ha enviado»', async () => {
-    await renderSensor('real', null)
-    expect(screen.getByTestId('sin-senal-sensor').textContent).toBe('Sin señal')
-    expect(screen.getByTestId('texto-sin-senal').textContent).toBe('Nunca ha enviado')
+  it('simulado con última lectura hace 30 min: ninguna etiqueta de estado', async () => {
+    await renderSensor('simulado', new Date(Date.now() - 30 * 60_000).toISOString())
+    expect(screen.queryByTestId('activo-sensor')).toBeNull()
+    expect(screen.queryByTestId('sin-senal-sensor')).toBeNull()
+    expect(screen.queryByTestId('nunca-envio-sensor')).toBeNull()
+    expect(screen.queryByTestId('texto-sin-senal')).toBeNull()
   })
 
-  it('simulado: sin aviso aunque no tenga lecturas de dispositivo', async () => {
+  it('simulado sin lecturas de dispositivo: ninguna etiqueta de estado', async () => {
     await renderSensor('simulado', null)
     expect(screen.queryByTestId('sin-senal-sensor')).toBeNull()
+    expect(screen.queryByTestId('nunca-envio-sensor')).toBeNull()
     expect(screen.queryByTestId('texto-sin-senal')).toBeNull()
+  })
+
+  it('real sin lecturas de dispositivo creado hace 30 min: «Nunca ha enviado» y sin «Sin señal»', async () => {
+    const datos = datosFalsosActual()
+    const creado = await datos.crearSensor('Sensor de campo')
+    if (!creado.ok) throw new Error('No se pudo crear el sensor de prueba')
+    datos.marcarOrigen(creado.valor.id, 'real')
+    datos.marcarCreadoEn(creado.valor.id, new Date(Date.now() - 30 * 60_000).toISOString())
+    await cargarSensores()
+    render(<Sensores />)
+    await screen.findByTestId('tarjeta-sensor')
+    expect(screen.getByTestId('nunca-envio-sensor').textContent).toBe('Nunca ha enviado')
+    expect(screen.queryByTestId('sin-senal-sensor')).toBeNull()
+  })
+
+  it('real sin lecturas de dispositivo creado hace 5 min: sin aviso de sin señal ni de nunca enviado', async () => {
+    const datos = datosFalsosActual()
+    const creado = await datos.crearSensor('Sensor de campo')
+    if (!creado.ok) throw new Error('No se pudo crear el sensor de prueba')
+    datos.marcarOrigen(creado.valor.id, 'real')
+    datos.marcarCreadoEn(creado.valor.id, new Date(Date.now() - 5 * 60_000).toISOString())
+    await cargarSensores()
+    render(<Sensores />)
+    await screen.findByTestId('tarjeta-sensor')
+    expect(screen.queryByTestId('nunca-envio-sensor')).toBeNull()
+    expect(screen.queryByTestId('sin-senal-sensor')).toBeNull()
   })
 })

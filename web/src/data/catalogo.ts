@@ -60,6 +60,7 @@ export const ETIQUETAS_MEDICION: Record<string, string> = {
   humedad_ambiental: 'Humedad ambiental (% HR)',
   luminosidad: 'Luminosidad (lux)',
   dli: 'Índice de luz diaria (DLI)',
+  sin_senal: 'Sin señal',
   sol_directo: 'Horas de sol directo',
 }
 

@@ -2953,6 +2953,19 @@ input[type='checkbox']:focus-visible {
   font-weight: 600;
 }
 
+/* Activo (sensores reales con señal reciente): tono verde de estado correcto. */
+.badge-activo {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border: 0;
+  border-radius: 999px;
+  box-shadow: none;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
 .texto-sin-senal {
   font-size: 0.85rem;
   opacity: 0.8;
