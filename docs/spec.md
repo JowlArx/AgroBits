@@ -120,6 +120,11 @@ Cada cultivo define un par [mín, máx] por tipo de medición (decisión D3: val
   - AC2: un lote con unidad incorrecta se rechaza. **Verificado** el 29/10/2026 (422).
   - AC3: un token inválido se rechaza. **Verificado** el 29/10/2026 (401).
   - AC4: el simulador no escribe en sensores con `origen = 'real'`. Migración `20261029000002_sensors_origen.sql` aplicada (29/10/2026 hora local; en remoto con versión `20261030002236`, comprobado con consulta de solo lectura el 21/11/2026).
+- **R-16** La vista de sensores debe avisar cuando un sensor real no ha enviado lecturas recientemente. Un sensor con `origen = 'real'` cuya última lectura de dispositivo es de hace más de 15 minutos, o que nunca ha enviado, muestra la etiqueta «Sin señal» y el tiempo transcurrido desde su última lectura («Nunca ha enviado» si no hay lecturas). Los sensores simulados no muestran este aviso. *(Propuesto el 23/11/2026; pendiente de aprobación humana.)*
+  - **AC1:** sensor real con última lectura hace 5 min: sin aviso.
+  - **AC2:** sensor real con última lectura hace 30 min: etiqueta «Sin señal» y tiempo transcurrido.
+  - **AC3:** sensor real sin lecturas de dispositivo: «Nunca ha enviado».
+  - **AC4:** sensor simulado: sin aviso, aunque no tenga lecturas de dispositivo.
 
 ## 6. Restricciones
 

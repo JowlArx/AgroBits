@@ -68,6 +68,7 @@ export class DatosFalsos implements ProveedorDatos {
   private contadorCultivo = 0
   private sensores: Sensor[] = []
   private contadorSensor = 0
+  private ultimasVistas = new Map<string, string | null>()
   private mediciones = new Map<string, Medicion[]>()
   private alertas: Alerta[] = []
 
@@ -117,7 +118,22 @@ export class DatosFalsos implements ProveedorDatos {
   // — Sensores ———————————————————————————————————————————————
 
   async cargarSensores(): Promise<Sensor[]> {
-    return this.sensores.map((s) => ({ ...s, cultivoIds: [...s.cultivoIds] }))
+    return this.sensores.map((s) => ({
+      ...s,
+      cultivoIds: [...s.cultivoIds],
+      ultimaVezVisto: this.ultimasVistas.get(s.id) ?? null,
+    }))
+  }
+
+  /** Solo para tests: fija la última vez visto de un sensor (null = nunca ha enviado). */
+  marcarUltimaVezVisto(sensorId: string, iso: string | null): void {
+    this.ultimasVistas.set(sensorId, iso)
+  }
+
+  async cargarUltimaVezVisto(sensorIds: readonly string[]): Promise<Record<string, string | null>> {
+    const resultado: Record<string, string | null> = {}
+    for (const id of sensorIds) resultado[id] = this.ultimasVistas.get(id) ?? null
+    return resultado
   }
 
   async crearSensor(nombre: string): Promise<Resultado<Sensor>> {

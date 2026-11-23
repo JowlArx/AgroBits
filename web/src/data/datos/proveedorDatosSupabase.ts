@@ -297,7 +297,29 @@ export class ProveedorDatosSupabase implements ProveedorDatos {
       .select(SELECT_SENSOR)
       .order('created_at', { ascending: true })
     if (error) throw new Error(`No se pudieron cargar los sensores (${error.message})`)
-    return ((data ?? []) as unknown as FilaSensor[]).map(aSensor)
+    const sensores = ((data ?? []) as unknown as FilaSensor[]).map(aSensor)
+    const ultimas = await this.cargarUltimaVezVisto(sensores.map((s) => s.id))
+    return sensores.map((s) => ({ ...s, ultimaVezVisto: ultimas[s.id] ?? null }))
+  }
+
+  /** Máximo `last_seen_at` de los tokens activos de cada sensor (RLS de `device_tokens`). */
+  async cargarUltimaVezVisto(sensorIds: readonly string[]): Promise<Record<string, string | null>> {
+    const resultado: Record<string, string | null> = {}
+    for (const id of sensorIds) resultado[id] = null
+    if (sensorIds.length === 0) return resultado
+    const { data, error } = await this.cliente
+      .from('device_tokens')
+      .select('sensor_id, last_seen_at')
+      .in('sensor_id', [...sensorIds])
+      .eq('activo', true)
+    if (error) throw new Error(`No se pudo consultar la última lectura (${error.message})`)
+    for (const fila of (data ?? []) as { sensor_id: string; last_seen_at: string | null }[]) {
+      if (!fila.last_seen_at) continue
+      const iso = aISO(fila.last_seen_at)
+      const previa = resultado[fila.sensor_id]
+      if (!previa || iso > previa) resultado[fila.sensor_id] = iso
+    }
+    return resultado
   }
 
   async crearSensor(nombre: string): Promise<Resultado<Sensor>> {

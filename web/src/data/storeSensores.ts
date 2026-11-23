@@ -16,6 +16,21 @@ export interface Sensor {
   colorLinea: ColorSensor
   /** `real` desactiva el simulador para este sensor; `simulado` genera lecturas automáticas. */
   origen: OrigenSensor
+  /** Última vez que un dispositivo del sensor envió una lectura (`device_tokens.last_seen_at`); null si nunca. */
+  ultimaVezVisto?: string | null
+}
+
+/** Un sensor real sin lecturas durante más de este tiempo se muestra como «Sin señal». */
+export const UMBRAL_SIN_SENAL_MS = 15 * 60 * 1000
+
+/**
+ * Aviso de «sin señal» (solo sensores reales): true si nunca ha enviado o su
+ * última lectura es más antigua que UMBRAL_SIN_SENAL_MS. Los simulados nunca.
+ */
+export function estaSinSenal(sensor: Sensor, ahora: number = Date.now()): boolean {
+  if (sensor.origen !== 'real') return false
+  if (!sensor.ultimaVezVisto) return true
+  return ahora - Date.parse(sensor.ultimaVezVisto) > UMBRAL_SIN_SENAL_MS
 }
 
 let sensores: Sensor[] = []

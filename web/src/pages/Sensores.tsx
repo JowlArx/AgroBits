@@ -13,6 +13,7 @@ import {
   actualizarColorSensor,
   actualizarOrigenSensor,
   eliminarSensor,
+  estaSinSenal,
   obtenerSensores,
   suscribirSensores,
 } from '../data/storeSensores'
@@ -69,6 +70,13 @@ function dliDeHoy(mediciones: readonly Medicion[]): number | null {
   const inicioDia = Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), hoy.getUTCDate())
   const delDia = mediciones.filter((m) => m.tipo === 'luminosidad' && Date.parse(m.medidaEn) >= inicioDia)
   return delDia.length === 0 ? null : dliEstimado(delDia.map((m) => ({ value: m.valor })))
+}
+
+/** Texto del aviso de «sin señal»: tiempo transcurrido desde la última lectura, o nunca. */
+function textoSinSenal(ultimaVezVisto: string | null | undefined, ahora: number = Date.now()): string {
+  if (!ultimaVezVisto) return 'Nunca ha enviado'
+  const minutos = Math.floor((ahora - Date.parse(ultimaVezVisto)) / 60_000)
+  return `Última lectura hace ${minutos} min`
 }
 
 export default function Sensores({ cultivoIdHistorial }: Props) {
@@ -179,6 +187,17 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
                             .map((id) => obtenerCultivo(id)?.nombre ?? 'Cultivo eliminado')
                             .join(' · ')}
                     </span>
+                    {/* Sin señal: solo sensores reales sin lecturas recientes (estaSinSenal). */}
+                    {estaSinSenal(sensor) && (
+                      <>
+                        <span className="badge-sin-senal" data-testid="sin-senal-sensor">
+                          Sin señal
+                        </span>
+                        <span className="texto-sin-senal" data-testid="texto-sin-senal">
+                          {textoSinSenal(sensor.ultimaVezVisto)}
+                        </span>
+                      </>
+                    )}
                     <div
                       className="paleta-colores"
                       role="group"

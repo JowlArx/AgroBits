@@ -77,3 +77,39 @@ describe('vista de sensores: alternar origen real/simulado con confirmación', (
     expect(screen.getByTestId('origen-sensor').textContent).toBe('Simulado')
   })
 })
+
+describe('vista de sensores: aviso de sin señal (solo sensores reales)', () => {
+  async function renderSensor(origen: 'real' | 'simulado', ultimaVezVisto: string | null): Promise<void> {
+    const datos = datosFalsosActual()
+    const creado = await datos.crearSensor('Sensor de campo')
+    if (!creado.ok) throw new Error('No se pudo crear el sensor de prueba')
+    datos.marcarOrigen(creado.valor.id, origen)
+    datos.marcarUltimaVezVisto(creado.valor.id, ultimaVezVisto)
+    await cargarSensores()
+    render(<Sensores />)
+    await screen.findByTestId('tarjeta-sensor')
+  }
+
+  it('real con última lectura hace 5 min: sin aviso', async () => {
+    await renderSensor('real', new Date(Date.now() - 5 * 60_000).toISOString())
+    expect(screen.queryByTestId('sin-senal-sensor')).toBeNull()
+  })
+
+  it('real con última lectura hace 30 min: badge y tiempo transcurrido', async () => {
+    await renderSensor('real', new Date(Date.now() - 30 * 60_000).toISOString())
+    expect(screen.getByTestId('sin-senal-sensor').textContent).toBe('Sin señal')
+    expect(screen.getByTestId('texto-sin-senal').textContent).toBe('Última lectura hace 30 min')
+  })
+
+  it('real sin token (nunca ha enviado): badge y «Nunca ha enviado»', async () => {
+    await renderSensor('real', null)
+    expect(screen.getByTestId('sin-senal-sensor').textContent).toBe('Sin señal')
+    expect(screen.getByTestId('texto-sin-senal').textContent).toBe('Nunca ha enviado')
+  })
+
+  it('simulado: sin aviso aunque no tenga lecturas de dispositivo', async () => {
+    await renderSensor('simulado', null)
+    expect(screen.queryByTestId('sin-senal-sensor')).toBeNull()
+    expect(screen.queryByTestId('texto-sin-senal')).toBeNull()
+  })
+})

@@ -66,6 +66,8 @@ export interface Sensor {
   id: string
   nombre: string
   origen: OrigenSensor
+  /** Última vez que un dispositivo del sensor envió una lectura; null si nunca. */
+  ultimaVezVisto?: string | null
 }
 
 /** Contrato de medición (R-08): compartido por mocks, generador y futuro ESP32. */

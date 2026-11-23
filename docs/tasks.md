@@ -218,6 +218,15 @@ Estado: **ingesta en producción; sensores en campo verificados por el responsab
 - **Pruebas requeridas:** compilación verificada el 30/10/2026 (`pio run` → SUCCESS). **Portal verificado en hardware el 30/10/2026:** el AP arranca, la página se abre, "Guardar y conectar" persiste WiFi y token en NVS y el equipo reinicia y envía. Reapertura con BOOT verificada por el responsable a finales de octubre de 2026. TLS verificado el 21/11/2026 (cadena y código; prueba negativa omitida por decisión del responsable).
 - **Riesgos:** GPIO9 es pin de strapping, así que BOOT solo sirve con el equipo encendido; la contraseña WiFi y el token se guardan en NVS (cifrado de NVS no evaluado); un cambio de CA de Supabase obliga a recompilar.
 
+### T-34 — Aviso «Sin señal» en sensores reales (R-16)
+- **Estado:** propuesta; pendiente de aprobación humana.
+- **Objetivo:** avisar en la vista de sensores cuando un sensor real no envía lecturas desde hace más de 15 minutos (R-16).
+- **Dependencias:** T-29 (`device_tokens.last_seen_at`), T-32 (`origen`).
+- **Archivos afectados:** `web/src/data/storeSensores.ts`, `web/src/domain/tipos.ts`, `web/src/data/datos/proveedorDatos.ts`, `web/src/data/datos/proveedorDatosSupabase.ts`, `web/src/tests/soporte/datosFalsos.ts`, `web/src/pages/Sensores.tsx`, `web/src/pages/Sensores.test.tsx`, `web/src/estilos.css`.
+- **Criterios de aceptación:** R-16 AC1–AC4.
+- **Pruebas requeridas:** las 4 pruebas de la sección «aviso de sin señal» de `Sensores.test.tsx`, y la suite de Vitest en verde.
+- **Riesgos:** la última lectura se toma de `device_tokens.last_seen_at`, que solo se actualiza al recibir lotes; un sensor con cobertura intermitente puede mostrar el aviso aunque su batería o su medición estén bien.
+
 ---
 
 ## Registro de verificación

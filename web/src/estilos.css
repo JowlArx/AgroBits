@@ -2939,3 +2939,21 @@ input[type='checkbox']:focus-visible {
   color: var(--texto-tenue);
   cursor: pointer;
 }
+
+/* Sin senal (sensores reales): tono de senal, sin sombra ni borde de 1 px. */
+.badge-sin-senal {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border: 0;
+  border-radius: 999px;
+  box-shadow: none;
+  background: #dbeafe;
+  color: #1e3a8a;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.texto-sin-senal {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}

@@ -54,6 +54,8 @@ export interface ProveedorDatos {
 
   // Sensores y asociación N–N (R-06)
   cargarSensores(): Promise<Sensor[]>
+  /** Última vez visto por sensor (máximo `last_seen_at` de sus tokens activos); null si nunca. */
+  cargarUltimaVezVisto(sensorIds: readonly string[]): Promise<Record<string, string | null>>
   crearSensor(nombre: string): Promise<Resultado<Sensor>>
   asociarSensor(sensorId: string, cultivoId: string): Promise<Resultado<Sensor>>
   /** D34: desasocia un sensor de un cultivo (borra solo el enlace N–N). */
