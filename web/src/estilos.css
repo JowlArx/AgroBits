@@ -488,6 +488,13 @@ legend {
   color: var(--texto-tenue);
 }
 
+.estadisticas-sensor {
+  margin: var(--espacio-2) 0 0;
+  font-size: 0.85rem;
+  color: var(--texto-tenue);
+  font-variant-numeric: tabular-nums;
+}
+
 /* D35: resumen de una línea en la tarjeta de cultivo + umbrales bajo demanda */
 .resumen-cultivo {
   margin: var(--espacio-1) 0 0;
@@ -2431,18 +2438,25 @@ input[type='checkbox']:focus-visible {
 
 .detalle-sensor {
   margin-top: var(--espacio-5);
+  margin-bottom: var(--espacio-3);
   background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: var(--radio);
-  padding: var(--espacio-4);
+  padding: var(--espacio-4) var(--espacio-4) var(--espacio-5);
 }
 
 /* D51: dentro de su tarjeta, el detalle ocupa toda la fila (la separación la da el gap).
    min-width: 0 evita que las pestañas de tipo (sin salto de línea) lo ensanchen. */
 .tarjeta-sensor > .detalle-sensor {
-  flex: 0 0 100%;
+  align-self: stretch;
   min-width: 0;
   margin-top: 0;
+  margin-bottom: var(--espacio-2);
+}
+
+/* Espaciado entre el botón de lectura y las notas/leyendas del detalle. */
+.detalle-sensor .btn-primario {
+  margin-bottom: var(--espacio-3);
 }
 
 .chip-color {
@@ -2889,6 +2903,7 @@ input[type='checkbox']:focus-visible {
 .historial { display: flex; flex-direction: column; gap: 1rem; }
 .historial-cabecera h3 { margin: 0; }
 .historial-descripcion { margin: 0.25rem 0 0; opacity: 0.75; font-size: 0.9rem; }
+.historial-resumen { margin: 0.5rem 0 0; font-size: 0.85rem; color: var(--texto-tenue); font-variant-numeric: tabular-nums; }
 .historial-filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
 .historial-filtros label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; }
 .historial-filtros select, .historial-filtros input { padding: 0.45rem var(--espacio-2); border: 1px solid var(--borde-input); border-radius: var(--radio-sm); background: var(--superficie); color: var(--texto); min-height: 2.75rem; }

@@ -7,6 +7,8 @@ import {
   CartesianGrid,
   ComposedChart,
   Line,
+  ReferenceArea,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -20,6 +22,8 @@ interface Props {
   tipo: TipoMedicion
   /** Color de la línea (valor CSS, p. ej. `var(--sensor-verde)`). */
   color: string
+  minUmbral?: number
+  maxUmbral?: number
 }
 
 /** Hora corta local (hh:mm:ss) para ejes y tooltip. */
@@ -30,12 +34,12 @@ export function horaCorta(iso: string): string {
     : fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 }
 
-export default function GraficoLecturas({ puntos, tipo, color }: Props) {
+export default function GraficoLecturas({ puntos, tipo, color, minUmbral, maxUmbral }: Props) {
   return (
     <div className="grafico-lineas grafico-sensor">
       <ResponsiveContainer width="100%" height="100%">
         {/* D31: eje Y alineado con el título + relleno plano (DESIGN.md). */}
-        <ComposedChart data={puntos} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
+        <ComposedChart data={puntos} margin={{ top: 24, right: 16, bottom: 8, left: 0 }}>
           <CartesianGrid stroke="var(--borde)" strokeDasharray="3 3" vertical={false} />
           {/* D41: la clave del eje es el instante completo, no la hora
               formateada (misma razón que en el tablero). */}
@@ -61,6 +65,17 @@ export default function GraficoLecturas({ puntos, tipo, color }: Props) {
             }}
             formatter={(valor) => [`${valor} ${UNIDADES[tipo]}`, ETIQUETAS_MEDICION[tipo]]}
           />
+          {minUmbral != null && maxUmbral != null && minUmbral < maxUmbral && (
+            <ReferenceArea y1={minUmbral} y2={maxUmbral} fill={color} fillOpacity={0.08} strokeOpacity={0} />
+          )}
+          {puntos.length > 0 && (
+            <ReferenceLine
+              x={puntos[puntos.length - 1].medidaEn}
+              stroke="var(--texto-tenue)"
+              strokeDasharray="3 3"
+              label={{ value: 'Última', position: 'top', fill: 'var(--texto-tenue)', fontSize: 10 }}
+            />
+          )}
           <Area
             type="linear"
             dataKey="valor"

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+﻿import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import {
   Bar,
   BarChart,
@@ -16,7 +16,7 @@ import type { AgregadoDiario } from '../data/datos/proveedorDatos'
 import type { Medicion } from '../domain/tipos'
 import type { TipoMedicion } from '../domain/tipos'
 import { TIPOS_MEDICION } from '../domain/tipos'
-import { ETIQUETAS_MEDICION } from '../data/catalogo'
+import { ETIQUETAS_MEDICION, VAR_COLOR_SENSOR } from '../data/catalogo'
 import { dliEstimado } from '../domain/luz'
 import { numero } from '../domain/formato'
 
@@ -55,10 +55,10 @@ export default function Historial({
 
   const [cultivoId, setCultivoId] = useState<string>(cultivoIdInicial ?? '')
   const [sensorId, setSensorId] = useState<string>('')
-  const [tipo, setTipo] = useState<TipoMedicion | ''>('')
+  const [tipo, setTipo] = useState<TipoMedicion | ''>('temperatura')
   const [desde, setDesde] = useState<string>(() => {
     const d = new Date()
-    d.setDate(d.getDate() - 30)
+    d.setDate(d.getDate() - 7)
     return fechaISO(d)
   })
   const [hasta, setHasta] = useState<string>(() => fechaISO(new Date()))
@@ -142,7 +142,8 @@ export default function Historial({
       let sufijo = 2
       while (nombresUsados.has(nombre)) nombre = `${nombre} (${sufijo++})`
       nombresUsados.add(nombre)
-      seriesMap.set(clave, { nombre, color: colores[seriesMap.size % colores.length] })
+      const color = sensor ? VAR_COLOR_SENSOR[sensor.colorLinea] : colores[seriesMap.size % colores.length]
+      seriesMap.set(clave, { nombre, color })
     }
     const series = [...seriesMap.values()]
 
@@ -247,6 +248,11 @@ export default function Historial({
         </p>
       </header>
 
+      {hayDatos && (
+        <p className="historial-resumen" data-testid="resumen-historial">
+          {rawMediciones.length} lecturas · {sensoresObjetivo.length} sensores · {puntos.length} días con datos
+        </p>
+      )}
       <div className="historial-filtros">
         <label>
           Cultivo
@@ -294,6 +300,20 @@ export default function Historial({
       <div className="historial-acciones">
         <button type="button" onClick={exportar} disabled={!hayDatos || exportando}>
           {exportando ? 'Exportando…' : 'Exportar a Excel'}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setCultivoId('')
+            setSensorId('')
+            setTipo('')
+            const d = new Date()
+            d.setDate(d.getDate() - 7)
+            setDesde(fechaISO(d))
+            setHasta(fechaISO(new Date()))
+          }}
+        >
+          Limpiar filtros
         </button>
       </div>
 

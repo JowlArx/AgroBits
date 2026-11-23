@@ -1,4 +1,4 @@
-// D30 — Vista de sensores: lista global de los sensores de la cuenta
+﻿// D30 — Vista de sensores: lista global de los sensores de la cuenta
 // (nombre, cultivos vinculados, última lectura y selector del color de su
 // línea). «Ver mediciones» despliega el detalle de UN sensor justo debajo de
 // su tarjeta (gráfica y última lectura en texto plano, D51). El color se
@@ -23,6 +23,7 @@ import { cargarAlertas } from '../data/storeAlertas'
 import {
   COLORES_SENSOR,
   TIPOS_MEDICION,
+  UMBRALES_POR_DEFECTO,
   type ColorSensor,
   type Medicion,
   type OrigenSensor,
@@ -81,9 +82,9 @@ function textoUltimaLectura(ultimaVezVisto: string, ahora: number): string {
 export default function Sensores({ cultivoIdHistorial }: Props) {
   const [sensorActivoId, setSensorActivoId] = useState<string | null>(null)
   const [tipoActivo, setTipoActivo] = useState<TipoMedicion>('temperatura')
+  const [rangoTiempo, setRangoTiempo] = useState<'6h' | '24h' | '7d' | 'todo'>('24h')
   const [errorColor, setErrorColor] = useState('')
   const [tokensSensorId, setTokensSensorId] = useState<string | null>(null)
-
   // Al venir de «Ver historial» de un cultivo, la vista baja hasta el historial.
   useEffect(() => {
     if (cultivoIdHistorial) document.getElementById('historial-mediciones')?.scrollIntoView({ block: 'start' })
@@ -128,18 +129,47 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
     if (sensorActivoId === sensorId) setSensorActivoId(null)
   }
 
+  // eslint-disable-next-line react-hooks/purity
+  const ahoraRango = Date.now()
+  const msRango =
+    rangoTiempo === '6h' ? 6 * 60 * 60 * 1000
+    : rangoTiempo === '24h' ? 24 * 60 * 60 * 1000
+    : rangoTiempo === '7d' ? 7 * 24 * 60 * 60 * 1000
+    : Infinity
   const puntosSensor = sensorActivo
     ? obtenerMediciones(sensorActivo.id)
-        .filter((m) => m.tipo === tipoActivo)
-        .slice(-15)
+        .filter((m) => m.tipo === tipoActivo && (msRango === Infinity || Date.parse(m.medidaEn) >= ahoraRango - msRango))
         .map((m) => ({ medidaEn: m.medidaEn, valor: m.valor }))
     : []
 
+  const estadisticasSensor = puntosSensor.length
+    ? {
+        min: Math.min(...puntosSensor.map((p) => p.valor)),
+        max: Math.max(...puntosSensor.map((p) => p.valor)),
+        media: puntosSensor.reduce((acc, p) => acc + p.valor, 0) / puntosSensor.length,
+        n: puntosSensor.length,
+      }
+    : null
   const ultimasDelActivo: Partial<Record<TipoMedicion, Medicion>> = sensorActivo
     ? ultimasPorTipo(sensorActivo.id)
     : {}
 
   const dliActivo = sensorActivo ? dliDeHoy(obtenerMediciones(sensorActivo.id)) : null
+
+  let umbralMin: number | undefined
+  let umbralMax: number | undefined
+  if (sensorActivo) {
+    if (tipoActivo === 'luminosidad') {
+      const u = sensorActivo.cultivoIds.map((id) => obtenerCultivo(id)?.umbrales?.luminosidad).find((x) => x) ?? UMBRALES_POR_DEFECTO.luminosidad
+      umbralMin = u?.min
+      umbralMax = u?.max
+    } else {
+      const u = sensorActivo.cultivoIds.map((id) => obtenerCultivo(id)?.umbrales?.[tipoActivo as Exclude<TipoMedicion, 'luminosidad'>]).find((x) => x)
+      umbralMin = u?.min
+      umbralMax = u?.max
+    }
+  }
+  const umbralActivo = { min: umbralMin, max: umbralMax }
 
   return (
     <section data-testid="vista-sensores" className="vista-sensores">
@@ -156,6 +186,7 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
             {sensores.map((sensor) => {
               const ultima = ultimaLectura(sensor.id)
               const abierto = sensorActivoId === sensor.id
+              // eslint-disable-next-line react-hooks/purity
               const ahora = Date.now()
               const estado = estadoSenal(sensor, ahora)
               return (
@@ -224,7 +255,6 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
                           className="muestra-color"
                           style={{ background: VAR_COLOR_SENSOR[color] }}
                           data-color={color}
-                          data-testid={`color-${color}`}
                           aria-label={`${ETIQUETAS_COLOR_SENSOR[color]} — color de ${sensor.nombre}`}
                           aria-pressed={sensor.colorLinea === color}
                           title={ETIQUETAS_COLOR_SENSOR[color]}
@@ -239,7 +269,16 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
                   <div className="acciones acciones-tarjeta">
                     <button
                       type="button"
-                      onClick={() => setSensorActivoId(abierto ? null : sensor.id)}
+                      onClick={() => {
+                        if (abierto) {
+                          setSensorActivoId(null)
+                          return
+                        }
+                        const mediciones = obtenerMediciones(sensor.id)
+                        const primeroConDatos = TIPOS_MEDICION.find((t) => mediciones.some((m) => m.tipo === t))
+                        setTipoActivo(primeroConDatos ?? 'temperatura')
+                        setSensorActivoId(sensor.id)
+                      }}
                       aria-expanded={abierto}
                     >
                       {abierto ? 'Ocultar mediciones' : 'Ver mediciones'}
@@ -287,6 +326,19 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
                       </header>
 
                       <h5>Evolución</h5>
+                      <div className="pestanas-widget" role="group" aria-label="Rango de tiempo a mostrar">
+                        {(['6h', '24h', '7d', 'todo'] as const).map((rango) => (
+                          <button
+                            key={rango}
+                            type="button"
+                            aria-pressed={rango === rangoTiempo}
+                            onClick={() => setRangoTiempo(rango)}
+                            data-testid={`rango-${rango}`}
+                          >
+                            {rango === 'todo' ? 'Todo' : rango.toUpperCase()}
+                          </button>
+                        ))}
+                      </div>
                       <div className="pestanas-widget" role="group" aria-label="Tipo de medición a mostrar">
                         {TIPOS_MEDICION.map((tipo) => (
                           <button
@@ -302,15 +354,26 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
 
                       {puntosSensor.length === 0 ? (
                         <p className="estado-vacio" data-testid="sin-lecturas-sensor">
-                          Sin lecturas todavía para “{ETIQUETAS_MEDICION[tipoActivo]}”: genera una lectura para
-                          ver la curva.
+                          {sensorActivo.origen === 'real'
+                            ? 'Sin lecturas todavía: verifica que el dispositivo esté encendido y con conexión.'
+                            : `Sin lecturas todavía para ${ETIQUETAS_MEDICION[tipoActivo]}: genera una lectura para ver la curva.`}
                         </p>
                       ) : (
-                        <GraficoLecturas
-                          puntos={puntosSensor}
-                          tipo={tipoActivo}
-                          color={VAR_COLOR_SENSOR[sensorActivo.colorLinea]}
-                        />
+                        <>
+                          <GraficoLecturas
+                            puntos={puntosSensor}
+                            tipo={tipoActivo}
+                            color={VAR_COLOR_SENSOR[sensorActivo.colorLinea]}
+                            minUmbral={umbralActivo.min}
+                            maxUmbral={umbralActivo.max}
+                          />
+                          {estadisticasSensor && (
+                            <p className="estadisticas-sensor" data-testid="estadisticas-sensor">
+                              Mín {numero(estadisticasSensor.min, 1)} · Media {numero(estadisticasSensor.media, 1)} ·
+                              Máx {numero(estadisticasSensor.max, 1)} (n={estadisticasSensor.n})
+                            </p>
+                          )}
+                        </>
                       )}
 
                       <h5>Última lectura de cada tipo</h5>
@@ -388,3 +451,7 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
     </section>
   )
 }
+
+
+
+
