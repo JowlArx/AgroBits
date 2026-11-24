@@ -2915,11 +2915,11 @@ input[type='checkbox']:focus-visible {
 .historial-cabecera h3 { margin: 0; }
 .historial-descripcion { margin: 0.25rem 0 0; opacity: 0.75; font-size: 0.9rem; }
 .historial-resumen { margin: 0.5rem 0 0; font-size: 0.85rem; color: var(--texto-tenue); font-variant-numeric: tabular-nums; }
-.form-nuevo-sensor { display: flex; flex-wrap: nowrap; gap: var(--espacio-2); align-items: center; justify-content: center; margin: var(--espacio-3) 0; max-width: 24rem; margin-inline: auto; }
+.form-nuevo-sensor { display: flex; flex-wrap: nowrap; gap: var(--espacio-2); align-items: center; justify-content: flex-start; margin: var(--espacio-3) 0; max-width: 24rem; margin-inline: 0; }
 .form-nuevo-sensor input { min-height: 2.25rem; width: 12rem; max-width: 100%; }
 .error-crear-sensor { text-align: center; margin: var(--espacio-2) 0 0; color: var(--error, #b00020); }
-.panel-sensores > button.btn-secundario { display: block; margin-inline: auto; }
-.fila-agregar-sensor { display: flex; flex-wrap: wrap; gap: var(--espacio-2); align-items: center; justify-content: center; margin: var(--espacio-3) 0; }
+.panel-sensores > button.btn-secundario { display: block; margin-inline: 0; }
+.fila-agregar-sensor { display: flex; flex-wrap: wrap; gap: var(--espacio-2); align-items: center; justify-content: flex-start; margin: var(--espacio-3) 0; }
 .historial-filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
 .historial-filtros label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; }
 .historial-filtros select, .historial-filtros input { padding: 0.45rem var(--espacio-2); border: 1px solid var(--borde-input); border-radius: var(--radio-sm); background: var(--superficie); color: var(--texto); min-height: 2.75rem; }
@@ -3001,3 +3001,5 @@ input[type='checkbox']:focus-visible {
   font-size: 0.85rem;
   opacity: 0.8;
 }
+
+
