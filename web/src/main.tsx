@@ -24,11 +24,10 @@ if (Capacitor.isNativePlatform()) {
   // OAuth nativo: captura el redirect y completa la sesión.
   void import('@capacitor/app').then(({ App }) => {
     App.addListener('appUrlOpen', async (event) => {
-      const url = event.url
-      console.log('OAuth redirect:', url)
-      if (url.includes('code=')) {
-        const { data, error } = await clienteSupabase.auth.exchangeCodeForSession(url)
-        console.log('OAuth exchange:', data, error)
+      const codigo = new URL(event.url).searchParams.get('code')
+      if (codigo) {
+        const { error } = await clienteSupabase.auth.exchangeCodeForSession(codigo)
+        if (error) console.error('OAuth error:', error.message)
         void import('@capacitor/browser').then(({ Browser }) => Browser.close())
       }
     })

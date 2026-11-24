@@ -16,4 +16,6 @@ if (!url || !clavePublica) {
   )
 }
 
-export const clienteSupabase = createClient(url, clavePublica)
+export const clienteSupabase = createClient(url, clavePublica, {
+  auth: { flowType: 'pkce' },
+})
