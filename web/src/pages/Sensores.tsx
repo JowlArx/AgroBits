@@ -89,6 +89,7 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
   const [nombreNuevoSensor, setNombreNuevoSensor] = useState('')
   const [creandoSensor, setCreandoSensor] = useState(false)
   const [errorCrearSensor, setErrorCrearSensor] = useState('')
+  const [mostrandoFormularioSensor, setMostrandoFormularioSensor] = useState(false)
   // Al venir de «Ver historial» de un cultivo, la vista baja hasta el historial.
   useEffect(() => {
     if (cultivoIdHistorial) document.getElementById('historial-mediciones')?.scrollIntoView({ block: 'start' })
@@ -197,26 +198,35 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
       <div className="panel-sensores" data-testid="panel-sensores">
         <h3>Sensores</h3>
 
-        <form className="form-nuevo-sensor" onSubmit={(event) => void crearNuevoSensor(event)}>
-          <label className="etiqueta">
-            Nuevo sensor
+        <button
+          type="button"
+          className="btn-secundario"
+          data-testid="boton-agregar-sensor"
+          onClick={() => setMostrandoFormularioSensor((valor) => !valor)}
+        >
+          {mostrandoFormularioSensor ? 'Ocultar formulario' : 'Agregar sensor'}
+        </button>
+
+        {mostrandoFormularioSensor && (
+          <form className="form-nuevo-sensor" onSubmit={(event) => void crearNuevoSensor(event)}>
             <input
               type="text"
               value={nombreNuevoSensor}
               onChange={(event) => setNombreNuevoSensor(event.target.value)}
               placeholder="Nombre del sensor"
+              aria-label="Nombre del sensor"
               data-testid="nuevo-sensor-nombre"
             />
-          </label>
-          <button type="submit" disabled={creandoSensor || nombreNuevoSensor.trim() === ''} data-testid="crear-sensor">
-            {creandoSensor ? 'Creando…' : 'Agregar sensor'}
-          </button>
-          {errorCrearSensor && (
-            <p role="alert" data-testid="error-crear-sensor">
-              {errorCrearSensor}
-            </p>
-          )}
-        </form>
+            <button type="submit" disabled={creandoSensor || nombreNuevoSensor.trim() === ''} data-testid="crear-sensor">
+              {creandoSensor ? 'Creando…' : 'Agregar'}
+            </button>
+            {errorCrearSensor && (
+              <p role="alert" data-testid="error-crear-sensor">
+                {errorCrearSensor}
+              </p>
+            )}
+          </form>
+        )}
 
         {sensores.length === 0 ? (
           <p data-testid="sin-sensores-panel" className="estado-vacio">
