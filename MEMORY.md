@@ -199,3 +199,10 @@ uevo-sensor-nombre, crear-sensor) que llama a crearSensor.
 - main.tsx guarda/actualiza el token al registrarse (upsert por token), si hay sesión.
 - Migración: supabase/migrations/20261124005312_push_tokens.sql.
 - Commit 995c312, deploy READY.
+
+## Notificaciones automáticas de alertas (24/11/2026)
+- Edge Function 
+otificar-alertas (FCM v1) procesa alertas activas; envío inicial al crear alerta y reenvío cada 3 h con tiempo transcurrido.
+- Trigger lert_created_notify + cron eenviar-alertas-pendientes (pg_cron cada 3 h).
+- Migración: supabase/migrations/20261124010000_alertas_push_notificaciones.sql.
+- Verificado: la función responde {"ok":true,"processed":8}.
