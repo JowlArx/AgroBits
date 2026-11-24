@@ -4,6 +4,7 @@
 // el cliente (plan.md §4.3). Los valores viven en `.env.local` (ignorado por
 // git); la plantilla documentada es `.env.example`.
 
+import { Capacitor } from '@capacitor/core'
 import { createClient } from '@supabase/supabase-js'
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
@@ -17,5 +18,5 @@ if (!url || !clavePublica) {
 }
 
 export const clienteSupabase = createClient(url, clavePublica, {
-  auth: { flowType: 'pkce' },
+  auth: { flowType: Capacitor.isNativePlatform() ? 'pkce' : 'implicit' },
 })
