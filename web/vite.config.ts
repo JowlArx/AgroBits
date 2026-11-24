@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['pwa-icon.svg'],
+      includeAssets: ['icono-hoja-senial.svg', 'logo.svg'],
       manifest: {
         name: 'AgroBits',
         short_name: 'AgroBits',
@@ -20,7 +20,7 @@ export default defineConfig({
         start_url: '/app.html',
         icons: [
           {
-            src: 'pwa-icon.svg',
+            src: 'icono-hoja-senial.svg',
             sizes: 'any',
             type: 'image/svg+xml',
             purpose: 'any maskable',
