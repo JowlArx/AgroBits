@@ -30,8 +30,11 @@ if (Capacitor.isNativePlatform()) {
       console.log('Push registration token:', token.value)
       ultimoTokenPush = token.value
       const { data } = await clienteSupabase.auth.getUser()
-      if (!data.user) return
-      await clienteSupabase.from('push_tokens').upsert(
+      if (!data.user) {
+        console.log('Push: sin sesion, token pendiente')
+        return
+      }
+      const { error } = await clienteSupabase.from('push_tokens').upsert(
         {
           user_id: data.user.id,
           token: token.value,
@@ -40,6 +43,8 @@ if (Capacitor.isNativePlatform()) {
         },
         { onConflict: 'token' },
       )
+      if (error) console.error('Push save error:', error.message)
+      else console.log('Push token guardado:', token.value)
     })
     PushNotifications.addListener('registrationError', (error) => {
       console.error('Push registration error:', error)
