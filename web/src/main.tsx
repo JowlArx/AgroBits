@@ -21,12 +21,14 @@ configurarProgramadorLecturas(new ProgramadorTemporizado())
 
 // Notificaciones nativas (Capacitor) solo en la app empaquetada.
 if (Capacitor.isNativePlatform()) {
+  let ultimoTokenPush: string | null = null
   void import('@capacitor/push-notifications').then(({ PushNotifications }) => {
     void PushNotifications.requestPermissions().then((permiso) => {
       if (permiso.receive === 'granted') void PushNotifications.register()
     })
     PushNotifications.addListener('registration', async (token) => {
       console.log('Push registration token:', token.value)
+      ultimoTokenPush = token.value
       const { data } = await clienteSupabase.auth.getUser()
       if (!data.user) return
       await clienteSupabase.from('push_tokens').upsert(
@@ -45,6 +47,20 @@ if (Capacitor.isNativePlatform()) {
     PushNotifications.addListener('pushNotificationReceived', (notificacion) => {
       console.log('Push recibida:', notificacion)
     })
+  })
+
+  clienteSupabase.auth.onAuthStateChange((_evento, sesion) => {
+    if (sesion && ultimoTokenPush) {
+      void clienteSupabase.from('push_tokens').upsert(
+        {
+          user_id: sesion.user.id,
+          token: ultimoTokenPush,
+          platform: Capacitor.getPlatform(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'token' },
+      )
+    }
   })
 }
 
