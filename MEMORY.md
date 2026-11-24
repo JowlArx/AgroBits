@@ -190,3 +190,6 @@ uevo-sensor-nombre, crear-sensor) que llama a crearSensor.
 - Build web se copia a dist/index.html (app) antes de cap sync android.
 - Requiere Android Studio/SDK para compilar APK; iOS solo en macOS.
 - Verificación: lint OK, vitest 255/255, build OK.
+
+## Rama de trabajo mobile (24/11/2026)
+- Creada y publicada eat/app-movil (tracking origin/feat/app-movil) para aislar el trabajo de la app móvil/Capacitor y notificaciones.
