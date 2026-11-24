@@ -25,8 +25,11 @@ if (Capacitor.isNativePlatform()) {
   void import('@capacitor/app').then(({ App }) => {
     App.addListener('appUrlOpen', async (event) => {
       const url = event.url
+      console.log('OAuth redirect:', url)
       if (url.includes('code=')) {
-        await clienteSupabase.auth.exchangeCodeForSession(url)
+        const { data, error } = await clienteSupabase.auth.exchangeCodeForSession(url)
+        console.log('OAuth exchange:', data, error)
+        void import('@capacitor/browser').then(({ Browser }) => Browser.close())
       }
     })
   })
