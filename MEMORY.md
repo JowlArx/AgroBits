@@ -177,3 +177,16 @@ Registrar únicamente hechos comprobados y decisiones aceptadas. Identificar exp
 - AgroBits convertida en PWA: ite-plugin-pwa (autoUpdate), manifest AgroBits, icono SVG (/pwa-icon.svg), service worker con precache.
 - Build genera dist/manifest.webmanifest, dist/sw.js y dist/registerSW.js.
 - Verificación: lint OK, vitest 255/255, build OK.
+
+## Alta de sensor sin depender de cultivo (23/11/2026)
+- Formulario inline en la vista Sensores (
+uevo-sensor-nombre, crear-sensor) que llama a crearSensor.
+- Commit c7e6e33, deploy READY: https://web-omega-eight-80.vercel.app.
+- Verificación: lint OK, vitest 255/255, build OK.
+
+## App nativa Android (Capacitor) + push (23/11/2026)
+- Agregado Capacitor (@capacitor/core/cli/android/ios/push-notifications), proyecto Android en web/android, config web/capacitor.config.ts.
+- main.tsx registra notificaciones nativas solo en plataforma nativa (permiso + registro + listeners).
+- Build web se copia a dist/index.html (app) antes de cap sync android.
+- Requiere Android Studio/SDK para compilar APK; iOS solo en macOS.
+- Verificación: lint OK, vitest 255/255, build OK.

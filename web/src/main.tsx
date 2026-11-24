@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { Capacitor } from '@capacitor/core'
 import App from './App'
 import { clienteSupabase } from './data/clienteSupabase'
 import { ProveedorSupabase } from './data/sesion/proveedorSupabase'
@@ -17,6 +18,24 @@ import './estilos.css'
 configurarProveedorAuth(new ProveedorSupabase(clienteSupabase))
 configurarProveedorDatos(new ProveedorDatosSupabase(clienteSupabase))
 configurarProgramadorLecturas(new ProgramadorTemporizado())
+
+// Notificaciones nativas (Capacitor) solo en la app empaquetada.
+if (Capacitor.isNativePlatform()) {
+  void import('@capacitor/push-notifications').then(({ PushNotifications }) => {
+    void PushNotifications.requestPermissions().then((permiso) => {
+      if (permiso.receive === 'granted') void PushNotifications.register()
+    })
+    PushNotifications.addListener('registration', (token) => {
+      console.log('Push registration token:', token.value)
+    })
+    PushNotifications.addListener('registrationError', (error) => {
+      console.error('Push registration error:', error)
+    })
+    PushNotifications.addListener('pushNotificationReceived', (notificacion) => {
+      console.log('Push recibida:', notificacion)
+    })
+  })
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
