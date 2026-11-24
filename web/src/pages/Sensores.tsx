@@ -208,24 +208,26 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
         </button>
 
         {mostrandoFormularioSensor && (
-          <form className="form-nuevo-sensor" onSubmit={(event) => void crearNuevoSensor(event)}>
-            <input
-              type="text"
-              value={nombreNuevoSensor}
-              onChange={(event) => setNombreNuevoSensor(event.target.value)}
-              placeholder="Nombre del sensor"
-              aria-label="Nombre del sensor"
-              data-testid="nuevo-sensor-nombre"
-            />
-            <button type="submit" disabled={creandoSensor || nombreNuevoSensor.trim() === ''} data-testid="crear-sensor">
-              {creandoSensor ? 'Creando…' : 'Agregar'}
-            </button>
+          <>
+            <form className="form-nuevo-sensor" onSubmit={(event) => void crearNuevoSensor(event)}>
+              <input
+                type="text"
+                value={nombreNuevoSensor}
+                onChange={(event) => setNombreNuevoSensor(event.target.value)}
+                placeholder="Nombre del sensor"
+                aria-label="Nombre del sensor"
+                data-testid="nuevo-sensor-nombre"
+              />
+              <button type="submit" disabled={creandoSensor || nombreNuevoSensor.trim() === ''} data-testid="crear-sensor">
+                {creandoSensor ? 'Creando…' : 'Agregar'}
+              </button>
+            </form>
             {errorCrearSensor && (
-              <p role="alert" data-testid="error-crear-sensor">
+              <p role="alert" data-testid="error-crear-sensor" className="error-crear-sensor">
                 {errorCrearSensor}
               </p>
             )}
-          </form>
+          </>
         )}
 
         {sensores.length === 0 ? (
@@ -503,6 +505,8 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
     </section>
   )
 }
+
+
 
 
 
