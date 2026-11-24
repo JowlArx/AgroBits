@@ -25,8 +25,19 @@ if (Capacitor.isNativePlatform()) {
     void PushNotifications.requestPermissions().then((permiso) => {
       if (permiso.receive === 'granted') void PushNotifications.register()
     })
-    PushNotifications.addListener('registration', (token) => {
+    PushNotifications.addListener('registration', async (token) => {
       console.log('Push registration token:', token.value)
+      const { data } = await clienteSupabase.auth.getUser()
+      if (!data.user) return
+      await clienteSupabase.from('push_tokens').upsert(
+        {
+          user_id: data.user.id,
+          token: token.value,
+          platform: Capacitor.getPlatform(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'token' },
+      )
     })
     PushNotifications.addListener('registrationError', (error) => {
       console.error('Push registration error:', error)
