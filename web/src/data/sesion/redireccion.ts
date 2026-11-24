@@ -5,7 +5,13 @@
 
 export type Redireccion = (url: string) => void
 
+import { Capacitor } from '@capacitor/core'
+
 const irConElNavegador: Redireccion = (url) => {
+  if (Capacitor.isNativePlatform()) {
+    void import('@capacitor/browser').then(({ Browser }) => Browser.open({ url }))
+    return
+  }
   window.location.assign(url)
 }
 

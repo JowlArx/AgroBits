@@ -21,6 +21,15 @@ configurarProgramadorLecturas(new ProgramadorTemporizado())
 
 // Notificaciones nativas (Capacitor) solo en la app empaquetada.
 if (Capacitor.isNativePlatform()) {
+  // OAuth nativo: captura el redirect y completa la sesión.
+  void import('@capacitor/app').then(({ App }) => {
+    App.addListener('appUrlOpen', async (event) => {
+      const url = event.url
+      if (url.includes('code=')) {
+        await clienteSupabase.auth.exchangeCodeForSession(url)
+      }
+    })
+  })
   let ultimoTokenPush: string | null = null
   void import('@capacitor/push-notifications').then(({ PushNotifications }) => {
     void PushNotifications.requestPermissions().then((permiso) => {

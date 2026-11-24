@@ -3,6 +3,7 @@
 // contraseña mal documentadas») y mantiene la sesión en caché a partir de
 // los eventos de `onAuthStateChange` (expiración incluida, R-03).
 
+import { Capacitor } from '@capacitor/core'
 import type { AuthError, Session, SupabaseClient } from '@supabase/supabase-js'
 import type { Resultado } from '../storeCultivos'
 import type { PerfilRegistro, ProveedorAuth, Sesion, UrlRedireccion } from './proveedorAuth'
@@ -53,6 +54,9 @@ function nombreDeUsuario(
  * Esa URL exacta debe estar en la lista de *Redirect URLs* de Supabase.
  */
 export function urlDeRetornoGoogle(): string {
+  if (Capacitor.isNativePlatform()) {
+    return 'com.agrobits.app://auth'
+  }
   return `${window.location.origin}${window.location.pathname}`
 }
 
