@@ -12,6 +12,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react'
 import {
   actualizarColorSensor,
   actualizarOrigenSensor,
+  crearSensor,
   eliminarSensor,
   obtenerSensores,
   suscribirSensores,
@@ -85,6 +86,9 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
   const [rangoTiempo, setRangoTiempo] = useState<'6h' | '24h' | '7d' | 'todo'>('24h')
   const [errorColor, setErrorColor] = useState('')
   const [tokensSensorId, setTokensSensorId] = useState<string | null>(null)
+  const [nombreNuevoSensor, setNombreNuevoSensor] = useState('')
+  const [creandoSensor, setCreandoSensor] = useState(false)
+  const [errorCrearSensor, setErrorCrearSensor] = useState('')
   // Al venir de «Ver historial» de un cultivo, la vista baja hasta el historial.
   useEffect(() => {
     if (cultivoIdHistorial) document.getElementById('historial-mediciones')?.scrollIntoView({ block: 'start' })
@@ -109,6 +113,23 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
   async function cambiarOrigen(sensorId: string, origen: OrigenSensor): Promise<void> {
     const resultado = await actualizarOrigenSensor(sensorId, origen)
     setErrorColor(resultado.ok ? '' : resultado.errores.map((e) => e.motivo).join('. '))
+  }
+
+  async function crearNuevoSensor(event: { preventDefault: () => void }): Promise<void> {
+    event.preventDefault()
+    if (nombreNuevoSensor.trim() === '') {
+      setErrorCrearSensor('El nombre del sensor es obligatorio')
+      return
+    }
+    setCreandoSensor(true)
+    setErrorCrearSensor('')
+    const resultado = await crearSensor(nombreNuevoSensor.trim())
+    if (resultado.ok) {
+      setNombreNuevoSensor('')
+    } else {
+      setErrorCrearSensor(resultado.errores.map((e) => e.motivo).join('. '))
+    }
+    setCreandoSensor(false)
   }
 
   /**
@@ -175,6 +196,27 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
     <section data-testid="vista-sensores" className="vista-sensores">
       <div className="panel-sensores" data-testid="panel-sensores">
         <h3>Sensores</h3>
+
+        <form className="form-nuevo-sensor" onSubmit={(event) => void crearNuevoSensor(event)}>
+          <label className="etiqueta">
+            Nuevo sensor
+            <input
+              type="text"
+              value={nombreNuevoSensor}
+              onChange={(event) => setNombreNuevoSensor(event.target.value)}
+              placeholder="Nombre del sensor"
+              data-testid="nuevo-sensor-nombre"
+            />
+          </label>
+          <button type="submit" disabled={creandoSensor || nombreNuevoSensor.trim() === ''} data-testid="crear-sensor">
+            {creandoSensor ? 'Creando…' : 'Agregar sensor'}
+          </button>
+          {errorCrearSensor && (
+            <p role="alert" data-testid="error-crear-sensor">
+              {errorCrearSensor}
+            </p>
+          )}
+        </form>
 
         {sensores.length === 0 ? (
           <p data-testid="sin-sensores-panel" className="estado-vacio">
