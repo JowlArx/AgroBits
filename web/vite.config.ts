@@ -1,9 +1,37 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['pwa-icon.svg'],
+      manifest: {
+        name: 'AgroBits',
+        short_name: 'AgroBits',
+        description: 'Monitoreo agrícola de sensores y cultivos',
+        theme_color: '#1f3d2b',
+        background_color: '#1f3d2b',
+        display: 'standalone',
+        scope: '/',
+        start_url: '/app.html',
+        icons: [
+          {
+            src: 'pwa-icon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any maskable',
+          },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,ico,png,woff2}'],
+      },
+    }),
+  ],
   build: {
     rollupOptions: {
       // Dos páginas (decisión de arquitectura del fix SEO): `index.html` es la

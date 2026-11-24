@@ -163,3 +163,17 @@ Higiene del proyecto (17/10/2026):
 ## Reglas de actualización
 
 Registrar únicamente hechos comprobados y decisiones aceptadas. Identificar expresamente las hipótesis y actualizar este archivo cuando cambie el estado del proyecto.
+
+## Última pasada UI (sensores e historial) — 23/11/2026
+- Rama: eat/sin-senal · commit b9dd45 · push a origin/feat/sin-senal.
+- Deploy producción (Vercel): READY · https://web-omega-eight-80.vercel.app.
+- Cambios en web/src/pages/Sensores.tsx, web/src/pages/Historial.tsx, web/src/components/GraficoLecturas.tsx, web/src/estilos.css:
+  - Tipo de medición por defecto inteligente al abrir un sensor; estadísticas del rango (mín/media/máx/n); estados vacíos diferenciados (real vs simulado).
+  - Historial: rango por defecto 7 días, botón “Limpiar filtros”, resumen de lecturas/sensores/días, tipo por defecto “Temperatura”, color real del sensor en el gráfico.
+  - Gráfico de sensor: selector de rango (6H/24H/7D/Todo), banda de umbral sombreada, marcador de última lectura.
+- Verificación: lint OK, vitest 255/255, build OK.
+
+## PWA instalable (23/11/2026)
+- AgroBits convertida en PWA: ite-plugin-pwa (autoUpdate), manifest AgroBits, icono SVG (/pwa-icon.svg), service worker con precache.
+- Build genera dist/manifest.webmanifest, dist/sw.js y dist/registerSW.js.
+- Verificación: lint OK, vitest 255/255, build OK.
