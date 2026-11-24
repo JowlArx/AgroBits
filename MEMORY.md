@@ -193,3 +193,9 @@ uevo-sensor-nombre, crear-sensor) que llama a crearSensor.
 
 ## Rama de trabajo mobile (24/11/2026)
 - Creada y publicada eat/app-movil (tracking origin/feat/app-movil) para aislar el trabajo de la app móvil/Capacitor y notificaciones.
+
+## Push tokens persistidos (24/11/2026)
+- Tabla push_tokens creada en Supabase con RLS por usuario.
+- main.tsx guarda/actualiza el token al registrarse (upsert por token), si hay sesión.
+- Migración: supabase/migrations/20261124005312_push_tokens.sql.
+- Commit 995c312, deploy READY.
