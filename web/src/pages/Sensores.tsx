@@ -198,17 +198,17 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
       <div className="panel-sensores" data-testid="panel-sensores">
         <h3>Sensores</h3>
 
-        <button
-          type="button"
-          className="btn-secundario"
-          data-testid="boton-agregar-sensor"
-          onClick={() => setMostrandoFormularioSensor((valor) => !valor)}
-        >
-          {mostrandoFormularioSensor ? 'Ocultar formulario' : 'Agregar sensor'}
-        </button>
+        <div className="fila-agregar-sensor">
+          <button
+            type="button"
+            className="btn-secundario"
+            data-testid="boton-agregar-sensor"
+            onClick={() => setMostrandoFormularioSensor((valor) => !valor)}
+          >
+            {mostrandoFormularioSensor ? 'Ocultar formulario' : 'Agregar sensor'}
+          </button>
 
-        {mostrandoFormularioSensor && (
-          <>
+          {mostrandoFormularioSensor && (
             <form className="form-nuevo-sensor" onSubmit={(event) => void crearNuevoSensor(event)}>
               <input
                 type="text"
@@ -222,12 +222,13 @@ export default function Sensores({ cultivoIdHistorial }: Props) {
                 {creandoSensor ? 'Creando…' : 'Agregar'}
               </button>
             </form>
-            {errorCrearSensor && (
-              <p role="alert" data-testid="error-crear-sensor" className="error-crear-sensor">
-                {errorCrearSensor}
-              </p>
-            )}
-          </>
+          )}
+        </div>
+
+        {mostrandoFormularioSensor && errorCrearSensor && (
+          <p role="alert" data-testid="error-crear-sensor" className="error-crear-sensor">
+            {errorCrearSensor}
+          </p>
         )}
 
         {sensores.length === 0 ? (
